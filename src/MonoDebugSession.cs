@@ -588,7 +588,7 @@ namespace OpenDebug
 			try {
 				return (int)container[propertyName];
 			}
-			catch (Exception e) {
+			catch (Exception) {
 				// ignore and return default value
 			}
 			return dflt;
