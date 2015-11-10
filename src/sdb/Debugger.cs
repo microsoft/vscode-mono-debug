@@ -86,7 +86,6 @@ namespace Mono.Debugger.Client
 
         static long _nextBreakpointId;
 
-        static volatile bool _showResumeMessage;
 
         public static State State
         {
@@ -281,7 +280,6 @@ namespace Mono.Debugger.Client
 
                 _session.TargetReady += (sender, e) =>
                 {
-                    _showResumeMessage = true;
                     _activeProcess = _session.GetProcesses().SingleOrDefault();
 
                     // The inferior process has launched, so we can safely
@@ -447,7 +445,6 @@ namespace Mono.Debugger.Client
                 CurrentAddress = null;
                 CurrentPort = -1;
 
-                _showResumeMessage = false;
                 _debuggeeKilled = false;
                 _kind = SessionKind.Launched;
 
@@ -484,7 +481,6 @@ namespace Mono.Debugger.Client
                 CurrentAddress = address;
                 CurrentPort = port;
 
-                _showResumeMessage = false;
                 _debuggeeKilled = false;
                 _kind = SessionKind.Connected;
 
@@ -510,7 +506,6 @@ namespace Mono.Debugger.Client
                 CurrentAddress = address;
                 CurrentPort = port;
 
-                _showResumeMessage = false;
                 _debuggeeKilled = false;
                 _kind = SessionKind.Listening;
 
