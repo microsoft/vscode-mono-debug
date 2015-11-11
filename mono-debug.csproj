@@ -104,10 +104,10 @@
     <None Include="gulpfile.js" />
     <None Include="OSSREADME.json" />
     <None Include="packages.config" />
-    <None Include="src\TerminalHelper.scpt">
+    <None Include="package.json" />
+    <None Include="TerminalHelper.scpt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="package.json" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <ItemGroup>
