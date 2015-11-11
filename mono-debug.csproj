@@ -101,7 +101,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <None Include="gulpfile.js" />
     <None Include="OSSREADME.json" />
     <None Include="packages.config" />
     <None Include="package.json" />
