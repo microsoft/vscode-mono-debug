@@ -1,6 +1,7 @@
-﻿/*---------------------------------------------------------
- * Copyright (C) Microsoft Corporation. All rights reserved.
- *--------------------------------------------------------*/
+﻿/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -230,7 +231,7 @@ namespace OpenDebug
 					}
 				}
 
-				// TODO@AW we should use the runtimeExecutable 
+				// TODO@AW we should use the runtimeExecutable
 				// TODO@AW we should pass runtimeArgs
 
 				var file = new FileInfo(programPath);
@@ -344,7 +345,7 @@ namespace OpenDebug
 			for (int i = 0; i < clientLines.Length; i++) {
 				lin.Add(ConvertClientLineToDebugger(clientLines[i]));
 			}
-                
+
 			// find all breakpoints for the given path and remember their id and line number
 			var bpts = new List<Tuple<int, int>>();
 			foreach (var be in Debugger.Breakpoints) {
@@ -353,7 +354,7 @@ namespace OpenDebug
 					bpts.Add(new Tuple<int,int>((int)be.Key, (int)bp.Line));
 				}
 			}
-                
+
 			HashSet<int> lin2 = new HashSet<int>();
 			foreach (var bpt in bpts) {
 				if (lin.Contains(bpt.Item2)) {
@@ -403,7 +404,7 @@ namespace OpenDebug
 			var bt = thread.Backtrace;
 			if (bt != null && bt.FrameCount >= 0) {
 				for (var i = 0; i < bt.FrameCount; i++) {
-					
+
 					var frame = bt.GetFrame(i);
 					var frameHandle = _frameHandles.Create(frame);
 

@@ -1,6 +1,7 @@
-﻿/*---------------------------------------------------------
- * Copyright (C) Microsoft Corporation. All rights reserved.
- *--------------------------------------------------------*/
+﻿/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 using System;
 using System.Text;
 using System.IO;
@@ -104,7 +105,7 @@ namespace OpenDebug
 	}
 
 	//---------------------------------------------------------------------------------------------------
-   
+
 	/*
 	 * V8Protocol is a base class which defines common constants and utilities for client and server
 	 */
@@ -288,7 +289,7 @@ namespace OpenDebug
 
 		private void ProcessData()
 		{
-			while (true) { 
+			while (true) {
 				if (_contentLength >= 0) {
 					if (_rawData.Length >= _contentLength) {
 						var buf = _rawData.RemoveFirst(_contentLength);
@@ -511,7 +512,7 @@ namespace OpenDebug
 				_outputStream.Flush();
 			}
 			catch (Exception) {
-				// 
+				//
 			}
 		}
 	}
