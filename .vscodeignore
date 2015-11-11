@@ -3,4 +3,3 @@
 **/.DS_Store
 !bin/Release/*
 !package.json
-!OSSREADME.json
