@@ -18,6 +18,13 @@
 		"url": "https://monacotools.visualstudio.com/DefaultCollection/Monaco/_git/vscode-mono-debug"
 	},
 	"devDependencies": {
+		"gulp": "^3.9.0",
+		"gulp-util": "^3.0.5",
+		"gulp-azure-storage": "*",
+		"git-rev-sync": "*",
+		"del": "*",
+		"run-sequence": "*",
+		"gulp-vinyl-zip": "*"
 	},
 	"contributes": {
 		"debuggers": [{
