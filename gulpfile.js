@@ -22,6 +22,11 @@ var MONO_BOM = [
 	'./bin/Release/mono-debug.exe',
 	'./bin/Release/TerminalHelper.scpt'
 ];
+var MONO_BOM2 = [
+	'./package.json',
+	'./LICENSE.txt',
+	'./ThirdPartyNotices.txt'
+];
 
 var extensionDest = 'extension';
 var extensionBin = path.join(extensionDest, 'bin', 'Release');
@@ -54,7 +59,7 @@ gulp.task('internal-bin-copy', function() {
 });
 
 gulp.task('internal-package-copy', function() {
-	return gulp.src('package.json').pipe(gulp.dest(extensionDest));
+	return gulp.src(MONO_BOM2).pipe(gulp.dest(extensionDest));
 });
 
 gulp.task('internal-zip', function(callback) {
