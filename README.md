@@ -1,5 +1,6 @@
 # vscode-mono-debug
-A simple VS Code debug adapter for mono
+
+A simple VS Code debug adapter for mono based on the [SDB](https://github.com/mono/sdb) command line debugger.
 
 ## Building
 
