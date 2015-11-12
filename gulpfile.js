@@ -3,6 +3,7 @@
  *--------------------------------------------------------*/
 
 var gulp = require('gulp');
+var path = require('path');
 var azure = require('gulp-azure-storage');
 var git = require('git-rev-sync');
 var del = require('del');
@@ -12,7 +13,6 @@ var vzip = require('gulp-vinyl-zip');
 var MONO_BOM = [
 	'./bin/Release/ICSharpCode.NRefactory.CSharp.dll',
 	'./bin/Release/ICSharpCode.NRefactory.dll',
-	'./bin/Release/Microsoft.SDB.dll',
 	'./bin/Release/Mono.Cecil.dll',
 	'./bin/Release/Mono.Cecil.Mdb.dll',
 	'./bin/Release/Mono.Debugger.Soft.dll',
@@ -23,7 +23,7 @@ var MONO_BOM = [
 	'./bin/Release/TerminalHelper.scpt'
 ];
 
-var extensionDest = 'extension/bin';
+var extensionDest = 'extension';
 var uploadDest = 'upload/' + git.short();
 
 gulp.task('default', function(callback) {
@@ -31,7 +31,7 @@ gulp.task('default', function(callback) {
 });
 
 gulp.task('build', function(callback) {
-	runSequence('clean', 'internal-copy', callback);
+	runSequence('clean', 'internal-bin-copy', 'internal-package-copy', callback);
 });
 
 gulp.task('zip', function(callback) {
@@ -48,8 +48,12 @@ gulp.task('clean', function() {
 
 //---- internal
 
-gulp.task('internal-copy', function() {
-	return gulp.src(MONO_BOM).pipe(gulp.dest(extensionDest));
+gulp.task('internal-bin-copy', function() {
+	return gulp.src(MONO_BOM).pipe(gulp.dest(path.join(extensionDest, 'bin')));
+});
+
+gulp.task('internal-package-copy', function() {
+	return gulp.src('package.json').pipe(gulp.dest(extensionDest));
 });
 
 gulp.task('internal-zip', function(callback) {
