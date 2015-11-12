@@ -24,6 +24,7 @@ var MONO_BOM = [
 ];
 
 var extensionDest = 'extension';
+var extensionBin = path.join(extensionDest, 'bin', 'Release');
 var uploadDest = 'upload/' + git.short();
 
 gulp.task('default', function(callback) {
@@ -49,7 +50,7 @@ gulp.task('clean', function() {
 //---- internal
 
 gulp.task('internal-bin-copy', function() {
-	return gulp.src(MONO_BOM).pipe(gulp.dest(path.join(extensionDest, 'bin')));
+	return gulp.src(MONO_BOM).pipe(gulp.dest(extensionBin));
 });
 
 gulp.task('internal-package-copy', function() {
