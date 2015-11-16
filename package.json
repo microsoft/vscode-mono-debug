@@ -9,7 +9,7 @@
 	"license": "MIT",
 	"private": true,
 	"engines": {
-		"vscode": "0.10.x"
+		"vscode": "^0.10.1"
 	},
 	"dependencies": {
 	},
