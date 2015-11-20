@@ -4,7 +4,7 @@ SDB_EXE = "./sdb/bin/sdb.exe"
 SDB_MAKE = "./sdb/Makefile"
 
 all: vsix
-	echo "done"
+	@echo "vsix created"
 
 upload: $MONO_DEBUG
 	gulp upload
@@ -19,7 +19,7 @@ $SDB_EXE: $SDB_MAKE
 	cd sdb; make -f Makefile
 
 build: $MONO_DEBUG
-	echo "build finished"
+	@echo "build finished"
 
 $MONO_DEBUG: $SDB_EXE
 	xbuild /p:Configuration=Release
