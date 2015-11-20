@@ -8,9 +8,6 @@
 	},
 	"license": "MIT",
 	"private": true,
-	"scripts": {
-		"prepublish": "make"
-	},
 	"engines": {
 		"vscode": "^0.10.1"
 	},

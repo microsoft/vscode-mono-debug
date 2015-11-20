@@ -3,8 +3,10 @@ node_js:
   - "4.1"
   - "4.0"
   - "0.12"
-sudo: true
+sudo: false
 addons:
   apt:
     packages:
     - mono-complete
+install:
+- make build
