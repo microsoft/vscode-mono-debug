@@ -18,6 +18,9 @@ $SDB_MAKE:
 $SDB_EXE: $SDB_MAKE
 	cd sdb; make -f Makefile
 
+build: $MONO_DEBUG
+	echo "build finished"
+
 $MONO_DEBUG: $SDB_EXE
 	xbuild /p:Configuration=Release
 
