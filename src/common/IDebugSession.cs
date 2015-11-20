@@ -4,13 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 using System;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using Microsoft.CSharp.RuntimeBinder;
-using System.IO;
 
 namespace OpenDebug
 {
-	public interface IDebugSession
+    public interface IDebugSession
 	{
 		DebugResult Dispatch(string command, dynamic args);
 
@@ -34,7 +32,7 @@ namespace OpenDebug
 		Task<DebugResult> Variables(int reference);
 		Task<DebugResult> Source(int sourceReference);
 
-		Task<DebugResult> Evaluate(int frameId, string expression);
+		Task<DebugResult> Evaluate(string context, int frameId, string expression);
 	}
 
 	public abstract class DebugSession : IDebugSession
@@ -163,12 +161,13 @@ namespace OpenDebug
 				return SetExceptionBreakpoints(filters).Result;
 
 			case "evaluate":
+				var context = GetString(args, "context");
 				int frameId = GetInt(args, "frameId", -1);
 				var expression = GetString(args, "expression");
 				if (expression == null) {
 					return new DebugResult(1013, "evaluate: property 'expression' is missing, null, or empty");
 				}
-				return Evaluate(frameId, expression).Result;
+				return Evaluate(context, frameId, expression).Result;
 
 			default:
 				return new DebugResult(1014, "unrecognized request: {_request}", new { _request = command });
@@ -252,7 +251,7 @@ namespace OpenDebug
 			return Task.FromResult(new DebugResult(new ThreadsResponseBody()));
 		}
 
-		public virtual Task<DebugResult> Evaluate(int frameId, string expression)
+		public virtual Task<DebugResult> Evaluate(string context, int frameId, string expression)
 		{
 			return Task.FromResult(new DebugResult(1021, "Evaluate not supported"));
 		}

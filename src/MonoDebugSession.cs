@@ -500,7 +500,7 @@ namespace OpenDebug
 			return Task.FromResult(new DebugResult(new ThreadsResponseBody(threads)));
 		}
 
-		public override Task<DebugResult> Evaluate(int frameId, string expression)
+		public override Task<DebugResult> Evaluate(string context, int frameId, string expression)
 		{
 			string error = null;
 
