@@ -3,6 +3,6 @@ node_js:
   - "4.1"
   - "4.0"
   - "0.12"
-sudo: false
+sudo: true
 install:
-  - apt-get install mono-complete
+  - sudo apt-get install mono-complete
