@@ -584,7 +584,7 @@ namespace OpenDebug
 			return false;
 		}
 
-		private static int getInt(dynamic container, string propertyName, int dflt = 0)
+		protected static int getInt(dynamic container, string propertyName, int dflt = 0)
 		{
 			try {
 				return (int)container[propertyName];
@@ -595,7 +595,7 @@ namespace OpenDebug
 			return dflt;
 		}
 
-		private static string getString(dynamic args, string property, string dflt = null)
+		protected static string getString(dynamic args, string property, string dflt = null)
 		{
 			var s = (string)args[property];
 			if (s == null) {
