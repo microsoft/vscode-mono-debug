@@ -131,7 +131,7 @@ namespace OpenDebug
 						}
 					}
 					catch (Exception e) {
-						responder.SetBody(new ErrorResponseBody(new Message(1104, "error while processing request '{_request}' (exception: {_exception})", new { request = command, exception = e.Message })));
+						responder.SetBody(new ErrorResponseBody(new Message(1104, "error while processing request '{_request}' (exception: {_exception})", new { _request = command, _exception = e.Message })));
 					}
 
 					if (command == "disconnect") {
