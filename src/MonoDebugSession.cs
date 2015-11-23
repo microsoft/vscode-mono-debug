@@ -30,10 +30,13 @@ namespace OpenDebug
 		private ObjectValue _exception;
 		private Dictionary<int, Thread> _seenThreads = new Dictionary<int, Thread>();
 		private bool _attachMode = false;
+		public ObjectValueFlags VariablesIgnoreFlags { get; set; }
 
 
 		public SDBDebugSession(Action<DebugEvent> callback) : base(true)
 		{
+			VariablesIgnoreFlags = ObjectValueFlags.None;
+
 			_variableHandles = new Handles<ObjectValue[]>();
 			_frameHandles = new Handles<Mono.Debugging.Client.StackFrame>();
 			_seenThreads = new Dictionary<int, Thread>();
@@ -463,13 +466,16 @@ namespace OpenDebug
 						// Wait for all values at once.
 						WaitHandle.WaitAll(children.Select(x => x.WaitHandle).ToArray());
 						foreach (var v in children) {
-							variables.Add(CreateVariable(v));
+							if ((v.Flags & VariablesIgnoreFlags) == 0)
+								variables.Add(CreateVariable(v));
 						}
 					}
 					else {
 						foreach (var v in children) {
-							v.WaitHandle.WaitOne();
-							variables.Add(CreateVariable(v));
+							if ((v.Flags & VariablesIgnoreFlags) == 0) {
+								v.WaitHandle.WaitOne ();
+								variables.Add (CreateVariable (v));
+							}
 						}
 					}
 
