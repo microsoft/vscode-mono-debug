@@ -14,8 +14,8 @@ namespace OpenDebug
 	 */
 	public sealed class DebugResult
 	{
-		public bool Success { get; } // boolean indicating success
-		public ResponseBody Body { get; }	// depending on value of success either the result or an error
+		public bool Success { get; private set; } // boolean indicating success
+		public ResponseBody Body { get; private set; }	// depending on value of success either the result or an error
 		public List<DebugEvent> Events { get; private set; } // send this event after returning the result
 
 		/*
@@ -76,7 +76,7 @@ namespace OpenDebug
 
 	public class ErrorResponseBody : ResponseBody {
 
-		public Message error { get; }
+		public Message error { get; private set; }
 
 		public ErrorResponseBody(Message m) {
 			error = m;
@@ -85,7 +85,7 @@ namespace OpenDebug
 
 	public class StackTraceResponseBody : ResponseBody
 	{
-		public StackFrame[] stackFrames { get; }
+		public StackFrame[] stackFrames { get; private set; }
 
 		public StackTraceResponseBody(List<StackFrame> frames = null) {
 			if (frames == null)
@@ -97,7 +97,7 @@ namespace OpenDebug
 
 	public class ScopesResponseBody : ResponseBody
 	{
-		public Scope[] scopes { get; }
+		public Scope[] scopes { get; private set; }
 
 		public ScopesResponseBody(List<Scope> scps = null) {
 			if (scps == null)
@@ -109,7 +109,7 @@ namespace OpenDebug
 
 	public class VariablesResponseBody : ResponseBody
 	{
-		public Variable[] variables { get; }
+		public Variable[] variables { get; private set; }
 
 		public VariablesResponseBody(List<Variable> vars = null) {
 			if (vars == null)
@@ -121,7 +121,7 @@ namespace OpenDebug
 
 	public class SourceResponseBody : ResponseBody
 	{
-		public string content { get; }
+		public string content { get; private set; }
 
 		public SourceResponseBody(string cont) {
 			content = cont;
@@ -130,7 +130,7 @@ namespace OpenDebug
 
 	public class ThreadsResponseBody : ResponseBody
 	{
-		public Thread[] threads { get; }
+		public Thread[] threads { get; private set; }
 
 		public ThreadsResponseBody(List<Thread> vars = null) {
 			if (vars == null)
@@ -142,8 +142,8 @@ namespace OpenDebug
 
 	public class EvaluateResponseBody : ResponseBody
 	{
-		public string result { get; }
-		public int variablesReference { get; }
+		public string result { get; private set; }
+		public int variablesReference { get; private set; }
 
 		public EvaluateResponseBody(string value, int reff = 0) {
 			result = value;
@@ -153,7 +153,7 @@ namespace OpenDebug
 
 	public class SetBreakpointsResponseBody : ResponseBody
 	{
-		public Breakpoint[] breakpoints { get; }
+		public Breakpoint[] breakpoints { get; private set; }
 
 		public SetBreakpointsResponseBody(List<Breakpoint> bpts = null) {
 			if (bpts == null)

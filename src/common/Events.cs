@@ -64,4 +64,27 @@ namespace OpenDebug
 			threadId = tid;
 		}
 	}
+
+	public class OutputEvent : DebugEvent
+	{
+		public string category { get; set; }
+		public string output { get; set; }
+
+		public enum Category { console, stdout, stderr };
+
+		public OutputEvent(Category cat, string outpt) : base("output") {
+			if (cat == Category.stdout)
+				category = "stdout";
+			else if (cat == Category.stderr)
+				category = "stderr";
+			else
+				category = "console";
+
+			output = outpt;
+		}
+
+		public OutputEvent(string outpt) : this(Category.console, outpt)
+		{
+		}
+	}
 }
