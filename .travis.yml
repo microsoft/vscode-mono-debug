@@ -1,3 +1,4 @@
 language: csharp
 solution: mono-debug.sln
-sudo: false
+script:
+  - ./build.sh build
