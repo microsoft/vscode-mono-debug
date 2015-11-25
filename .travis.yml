@@ -5,4 +5,4 @@ git:
 before_install:
   - git submodule update --init --recursive
 script:
-  - ./build.sh build
+  - make -f Makefile build
