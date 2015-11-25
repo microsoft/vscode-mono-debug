@@ -4,5 +4,4 @@ git:
   submodules: false
 before_install:
   - git submodule update --init --recursive
-script:
-  - make -f Makefile build
+  - cd sdb; make -f Makefile
