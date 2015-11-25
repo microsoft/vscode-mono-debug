@@ -1,4 +1,6 @@
 language: csharp
 solution: mono-debug.sln
+before_install:
+  - git submodule update --init --recursive
 script:
   - ./build.sh build
