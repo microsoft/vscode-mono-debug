@@ -15,7 +15,10 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://monacotools.visualstudio.com/DefaultCollection/Monaco/_git/vscode-mono-debug"
+		"url": "https://github.com/Microsoft/vscode-mono-debug.git"
+	},
+	"bugs": {
+		"url": "https://github.com/Microsoft/vscode-mono-debug/issues"
 	},
 	"devDependencies": {
 		"gulp": "^3.9.0",
