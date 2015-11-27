@@ -1,4 +1,6 @@
 # vscode-mono-debug
+[![build status](https://travis-ci.org/Microsoft/vscode-mono-debug.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-mono-debug)
+
 
 A simple VS Code debug adapter for the Mono VM based on the [SDB](https://github.com/mono/sdb) command line debugger.
 
