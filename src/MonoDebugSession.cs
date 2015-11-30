@@ -197,7 +197,7 @@ namespace OpenDebug
 					program = programPath;
 				}
 
-				var result = Terminal.LaunchInTerminal(workingDirectory, mono_path, mono_args, program, arguments, environmentVariables);
+				var result = Terminal.LaunchInTerminal(workingDirectory, mono_path, mono_args, program, arguments, env);
 				if (!result.Success) {
 					return Task.FromResult(new DebugResult(3002, "launch: can't launch terminal ({reason})", new { reason = result.Message }));
 				}
