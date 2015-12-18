@@ -48,7 +48,7 @@
 					"request": "launch",
 					"program": "${workspaceRoot}/program.exe",
 					"args": [],
-					"cwd": ".",
+					"cwd": "${workspaceRoot}",
 					"runtimeExecutable": null,
 					"env": { }
 				},
