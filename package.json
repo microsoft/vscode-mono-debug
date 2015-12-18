@@ -46,7 +46,7 @@
 					"name": "Launch",
 					"type": "mono",
 					"request": "launch",
-					"program": "program.exe",
+					"program": "${workspaceRoot}/program.exe",
 					"args": [],
 					"cwd": ".",
 					"runtimeExecutable": null,
