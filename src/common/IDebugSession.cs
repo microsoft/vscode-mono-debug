@@ -140,13 +140,10 @@ namespace OpenDebug
 						noOfSources++;
 					}
 				}
-				if (noOfSources == 1) {
+				if (noOfSources > 0) {
 					var src2 = new Source(name, path, reference);
 					var lines = args.lines.ToObject<int[]>();
 					return SetBreakpoints(src2, lines).Result;
-				}
-				if (noOfSources > 1) {
-					return new DebugResult(1011, "setBreakpoints: only one of 'name', 'path', or 'reference' may be specified in a 'source' object");
 				}
 				return new DebugResult(1012, "setBreakpoints: property 'source' is empty or misformed");
 
