@@ -11,7 +11,22 @@
 			],
 			"stopOnEntry": false,
 			"sourceMaps": true,
-			"outDir": "out"
+			"outDir": "${workspaceRoot}/out"
+		},
+		{
+			"name": "Run Tests",
+			"type": "node",
+			"request": "launch",
+			"cwd": "${workspaceRoot}",
+			"program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+			"args": [
+				"-u", "tdd",
+				"--timeout", "999999",
+				"--colors",
+				"./tests/out"
+			],
+			"sourceMaps": true,
+			"outDir": "${workspaceRoot}/tests/out"
 		}
 	]
 }

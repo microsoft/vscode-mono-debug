@@ -9,6 +9,8 @@ var git = require('git-rev-sync');
 var del = require('del');
 var runSequence = require('run-sequence');
 var vzip = require('gulp-vinyl-zip');
+var tsb = require('gulp-tsb');
+
 
 var MONO_BOM = [
 	'./bin/Release/ICSharpCode.NRefactory.CSharp.dll',
@@ -28,12 +30,13 @@ var MONO_BOM2 = [
 	'./ThirdPartyNotices.txt'
 ];
 
+
 var extensionDest = 'extension';
 var extensionBin = path.join(extensionDest, 'bin', 'Release');
 var uploadDest = 'upload/' + git.short();
 
 gulp.task('default', function(callback) {
-	runSequence('build', callback);
+	runSequence('build', 'internal-compile', callback);
 });
 
 gulp.task('build', function(callback) {
@@ -76,3 +79,17 @@ gulp.task('internal-upload', function() {
 		}));
 });
 
+//---- tests
+
+var compilation = tsb.create(path.join(__dirname, 'tests/tsconfig.json'), true);
+
+var sources = [
+	'tests/**/*.ts'
+];
+var outDest = 'tests/out';
+
+gulp.task('internal-compile', function() {
+	return gulp.src(sources, { base: '.' })
+		.pipe(compilation())
+		.pipe(gulp.dest(outDest));
+});
