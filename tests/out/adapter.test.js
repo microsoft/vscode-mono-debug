@@ -8,9 +8,6 @@ var DebugClient_1 = require('./DebugClient');
 suite('Node Debug Adapter', function () {
     var DEBUG_ADAPTER = './bin/Debug/monoDebug.exe';
     var PROJECT_ROOT = Path.join(__dirname, '../../');
-    var PROGRAM = Path.join(PROJECT_ROOT, 'tests/data/simple/Program.exe');
-    var SOURCE = Path.join(PROJECT_ROOT, 'tests/data/simple/Program.cs');
-    var BREAKPOINT_LINE = 2;
     var dc;
     setup(function (done) {
         dc = new DebugClient_1.DebugClient('mono', DEBUG_ADAPTER, 'mono');
@@ -45,14 +42,26 @@ suite('Node Debug Adapter', function () {
     });
     suite('launch', function () {
         test('should run program to the end', function () {
+            var PROGRAM = Path.join(PROJECT_ROOT, 'tests/data/simple/Program.exe');
             return Promise.all([
                 dc.configurationSequence(),
                 dc.launch({ program: PROGRAM }),
                 dc.waitForEvent('terminated')
             ]);
         });
+        test.only('should stop on debugger statement', function () {
+            var PROGRAM = Path.join(PROJECT_ROOT, 'tests/data/simple_break/Program.exe');
+            var DEBUGGER_LINE = 10;
+            return Promise.all([
+                dc.configurationSequence(),
+                dc.launch({ program: PROGRAM }),
+                dc.assertStoppedLocation('step', DEBUGGER_LINE)
+            ]);
+        });
     });
     suite('setBreakpoints', function () {
+        var PROGRAM = Path.join(PROJECT_ROOT, 'tests/data/simple/Program.exe');
+        var SOURCE = Path.join(PROJECT_ROOT, 'tests/data/simple/Program.cs');
         var BREAKPOINT_LINE = 10;
         test('should stop on a breakpoint', function () {
             return dc.hitBreakpoint({ program: PROGRAM, }, SOURCE, BREAKPOINT_LINE);
