@@ -1,7 +1,5 @@
 language: csharp
 
-solution: mono-debug.sln
-
 git:
   submodules: false
 
