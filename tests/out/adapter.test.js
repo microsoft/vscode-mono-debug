@@ -45,16 +45,16 @@ suite('Node Debug Adapter', function () {
             var PROGRAM = Path.join(PROJECT_ROOT, 'tests/data/simple/Program.exe');
             return Promise.all([
                 dc.configurationSequence(),
-                dc.launch({ program: PROGRAM }),
+                dc.launch({ program: PROGRAM, externalConsole: false }),
                 dc.waitForEvent('terminated')
             ]);
         });
-        test.only('should stop on debugger statement', function () {
+        test('should stop on debugger statement', function () {
             var PROGRAM = Path.join(PROJECT_ROOT, 'tests/data/simple_break/Program.exe');
             var DEBUGGER_LINE = 10;
             return Promise.all([
                 dc.configurationSequence(),
-                dc.launch({ program: PROGRAM }),
+                dc.launch({ program: PROGRAM, externalConsole: false }),
                 dc.assertStoppedLocation('step', DEBUGGER_LINE)
             ]);
         });
@@ -64,7 +64,7 @@ suite('Node Debug Adapter', function () {
         var SOURCE = Path.join(PROJECT_ROOT, 'tests/data/simple/Program.cs');
         var BREAKPOINT_LINE = 10;
         test('should stop on a breakpoint', function () {
-            return dc.hitBreakpoint({ program: PROGRAM, }, SOURCE, BREAKPOINT_LINE);
+            return dc.hitBreakpoint({ program: PROGRAM, externalConsole: false }, SOURCE, BREAKPOINT_LINE);
         });
     });
 });
