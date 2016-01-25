@@ -3,6 +3,7 @@
  *--------------------------------------------------------*/
 
 var gulp = require('gulp');
+var log = require('gulp-util').log;
 var path = require('path');
 var azure = require('gulp-azure-storage');
 var git = require('git-rev-sync');
@@ -11,6 +12,11 @@ var runSequence = require('run-sequence');
 var vzip = require('gulp-vinyl-zip');
 var tsb = require('gulp-tsb');
 
+var compilation = tsb.create(path.join(__dirname, 'tests/tsconfig.json'), true);
+
+var sources = [
+	'tests/**/*.ts'
+];
 
 var MONO_BOM = [
 	'./bin/Release/ICSharpCode.NRefactory.CSharp.dll',
@@ -30,17 +36,18 @@ var MONO_BOM2 = [
 	'./ThirdPartyNotices.txt'
 ];
 
+var outDest = 'tests/out';
 
 var extensionDest = 'extension';
 var extensionBin = path.join(extensionDest, 'bin', 'Release');
 var uploadDest = 'upload/' + git.short();
 
 gulp.task('default', function(callback) {
-	runSequence('build', 'internal-compile', callback);
+	runSequence('build', callback);
 });
 
 gulp.task('build', function(callback) {
-	runSequence('clean', 'internal-bin-copy', 'internal-package-copy', callback);
+	runSequence('clean', 'internal-build', callback);
 });
 
 gulp.task('zip', function(callback) {
@@ -55,7 +62,16 @@ gulp.task('clean', function() {
 	return del(['extension/**', 'upload/**']);
 });
 
+gulp.task('ts-watch', ['internal-build'], function(cb) {
+	log('Watching build sources...');
+	gulp.watch(sources, ['internal-compile']);
+});
+
 //---- internal
+
+gulp.task('internal-build', function(callback) {
+	runSequence('internal-compile', 'internal-bin-copy', 'internal-package-copy', callback);
+});
 
 gulp.task('internal-bin-copy', function() {
 	return gulp.src(MONO_BOM).pipe(gulp.dest(extensionBin));
@@ -63,6 +79,12 @@ gulp.task('internal-bin-copy', function() {
 
 gulp.task('internal-package-copy', function() {
 	return gulp.src(MONO_BOM2).pipe(gulp.dest(extensionDest));
+});
+
+gulp.task('internal-compile', function() {
+	return gulp.src(sources, { base: '.' })
+		.pipe(compilation())
+		.pipe(gulp.dest(outDest));
 });
 
 gulp.task('internal-zip', function(callback) {
@@ -77,19 +99,4 @@ gulp.task('internal-upload', function() {
 			key:        process.env.AZURE_STORAGE_ACCESS_KEY,
 			container:  'debuggers'
 		}));
-});
-
-//---- tests
-
-var compilation = tsb.create(path.join(__dirname, 'tests/tsconfig.json'), true);
-
-var sources = [
-	'tests/**/*.ts'
-];
-var outDest = 'tests/out';
-
-gulp.task('internal-compile', function() {
-	return gulp.src(sources, { base: '.' })
-		.pipe(compilation())
-		.pipe(gulp.dest(outDest));
 });
