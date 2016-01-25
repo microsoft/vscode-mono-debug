@@ -1,7 +1,13 @@
 language: csharp
+
 solution: mono-debug.sln
+
 git:
   submodules: false
+
 before_install:
   - git submodule update --init --recursive
   - cd sdb; make -f Makefile; cd ..
+
+script:
+  - npm test
