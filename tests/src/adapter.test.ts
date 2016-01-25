@@ -36,7 +36,6 @@ suite('Node Debug Adapter', () => {
 				done();
 			});
 		});
-
    });
 
 	suite('initialize', () => {
@@ -54,7 +53,6 @@ suite('Node Debug Adapter', () => {
 				done();
 			});
 		});
-
 	});
 
 	suite('launch', () => {
@@ -93,5 +91,4 @@ suite('Node Debug Adapter', () => {
 			return dc.hitBreakpoint({ program: PROGRAM, externalConsole: false }, SOURCE, BREAKPOINT_LINE);
 		});
 	});
-
 });
