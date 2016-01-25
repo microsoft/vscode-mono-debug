@@ -6,7 +6,7 @@
 var Path = require('path');
 var DebugClient_1 = require('./DebugClient');
 suite('Node Debug Adapter', function () {
-    var DEBUG_ADAPTER = './bin/Debug/monoDebug.exe';
+    var DEBUG_ADAPTER = './bin/Release/monoDebug.exe';
     var PROJECT_ROOT = Path.join(__dirname, '../../');
     var dc;
     setup(function (done) {
