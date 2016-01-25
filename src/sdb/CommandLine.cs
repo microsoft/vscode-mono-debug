@@ -27,31 +27,31 @@ using System.Threading;
 
 namespace Mono.Debugger.Client
 {
-    public static class CommandLine
-    {
-        internal static AutoResetEvent ResumeEvent { get; private set; }
+	public static class CommandLine
+	{
+		internal static AutoResetEvent ResumeEvent { get; private set; }
 
-        internal static bool InferiorExecuting { get; set; }
+		internal static bool InferiorExecuting { get; set; }
 
-        static CommandLine()
-        {
-            ResumeEvent = new AutoResetEvent(false);
-        }
-            
-        internal static void SetControlCHandler()
-        {
-        }
+		static CommandLine()
+		{
+			ResumeEvent = new AutoResetEvent(false);
+		}
 
-        internal static void UnsetControlCHandler()
-        {
-        }
+		internal static void SetControlCHandler()
+		{
+		}
 
-        public static void WaitForSuspend() {
-            if (InferiorExecuting)
-            {
-                ResumeEvent.WaitOne();
-                InferiorExecuting = false;
-            }
-        }
-    }
+		internal static void UnsetControlCHandler()
+		{
+		}
+
+		public static void WaitForSuspend() {
+			if (InferiorExecuting)
+			{
+				ResumeEvent.WaitOne();
+				InferiorExecuting = false;
+			}
+		}
+	}
 }
