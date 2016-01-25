@@ -12,6 +12,7 @@ using System.Net;
 using Mono.Debugger.Client;
 using Mono.Debugging.Client;
 using System.Collections.Concurrent;
+using Microsoft.CSharp.RuntimeBinder;
 
 
 namespace OpenDebug
@@ -166,7 +167,15 @@ namespace OpenDebug
 				}
 			}
 
-			if (Utilities.IsOSX() || Utilities.IsLinux()) {
+			bool externalConsole = true;
+			try {
+				externalConsole = (bool)args["externalConsole"];
+			}
+			catch (RuntimeBinderException) {
+				// ignore
+			}
+				
+			if (externalConsole && (Utilities.IsOSX() || Utilities.IsLinux())) {
 				const string host = "127.0.0.1";
 				int port = Utilities.FindFreePort(55555);
 
