@@ -13,7 +13,7 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 suite('Node Debug Adapter', () => {
 
 	const PROJECT_ROOT = Path.join(__dirname, '../../');
-	const DEBUG_ADAPTER = Path.join(PROJECT_ROOT, 'bin/Release/mono-debug.exe');
+	const DEBUG_ADAPTER = Path.join(PROJECT_ROOT, 'bin/Debug/mono-debug.exe');
 
 
 	let dc: DebugClient;
