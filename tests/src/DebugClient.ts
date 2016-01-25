@@ -8,6 +8,7 @@
 import cp = require('child_process');
 import assert = require('assert');
 import net = require('net');
+import * as fs from 'fs';
 import {DebugProtocol} from 'vscode-debugprotocol';
 import {ProtocolClient} from './ProtocolClient';
 
@@ -65,6 +66,12 @@ export class DebugClient extends ProtocolClient {
 				done();
 			});
 		} else {
+
+			if (!fs.existsSync(this._executable)) {
+				done(new Error("does not exist: " + this._executable));
+				return;
+			}
+
 			this._adapterProcess = cp.spawn(this._runtime, [ this._executable ], {
 					stdio: [
 						'pipe', 	// stdin

@@ -11,6 +11,7 @@ var __extends = (this && this.__extends) || function (d, b) {
 var cp = require('child_process');
 var assert = require('assert');
 var net = require('net');
+var fs = require('fs');
 var ProtocolClient_1 = require('./ProtocolClient');
 var DebugClient = (function (_super) {
     __extends(DebugClient, _super);
@@ -55,6 +56,10 @@ var DebugClient = (function (_super) {
             });
         }
         else {
+            if (!fs.existsSync(this._executable)) {
+                done(new Error("does not exist: " + this._executable));
+                return;
+            }
             this._adapterProcess = cp.spawn(this._runtime, [this._executable], {
                 stdio: [
                     'pipe',
