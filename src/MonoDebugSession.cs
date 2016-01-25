@@ -42,7 +42,7 @@ namespace OpenDebug
 			Configuration.Current.MaxConnectionAttempts = 10;
 			Configuration.Current.ConnectionAttemptInterval = 500;
 
-			Debugger.Callback = (type, sourceLocation, threadinfo) => {
+			Debugger.Callback = (type, sourceLocation, threadinfo, text) => {
 				int tid;
 				switch (type) {
 				case "TargetStopped":
@@ -83,6 +83,14 @@ namespace OpenDebug
 						_seenThreads.Remove(tid);
 					}
 					callback.Invoke(new ThreadEvent("exited", tid));
+					break;
+
+				case "Output":
+					callback.Invoke(new OutputEvent(OutputEvent.Category.stdout, text));
+					break;
+
+				case "ErrorOutput":
+					callback.Invoke(new OutputEvent(OutputEvent.Category.stderr, text));
 					break;
 
 				default:
@@ -167,7 +175,7 @@ namespace OpenDebug
 				}
 			}
 
-			bool externalConsole = true;
+			bool externalConsole = false;
 			try {
 				externalConsole = (bool)args["externalConsole"];
 			}

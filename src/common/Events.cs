@@ -70,16 +70,23 @@ namespace OpenDebug
 		public string category { get; set; }
 		public string output { get; set; }
 
-		public enum Category { console, stdout, stderr };
+		public enum Category { console, stdout, stderr, telemetry };
 
 		public OutputEvent(Category cat, string outpt) : base("output") {
-			if (cat == Category.stdout)
+			switch (cat) {
+			case Category.stdout:
 				category = "stdout";
-			else if (cat == Category.stderr)
+				break;
+			case Category.stderr:
 				category = "stderr";
-			else
+				break;
+			case Category.telemetry:
+				category = "telemetry";
+				break;
+			default:
 				category = "console";
-
+				break;
+			}
 			output = outpt;
 		}
 

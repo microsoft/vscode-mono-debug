@@ -102,6 +102,11 @@
 							"type": "object",
 							"description": "Environment variables passed to the program.",
 							"default": {}
+						},
+						"externalConsole": {
+							"type": "boolean",
+							"description": "Launch debug target in external console.",
+							"default": true
 						}
 					}
 				},
