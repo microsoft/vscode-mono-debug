@@ -74,8 +74,6 @@ var DebugClient = (function (_super) {
             this._adapterProcess.on('exit', function (code, signal) {
                 // console.log('exit');
                 if (code) {
-                    // throw new Error("debug adapter exit code: " + code);
-                    done(new Error("debug adapter exit code: " + code));
                 }
             });
             this.connect(this._adapterProcess.stdout, this._adapterProcess.stdin);

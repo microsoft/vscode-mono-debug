@@ -87,7 +87,7 @@ export class DebugClient extends ProtocolClient {
 				// console.log('exit');
 				if (code) {
 					// throw new Error("debug adapter exit code: " + code);
-					done(new Error("debug adapter exit code: " + code));
+					// done(new Error("debug adapter exit code: " + code));
 				}
 			});
 
