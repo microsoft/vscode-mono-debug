@@ -9,5 +9,8 @@ before_install:
   - git submodule update --init --recursive
   - cd sdb; make -f Makefile; cd ..
 
+install:
+  - npm install
+
 script:
   - npm test
