@@ -45,20 +45,20 @@ namespace OpenDebug
 
 			if (port > 0) {
 				// TCP/IP server
+				Console.Error.WriteLine("waiting for debug protocol on port " + port);
 				RunServer(port);
-			}
-
+			} else {
 			// stdin/stdout
-			Console.Error.WriteLine("waiting for v8 protocol on stdin/stdout");
+				Console.Error.WriteLine("waiting for debug protocol on stdin/stdout");
 			Dispatch(Console.OpenStandardInput(), Console.OpenStandardOutput());
+				System.Threading.Thread.Sleep(300);	// wait a bit on exit so that remaining output events can drain...
+			}
 		}
 
 		private static void RunServer(int port)
 		{
 			TcpListener serverSocket = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
 			serverSocket.Start();
-
-			Console.Error.WriteLine("waiting for v8 protocol on port " + port);
 
 			new System.Threading.Thread(() => {
 				while (true) {
