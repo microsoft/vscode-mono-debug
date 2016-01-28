@@ -13,9 +13,10 @@ before_install:
   - nvm install 0.12
   - nvm use 0.12
 
-
 install:
+  - nuget restore solution-name.sln
   - npm install
 
 script:
+  - xbuild /p:Configuration=Release mono-debug.sln
   - npm test
