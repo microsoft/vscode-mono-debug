@@ -203,7 +203,7 @@ namespace OpenDebug
 
 		public virtual Task<DebugResult> Disconnect()
 		{
-			return Task.FromResult(new DebugResult(new TerminatedEvent()));
+			return Task.FromResult(new DebugResult());
 		}
 
 		public virtual Task<DebugResult> SetExceptionBreakpoints(string[] filter)

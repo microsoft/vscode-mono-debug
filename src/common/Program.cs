@@ -48,9 +48,9 @@ namespace OpenDebug
 				Console.Error.WriteLine("waiting for debug protocol on port " + port);
 				RunServer(port);
 			} else {
-			// stdin/stdout
+				// stdin/stdout
 				Console.Error.WriteLine("waiting for debug protocol on stdin/stdout");
-			Dispatch(Console.OpenStandardInput(), Console.OpenStandardOutput());
+				Dispatch(Console.OpenStandardInput(), Console.OpenStandardOutput());
 				System.Threading.Thread.Sleep(300);	// wait a bit on exit so that remaining output events can drain...
 			}
 		}
@@ -96,7 +96,7 @@ namespace OpenDebug
 
 			IDebugSession debugSession = null;
 
-			var r = protocol.Start((string command, dynamic args, IResponder responder) => {
+			var r = protocol.Start((string command, dynamic args, V8Response response) => {
 
 				if (args == null) {
 					args = new { };
@@ -105,13 +105,13 @@ namespace OpenDebug
 				if (command == "initialize") {
 					string adapterID = Utilities.GetString(args, "adapterID");
 					if (adapterID == null) {
-						responder.SetBody(new ErrorResponseBody(new Message(1101, "initialize: property 'adapterID' is missing or empty")));
+						response.SetBody(new ErrorResponseBody(new Message(1101, "initialize: property 'adapterID' is missing or empty")));
 						return;
 					}
 
 					debugSession = EngineFactory.CreateDebugSession(adapterID, (e) => protocol.SendEvent(e.type, e));
 					if (debugSession == null) {
-						responder.SetBody(new ErrorResponseBody(new Message(1103, "initialize: can't create debug session for adapter '{_id}'", new { _id = adapterID })));
+						response.SetBody(new ErrorResponseBody(new Message(1103, "initialize: can't create debug session for adapter '{_id}'", new { _id = adapterID })));
 						return;
 					}
 				}
@@ -121,17 +121,11 @@ namespace OpenDebug
 					try {
 						DebugResult dr = debugSession.Dispatch(command, args);
 						if (dr != null) {
-							responder.SetBody(dr.Body);
-
-							if (dr.Events != null) {
-								foreach (var e in dr.Events) {
-									responder.AddEvent(e.type, e);
-								}
-							}
+							response.SetBody(dr.Body);
 						}
 					}
 					catch (Exception e) {
-						responder.SetBody(new ErrorResponseBody(new Message(1104, "error while processing request '{_request}' (exception: {_exception})", new { _request = command, _exception = e.Message })));
+						response.SetBody(new ErrorResponseBody(new Message(1104, "error while processing request '{_request}' (exception: {_exception})", new { _request = command, _exception = e.Message })));
 					}
 
 					if (command == "disconnect") {

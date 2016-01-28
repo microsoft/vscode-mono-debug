@@ -16,21 +16,12 @@ namespace OpenDebug
 	{
 		public bool Success { get; private set; } // boolean indicating success
 		public ResponseBody Body { get; private set; }	// depending on value of success either the result or an error
-		public List<DebugEvent> Events { get; private set; } // send this event after returning the result
 
 		/*
 		 * A success result without additional data.
 		 */
 		public DebugResult() {
 			Success = true;
-		}
-
-		/*
-		 * A success result with as additional event.
-		 */
-		public DebugResult(DebugEvent ev) {
-			Success = true;
-			Add(ev);
 		}
 
 		/*
@@ -50,19 +41,6 @@ namespace OpenDebug
 		public DebugResult(int id, string format, dynamic arguments = null) {
 			Success = false;
 			Body = new ErrorResponseBody(new Message(id, format, arguments));
-		}
-
-		/*
-		 * Add a DebugEvent to this request result.
-		 * Events are fired after the result is returned to the caller of the request.
-		 */
-		public void Add(DebugEvent ev) {
-			if (ev != null) {
-				if (Events == null) {
-					Events = new List<DebugEvent>();
-				}
-				Events.Add(ev);
-			}
 		}
 	}
 
