@@ -227,6 +227,34 @@ var DebugClient = (function (_super) {
             return response;
         });
     };
+    /*
+     * Returns a promise that will resolve if an event with a specific type was received within the given timeout.
+     * The promise will be rejected if a timeout occurs.
+     */
+    DebugClient.prototype.assertOutput = function (category, expected, timeout) {
+        var _this = this;
+        if (timeout === void 0) { timeout = 3000; }
+        return new Promise(function (resolve, reject) {
+            var output = '';
+            _this.on('output', function (event) {
+                var e = event;
+                if (e.body.category === category) {
+                    output += e.body.output;
+                    if (output === expected) {
+                        resolve(event);
+                    }
+                    else if (expected.indexOf(output) !== 0) {
+                        reject(new Error("received data no longer a prefix of expected"));
+                    }
+                }
+            });
+            if (!_this._socket) {
+                setTimeout(function () {
+                    reject(new Error("no matching event 'output' received after " + timeout + " ms"));
+                }, timeout);
+            }
+        });
+    };
     // ---- scenarios ---------------------------------------------------------------------------------------------------------
     /**
      * Returns a promise that will resolve if a configurable breakpoint has been hit within 3000ms

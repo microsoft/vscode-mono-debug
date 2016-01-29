@@ -269,6 +269,33 @@ export class DebugClient extends ProtocolClient {
 		});
 	}
 
+	/*
+	 * Returns a promise that will resolve if an event with a specific type was received within the given timeout.
+	 * The promise will be rejected if a timeout occurs.
+	 */
+	public assertOutput(category: string, expected: string, timeout: number = 3000): Promise<DebugProtocol.Event> {
+
+		return new Promise((resolve, reject) => {
+			let output = '';
+			this.on('output', event => {
+				const e = <DebugProtocol.OutputEvent> event;
+				if (e.body.category === category) {
+					output += e.body.output;
+					if (output === expected) {
+						resolve(event);
+					} else if (expected.indexOf(output) !== 0) {
+						reject(new Error(`received data no longer a prefix of expected`));
+					}
+				}
+			});
+			if (!this._socket) {	// no timeouts if debugging the tests
+				setTimeout(() => {
+					reject(new Error(`no matching event 'output' received after ${timeout} ms`));
+				}, timeout);
+			}
+		})
+	}
+
 	// ---- scenarios ---------------------------------------------------------------------------------------------------------
 
 	/**

@@ -63,7 +63,7 @@ suite('Node Debug Adapter', () => {
 
 			return Promise.all([
 				dc.configurationSequence(),
-				dc.launch({ program: PROGRAM, externalConsole: false }),
+				dc.launch({ program: PROGRAM }),
 				dc.waitForEvent('terminated')
 			]);
 		});
@@ -75,7 +75,7 @@ suite('Node Debug Adapter', () => {
 
 			return Promise.all([
 				dc.configurationSequence(),
-				dc.launch({ program: PROGRAM, externalConsole: false }),
+				dc.launch({ program: PROGRAM }),
 				dc.assertStoppedLocation('step', DEBUGGER_LINE)
 			]);
 		});
@@ -88,7 +88,23 @@ suite('Node Debug Adapter', () => {
 		const BREAKPOINT_LINE = 10;
 
 		test('should stop on a breakpoint', () => {
-			return dc.hitBreakpoint({ program: PROGRAM, externalConsole: false }, SOURCE, BREAKPOINT_LINE);
+			return dc.hitBreakpoint({ program: PROGRAM }, SOURCE, BREAKPOINT_LINE);
+		});
+	});
+
+	suite('output event', () => {
+
+		const PROGRAM = Path.join(PROJECT_ROOT, 'tests/data/output/Output.exe');
+		const STDOUT = "Hello stdout 0\nHello stdout 1\nHello stdout 2\n";
+		const STDERR = "Hello stderr 0\nHello stderr 1\nHello stderr 2\n";
+
+		test.only('stdout and stderr events should be complete and in correct order', () => {
+			return Promise.all([
+				dc.configurationSequence(),
+				dc.launch({ program: PROGRAM }),
+				dc.assertOutput('stdout', STDOUT),
+				dc.assertOutput('stderr', STDERR)
+			]);
 		});
 	});
 });
