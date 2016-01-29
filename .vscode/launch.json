@@ -25,6 +25,9 @@
 				"--colors",
 				"./tests/out"
 			],
+			"runtimeArgs": [
+				"--nolazy"
+			],
 			"sourceMaps": true,
 			"outDir": "${workspaceRoot}/tests/out"
 		}
