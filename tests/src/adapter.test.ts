@@ -98,7 +98,7 @@ suite('Node Debug Adapter', () => {
 		const STDOUT = "Hello stdout 0\nHello stdout 1\nHello stdout 2\n";
 		const STDERR = "Hello stderr 0\nHello stderr 1\nHello stderr 2\n";
 
-		test.only('stdout and stderr events should be complete and in correct order', () => {
+		test('stdout and stderr events should be complete and in correct order', () => {
 			return Promise.all([
 				dc.configurationSequence(),
 				dc.launch({ program: PROGRAM }),
