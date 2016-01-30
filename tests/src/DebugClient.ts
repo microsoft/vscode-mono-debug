@@ -8,7 +8,6 @@
 import cp = require('child_process');
 import assert = require('assert');
 import net = require('net');
-import * as fs from 'fs';
 import {DebugProtocol} from 'vscode-debugprotocol';
 import {ProtocolClient} from './ProtocolClient';
 
@@ -66,12 +65,6 @@ export class DebugClient extends ProtocolClient {
 				done();
 			});
 		} else {
-
-			if (!fs.existsSync(this._executable)) {
-				done(new Error("does not exist: " + this._executable));
-				return;
-			}
-
 			this._adapterProcess = cp.spawn(this._runtime, [ this._executable ], {
 					stdio: [
 						'pipe', 	// stdin
@@ -91,9 +84,7 @@ export class DebugClient extends ProtocolClient {
 				console.log(err);
 			});
 			this._adapterProcess.on('exit', (code: number, signal: string) => {
-				// console.log('exit');
 				if (code) {
-					// throw new Error("debug adapter exit code: " + code);
 					// done(new Error("debug adapter exit code: " + code));
 				}
 			});
@@ -270,8 +261,9 @@ export class DebugClient extends ProtocolClient {
 	}
 
 	/*
-	 * Returns a promise that will resolve if an event with a specific type was received within the given timeout.
-	 * The promise will be rejected if a timeout occurs.
+	 * Returns a promise that will resolve if enough output events with the given category have been received
+	 * and the concatenated data match the expected data.
+	 * The promise will be rejected as soon as the received data cannot match the expected data or if a timeout occurs.
 	 */
 	public assertOutput(category: string, expected: string, timeout: number = 3000): Promise<DebugProtocol.Event> {
 
@@ -284,13 +276,14 @@ export class DebugClient extends ProtocolClient {
 					if (output === expected) {
 						resolve(event);
 					} else if (expected.indexOf(output) !== 0) {
-						reject(new Error(`received data no longer a prefix of expected`));
+						const sanitize = (s: string) => s.toString().replace(/\r/mg, '\\r').replace(/\n/mg, '\\n');
+						reject(new Error(`received data '${sanitize(output)}' is not a prefix of the expected data '${sanitize(expected)}'`));
 					}
 				}
 			});
 			if (!this._socket) {	// no timeouts if debugging the tests
 				setTimeout(() => {
-					reject(new Error(`no matching event 'output' received after ${timeout} ms`));
+					reject(new Error(`not enough output data received after ${timeout} ms`));
 				}, timeout);
 			}
 		})
@@ -320,7 +313,7 @@ export class DebugClient extends ProtocolClient {
 				if (this._supportsConfigurationDoneRequest) {
 					return this.configurationDoneRequest();
 				} else {
-					// if debug adapter doesn't support the configurationDoneRequest we has to send the setExceptionBreakpointsRequest.
+					// if debug adapter doesn't support the configurationDoneRequest we have to send the setExceptionBreakpointsRequest.
 					return this.setExceptionBreakpointsRequest({ filters: [ 'all' ] });
 				}
 			}),

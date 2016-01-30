@@ -21,13 +21,13 @@ suite('Node Debug Adapter', () => {
 	setup(done => {
 		dc = new DebugClient('mono', DEBUG_ADAPTER, 'mono');
 		dc.start(done);
-   });
+	});
 
-   teardown(done => {
-	   dc.stop(done);
-   });
+	teardown(done => {
+		dc.stop(done);
+	});
 
-   suite('basic', () => {
+	suite('basic', () => {
 
 		test('unknown request should produce error', done => {
 			dc.send('illegal_request').then(() => {
@@ -36,7 +36,7 @@ suite('Node Debug Adapter', () => {
 				done();
 			});
 		});
-   });
+	});
 
 	suite('initialize', () => {
 
@@ -92,18 +92,16 @@ suite('Node Debug Adapter', () => {
 		});
 	});
 
-	suite('output event', () => {
+	suite('output events', () => {
 
 		const PROGRAM = Path.join(PROJECT_ROOT, 'tests/data/output/Output.exe');
-		const STDOUT = "Hello stdout 0\nHello stdout 1\nHello stdout 2\n";
-		const STDERR = "Hello stderr 0\nHello stderr 1\nHello stderr 2\n";
 
 		test('stdout and stderr events should be complete and in correct order', () => {
 			return Promise.all([
 				dc.configurationSequence(),
 				dc.launch({ program: PROGRAM }),
-				dc.assertOutput('stdout', STDOUT),
-				dc.assertOutput('stderr', STDERR)
+				dc.assertOutput('stdout', "Hello stdout 0\nHello stdout 1\nHello stdout 2\n"),
+				dc.assertOutput('stderr', "Hello stderr 0\nHello stderr 1\nHello stderr 2\n")
 			]);
 		});
 	});
