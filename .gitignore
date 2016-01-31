@@ -1,6 +1,6 @@
-tests/out/
-extension/
-upload/
+/tests/out/
+/extension/
+/upload/
 *.vsix
 
 ## Ignore Visual Studio temporary files, build results, and
