@@ -100,8 +100,8 @@ suite('Node Debug Adapter', () => {
 			return Promise.all([
 				dc.configurationSequence(),
 				dc.launch({ program: PROGRAM }),
-				dc.assertOutput('stdout', "Hello stdout 0\nHello stdout 1\nHello stdout 2\n")//,
-				//dc.assertOutput('stderr', "Hello stderr 0\nHello stderr 1\nHello stderr 2\n")
+				dc.assertOutput('stdout', "Hello stdout 0\nHello stdout 1\nHello stdout 2\n"),
+				dc.assertOutput('stderr', "Hello stderr 0\nHello stderr 1\nHello stderr 2\n")
 			]);
 		});
 	});

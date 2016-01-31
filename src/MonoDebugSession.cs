@@ -623,7 +623,10 @@ namespace OpenDebug
 
 		private void SendOutput(OutputEvent.Category category, string data) {
 			if (!String.IsNullOrEmpty(data) && _callback != null) {
-				_callback.Invoke(new OutputEvent(category, data + '\n'));
+				if (data[data.Length-1] != '\n') {
+					data += '\n';
+				}
+				_callback.Invoke(new OutputEvent(category, data));
 			}
 		}
 
