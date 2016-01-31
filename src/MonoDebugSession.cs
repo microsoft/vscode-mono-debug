@@ -26,15 +26,21 @@ namespace OpenDebug
 		};
 		private const int MAX_CHILDREN = 100;
 
+		private Action<DebugEvent> _callback;
+		private System.Diagnostics.Process _process;
 		private Handles<ObjectValue[]> _variableHandles;
 		private Handles<Mono.Debugging.Client.StackFrame> _frameHandles;
 		private ObjectValue _exception;
 		private Dictionary<int, Thread> _seenThreads = new Dictionary<int, Thread>();
 		private bool _attachMode = false;
+		private bool _terminated = false;
+		private bool _stderrEOF = true;
+		private bool _stdoutEOF = true;
 
 
 		public SDBDebugSession(Action<DebugEvent> callback) : base(true)
 		{
+			_callback = callback;
 			_variableHandles = new Handles<ObjectValue[]>();
 			_frameHandles = new Handles<Mono.Debugging.Client.StackFrame>();
 			_seenThreads = new Dictionary<int, Thread>();
@@ -66,7 +72,7 @@ namespace OpenDebug
 					break;
 
 				case "TargetExited":
-					callback.Invoke(new TerminatedEvent());
+					Terminate("target exited");
 					break;
 
 				case "TargetThreadStarted":
@@ -86,11 +92,11 @@ namespace OpenDebug
 					break;
 
 				case "Output":
-					callback.Invoke(new OutputEvent(OutputEvent.Category.stdout, text));
+					SendOutput(OutputEvent.Category.stdout, text);
 					break;
 
 				case "ErrorOutput":
-					callback.Invoke(new OutputEvent(OutputEvent.Category.stderr, text));
+					SendOutput(OutputEvent.Category.stderr, text);
 					break;
 
 				default:
@@ -182,8 +188,8 @@ namespace OpenDebug
 			catch (RuntimeBinderException) {
 				// ignore
 			}
-				
-			if (externalConsole && (Utilities.IsOSX() || Utilities.IsLinux())) {
+
+			if (Utilities.IsOSX() || Utilities.IsLinux()) {
 				const string host = "127.0.0.1";
 				int port = Utilities.FindFreePort(55555);
 
@@ -214,9 +220,59 @@ namespace OpenDebug
 					program = programPath;
 				}
 
-				var result = Terminal.LaunchInTerminal(workingDirectory, mono_path, mono_args, program, arguments, env);
-				if (!result.Success) {
-					return Task.FromResult(new DebugResult(3002, "launch: can't launch terminal ({reason})", new { reason = result.Message }));
+				if (externalConsole) {
+					var result = Terminal.LaunchInTerminal(workingDirectory, mono_path, mono_args, program, arguments, env);
+					if (!result.Success) {
+						return Task.FromResult(new DebugResult(3002, "launch: can't launch terminal ({reason})", new { reason = result.Message }));
+					}
+				} else {
+
+					_process = new System.Diagnostics.Process();
+					_process.StartInfo.CreateNoWindow = true;
+					_process.StartInfo.UseShellExecute = false;
+					_process.StartInfo.WorkingDirectory = workingDirectory;
+					_process.StartInfo.FileName = mono_path;
+					_process.StartInfo.Arguments = string.Format("{0} {1} {2}", Terminal.ConcatArgs(mono_args), Terminal.Quote(program), Terminal.ConcatArgs(arguments));
+
+					_stdoutEOF = false;
+					_process.StartInfo.RedirectStandardOutput = true;
+					_process.OutputDataReceived += (object sender, System.Diagnostics.DataReceivedEventArgs e) => {
+						if (e.Data == null) {
+							_stdoutEOF = true;
+						}
+						SendOutput(OutputEvent.Category.stdout, e.Data);
+					};
+
+					_stderrEOF = false;
+					_process.StartInfo.RedirectStandardError = true;
+					_process.ErrorDataReceived += (object sender, System.Diagnostics.DataReceivedEventArgs e) => {
+						if (e.Data == null) {
+							_stderrEOF = true;
+						}
+						SendOutput(OutputEvent.Category.stderr, e.Data);
+					};
+
+					_process.EnableRaisingEvents = true;
+					_process.Exited += (object sender, EventArgs e) => {
+						Terminate("node process exited");
+					};
+
+					if (env != null) {
+						// we cannot set the env vars on the process StartInfo because we need to set StartInfo.UseShellExecute to true at the same time.
+						// instead we set the env vars on OpenDebug itself because we know that OpenDebug lives as long as a debug session.
+						foreach (var entry in env) {
+							System.Environment.SetEnvironmentVariable(entry.Key, entry.Value);
+						}
+					}
+
+					try {
+						_process.Start();
+						_process.BeginOutputReadLine();
+						_process.BeginErrorReadLine();
+					}
+					catch (Exception e) {
+						return Task.FromResult(new DebugResult(3002, "launch: can't launch terminal ({reason})", new { reason = e.Message }));
+					}
 				}
 
 				Debugger.Connect(IPAddress.Parse(host), port);
@@ -291,11 +347,16 @@ namespace OpenDebug
 				Debugger.Disconnect();
 			} else {
 				// Let's not leave dead Mono processes behind...
-				Debugger.Pause();
-				Debugger.Kill();
+				if (_process != null) {
+					_process.Kill();
+					_process = null;
+				} else {
+					Debugger.Pause();
+					Debugger.Kill();
 
-				while (!Debugger.DebuggeeKilled) {
-					System.Threading.Thread.Sleep(10);
+					while (!Debugger.DebuggeeKilled) {
+						System.Threading.Thread.Sleep(10);
+					}
 				}
 			}
 
@@ -559,6 +620,28 @@ namespace OpenDebug
 		}
 
 		//---- private ------------------------------------------
+
+		private void SendOutput(OutputEvent.Category category, string data) {
+			if (!String.IsNullOrEmpty(data) && _callback != null) {
+				_callback.Invoke(new OutputEvent(category, data + '\n'));
+			}
+		}
+
+		private void Terminate(string reason) {
+			if (!_terminated) {
+
+				// wait until we've seen the end of stdout and stderr
+				for (int i = 0; i < 100 && (_stdoutEOF == false || _stderrEOF == false); i++) {
+					System.Threading.Thread.Sleep(100);
+				}
+
+				if (_callback != null) {
+					_callback.Invoke(new TerminatedEvent());
+				}
+				_terminated = true;
+				_process = null;
+			}
+		}
 
 		private StoppedEvent CreateStoppedEvent(string reason, SourceLocation sl, ThreadInfo ti, string text = null)
 		{

@@ -51,7 +51,6 @@ namespace OpenDebug
 				// stdin/stdout
 				Console.Error.WriteLine("waiting for debug protocol on stdin/stdout");
 				Dispatch(Console.OpenStandardInput(), Console.OpenStandardOutput());
-				System.Threading.Thread.Sleep(300);	// wait a bit on exit so that remaining output events can drain...
 			}
 		}
 

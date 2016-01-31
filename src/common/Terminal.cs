@@ -285,7 +285,7 @@ namespace OpenDebug
 			return result;
 		}
 
-		private static string ConcatArgs(string[] args)
+		public static string ConcatArgs(string[] args)
 		{
 			var arg = "";
 			if (args != null) {
