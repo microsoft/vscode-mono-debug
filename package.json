@@ -57,6 +57,7 @@
 					"program": "${workspaceRoot}/program.exe",
 					"args": [],
 					"cwd": "${workspaceRoot}",
+                    "preLaunchTask": "",
 					"runtimeExecutable": null,
 					"env": { },
 					"externalConsole": false
