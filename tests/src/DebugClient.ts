@@ -9,7 +9,7 @@ import cp = require('child_process');
 import assert = require('assert');
 import net = require('net');
 import {DebugProtocol} from 'vscode-debugprotocol';
-import {ProtocolClient} from './ProtocolClient';
+import {ProtocolClient} from './protocolClient';
 
 
 export class DebugClient extends ProtocolClient {
@@ -144,6 +144,10 @@ export class DebugClient extends ProtocolClient {
 		return this.send('setBreakpoints', args);
 	}
 
+	public setFunctionBreakpointsRequest(args: DebugProtocol.SetFunctionBreakpointsArguments): Promise<DebugProtocol.SetFunctionBreakpointsResponse> {
+		return this.send('setFunctionBreakpoints', args);
+	}
+
 	public setExceptionBreakpointsRequest(args: DebugProtocol.SetExceptionBreakpointsArguments): Promise<DebugProtocol.SetExceptionBreakpointsResponse> {
 		return this.send('setExceptionBreakpoints', args);
 	}
@@ -237,7 +241,7 @@ export class DebugClient extends ProtocolClient {
 		});
 	}
 
-	private configurationDone() : Promise<any> {
+	private configurationDone() : Promise<DebugProtocol.Response> {
 		if (this._supportsConfigurationDoneRequest) {
 			return this.configurationDoneRequest();
 		} else {
@@ -251,7 +255,7 @@ export class DebugClient extends ProtocolClient {
 	 * and the event's reason and line number was asserted.
 	 * The promise will be rejected if a timeout occurs, the assertions fail, or if the 'stackTrace' request fails.
 	 */
-	public assertStoppedLocation(reason: string, line: number) : Promise<DebugProtocol.StackTraceResponse> {
+	public assertStoppedLocation(reason: string, expected: { path?: string, line?: number, column?: number } ) : Promise<DebugProtocol.StackTraceResponse> {
 
 		return this.waitForEvent('stopped').then(event => {
 			assert.equal(event.body.reason, reason);
@@ -259,7 +263,16 @@ export class DebugClient extends ProtocolClient {
 				threadId: event.body.threadId
 			});
 		}).then(response => {
-			assert.equal(response.body.stackFrames[0].line, line);
+			const frame = response.body.stackFrames[0];
+			if (typeof expected.path === 'string') {
+				assert.equal(frame.source.path, expected.path, "stopped location: path mismatch");
+			}
+			if (typeof expected.line === 'number') {
+				assert.equal(frame.line, expected.line, "stopped location: line mismatch");
+			}
+			if (typeof expected.column === 'number') {
+				assert.equal(frame.column, expected.column, "stopped location: column mismatch");
+			}
 			return response;
 		});
 	}
@@ -277,7 +290,7 @@ export class DebugClient extends ProtocolClient {
 				const e = <DebugProtocol.OutputEvent> event;
 				if (e.body.category === category) {
 					output += e.body.output;
-					if (output === expected) {
+					if (output.indexOf(expected) === 0) {
 						resolve(event);
 					} else if (expected.indexOf(output) !== 0) {
 						const sanitize = (s: string) => s.toString().replace(/\r/mg, '\\r').replace(/\n/mg, '\\n');
@@ -300,26 +313,38 @@ export class DebugClient extends ProtocolClient {
 	 * and the event's reason and line number was asserted.
 	 * The promise will be rejected if a timeout occurs, the assertions fail, or if the requests fails.
 	 */
-	public hitBreakpoint(launchArgs: any, program: string, line: number) : Promise<any> {
+	public hitBreakpoint(launchArgs: any, location: { path: string, line: number, column?: number, verified?: boolean }, expected?: { path?: string, line?: number, column?: number, verified?: boolean }) : Promise<any> {
 
 		return Promise.all([
 
 			this.waitForEvent('initialized').then(event => {
 				return this.setBreakpointsRequest({
-					lines: [ line ],
-					breakpoints: [ { line: line } ],
-					source: { path: program }
+					lines: [ location.line ],
+					breakpoints: [ { line: location.line, column: location.column } ],
+					source: { path: location.path }
 				});
 			}).then(response => {
+
 				const bp = response.body.breakpoints[0];
-				assert.equal(bp.verified, true);
-				assert.equal(bp.line, line);
+
+				const verified = (typeof location.verified === 'boolean') ? location.verified : true;
+				assert.equal(bp.verified, verified, "breakpoint verification mismatch: verified");
+
+				if (bp.source && bp.source.path) {
+					assert.equal(bp.source.path, location.path, "breakpoint verification mismatch: path");
+				}
+				if (typeof bp.line === 'number') {
+					assert.equal(bp.line, location.line, "breakpoint verification mismatch: line");
+				}
+				if (typeof location.column === 'number' && typeof bp.column === 'number') {
+					assert.equal(bp.column, location.column, "breakpoint verification mismatch: column");
+				}
 				return this.configurationDone();
 			}),
 
 			this.launch(launchArgs),
 
-			this.assertStoppedLocation('breakpoint', line)
+			this.assertStoppedLocation('breakpoint', expected || location)
 
 		]);
 	}

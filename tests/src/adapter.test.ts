@@ -13,6 +13,8 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 suite('Node Debug Adapter', () => {
 
 	const PROJECT_ROOT = Path.join(__dirname, '../../');
+	const DATA_ROOT = Path.join(PROJECT_ROOT, 'tests/data/');
+
 	const DEBUG_ADAPTER = Path.join(PROJECT_ROOT, 'bin/Release/mono-debug.exe');
 
 
@@ -59,7 +61,7 @@ suite('Node Debug Adapter', () => {
 
 		test('should run program to the end', () => {
 
-			const PROGRAM = Path.join(PROJECT_ROOT, 'tests/data/simple/Program.exe');
+			const PROGRAM = Path.join(DATA_ROOT, 'simple/Program.exe');
 
 			return Promise.all([
 				dc.configurationSequence(),
@@ -70,7 +72,7 @@ suite('Node Debug Adapter', () => {
 
 		test('should stop on debugger statement', () => {
 
-			const PROGRAM = Path.join(PROJECT_ROOT, 'tests/data/simple_break/Program.exe');
+			const PROGRAM = Path.join(DATA_ROOT, 'simple_break/Program.exe');
 			const DEBUGGER_LINE = 10;
 
 			return Promise.all([
@@ -83,18 +85,18 @@ suite('Node Debug Adapter', () => {
 
 	suite('setBreakpoints', () => {
 
-		const PROGRAM = Path.join(PROJECT_ROOT, 'tests/data/simple/Program.exe');
-		const SOURCE = Path.join(PROJECT_ROOT, 'tests/data/simple/Program.cs');
+		const PROGRAM = Path.join(DATA_ROOT, 'simple/Program.exe');
+		const SOURCE = Path.join(DATA_ROOT, 'simple/Program.cs');
 		const BREAKPOINT_LINE = 10;
 
 		test('should stop on a breakpoint', () => {
-			return dc.hitBreakpoint({ program: PROGRAM }, SOURCE, BREAKPOINT_LINE);
+			return dc.hitBreakpoint({ program: PROGRAM }, { path: SOURCE, line: BREAKPOINT_LINE } );
 		});
 	});
 
 	suite('output events', () => {
 
-		const PROGRAM = Path.join(PROJECT_ROOT, 'tests/data/output/Output.exe');
+		const PROGRAM = Path.join(DATA_ROOT, 'output/Output.exe');
 
 		test('stdout and stderr events should be complete and in correct order', () => {
 			return Promise.all([

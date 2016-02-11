@@ -18,6 +18,7 @@ namespace OpenDebug
 		Task<DebugResult> Disconnect();
 
 		Task<DebugResult> SetBreakpoints(Source source, int[] lines);
+		Task<DebugResult> SetFunctionBreakpoints();
 		Task<DebugResult> SetExceptionBreakpoints(string[] filter);
 
 		Task<DebugResult> Continue(int threadId);
@@ -147,6 +148,9 @@ namespace OpenDebug
 				}
 				return new DebugResult(1012, "setBreakpoints: property 'source' is empty or misformed");
 
+			case "setFunctionBreakpoints":
+				return SetFunctionBreakpoints().Result;
+
 			case "setExceptionBreakpoints":
 				string[] filters = null;
 				if (args.filters != null) {
@@ -202,6 +206,11 @@ namespace OpenDebug
 		}
 
 		public virtual Task<DebugResult> Disconnect()
+		{
+			return Task.FromResult(new DebugResult());
+		}
+
+		public virtual Task<DebugResult> SetFunctionBreakpoints()
 		{
 			return Task.FromResult(new DebugResult());
 		}
