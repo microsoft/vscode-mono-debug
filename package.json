@@ -67,7 +67,7 @@
 					"type": "mono",
 					"request": "attach",
 					"address": "localhost",
-					"port": 5858
+					"port": 55555
 				}
 			],
 			"configurationAttributes": {
@@ -117,7 +117,7 @@
 						"port": {
 							"type": "number",
 							"description": "Port to attach to.",
-							"default": "undefined"
+							"default": 55555
 						},
 						"address": {
 							"type": "string",
