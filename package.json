@@ -11,7 +11,7 @@
 	"private": true,
 	"scripts": {
 		"prepublish": "make build",
-		"compile": "tsc -p ./tests",
+		"compile": "make build",
 		"watch": "tsc -w -p ./tests",
 		"test": "node ./node_modules/mocha/bin/mocha --timeout 999999 -u tdd ./tests/out/"
 	},

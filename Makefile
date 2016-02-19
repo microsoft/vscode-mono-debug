@@ -16,10 +16,11 @@ $SDB_EXE: $SDB_MAKE
 	cd sdb; make -f Makefile
 
 build: $MONO_DEBUG
+	tsc -p ./tests
 	@echo "build finished"
 
 $MONO_DEBUG: $SDB_EXE
-	xbuild /p:Configuration=Release
+	xbuild /p:Configuration=Release mono-debug.sln
 
 
 clean:
