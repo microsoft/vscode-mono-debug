@@ -1,9 +1,9 @@
 {
 	"name": "mono-debug",
-	"displayName": "Mono Debug",
+	"displayName": "%extension.displayName%",
 	"version": "0.10.4",
-	"publisher": "isidor",
-	"description": "Visual Studio Code debug adapter for mono",
+	"publisher": "andreweinand",
+	"description": "%extension.description%",
 	"author": {
 		"name": "Microsoft Corporation"
 	},
@@ -41,7 +41,7 @@
 	"contributes": {
 		"debuggers": [{
 			"type": "mono",
-			"label": "C# mono",
+			"label": "%mono.label%",
 			"enableBreakpointsFor": { "languageIds": ["csharp", "fsharp"] },
 			"program": "./bin/Release/mono-debug.exe",
 			"osx": {
@@ -53,7 +53,7 @@
 			"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
 			"initialConfigurations": [
 				{
-					"name": "Launch",
+					"name": "%mono.launch.config.name%",
 					"type": "mono",
 					"request": "launch",
 					"program": "${workspaceRoot}/program.exe",
@@ -65,7 +65,7 @@
 					"externalConsole": false
 				},
 				{
-					"name": "Attach",
+					"name": "%mono.attach.config.name%",
 					"type": "mono",
 					"request": "attach",
 					"address": "localhost",
@@ -78,52 +78,53 @@
 					"properties": {
 						"program": {
 							"type": "string",
-							"description": "Workspace relative path to the program."
+							"description": "%mono.launch.program.description%"
 						},
 						"args": {
 							"type": "array",
-							"description": "Command line arguments passed to the program.",
+							"description": "%mono.launch.args.description%",
 							"items": { "type": "string" },
 							"default": []
 						},
 						"cwd": {
 							"type": "string",
-							"description": "Workspace relative or absolute path to the working directory of the program being debugged. Default is the current workspace.",
+							"description": "%mono.launch.cwd.description%",
 							"default": "."
 						},
 						"runtimeExecutable": {
 							"type": ["string", "null"],
-							"description": "Workspace relative or absolute path to the runtime executable to be used. Default is the runtime executable on the PATH.",
+							"description": "%mono.launch.runtimeExecutable.description%",
 							"default": null
 						},
 						"runtimeArgs": {
 							"type": "array",
-							"description": "Optional arguments passed to the runtime executable.",
+							"description": "%mono.launch.runtimeArgs.description%",
 							"items": { "type": "string" },
 							"default": []
 						},
 						"env": {
 							"type": "object",
-							"description": "Environment variables passed to the program.",
+							"description": "%mono.launch.env.description%",
 							"default": {}
 						},
 						"externalConsole": {
 							"type": "boolean",
-							"description": "Launch debug target in external console.",
+							"description": "%mono.launch.externalConsole.description%",
 							"default": true
 						}
 					}
 				},
 				"attach": {
+					"required": ["port"],
 					"properties": {
 						"port": {
 							"type": "number",
-							"description": "Port to attach to.",
+							"description": "%mono.attach.port.description%",
 							"default": 55555
 						},
 						"address": {
 							"type": "string",
-							"description": "TCP/IP address. Default is \"localhost\".",
+							"description": "%mono.attach.address.description%",
 							"default": "undefined"
 						}
 					}

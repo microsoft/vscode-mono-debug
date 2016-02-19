@@ -1,0 +1,20 @@
+{
+	"extension.displayName": "Mono Debug",
+	"extension.description": "Visual Studio Code debug adapter for mono",
+
+	"mono.label": "C# mono",
+
+	"mono.launch.config.name": "Launch",
+	"mono.attach.config.name": "Attach",
+
+	"mono.launch.program.description": "Absolute path to the program.",
+	"mono.launch.args.description": "Command line arguments passed to the program.",
+	"mono.launch.cwd.description": "Absolute path to the working directory of the program being debugged.",
+	"mono.launch.runtimeExecutable.description": "Absolute path to the runtime executable to be used. Default is the runtime executable on the PATH.",
+	"mono.launch.runtimeArgs.description": "Optional arguments passed to the runtime executable.",
+	"mono.launch.env.description": "Environment variables passed to the program.",
+	"mono.launch.externalConsole.description": "Launch debug target in external console.",
+
+	"mono.attach.port.description": "Debug port to attach to.",
+	"mono.attach.address.description": "TCP/IP address. Default is \"localhost\"."
+}
