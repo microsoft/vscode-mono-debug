@@ -3,5 +3,6 @@
 **/.DS_Store
 !bin/Release/*
 !package.json
+!package.nls.json
 !LICENSE.txt
 !ThirdPartyNotices.txt

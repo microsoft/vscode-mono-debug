@@ -26,7 +26,7 @@ suite('Node Debug Adapter', () => {
 	});
 
 	teardown(done => {
-		dc.stop(done);
+		dc.stop(done); 
 	});
 
 	suite('basic', () => {

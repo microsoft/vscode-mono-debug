@@ -6,9 +6,6 @@ SDB_MAKE = "./sdb/Makefile"
 all: vsix
 	@echo "vsix created"
 
-upload: $MONO_DEBUG
-	gulp upload
-
 vsix: $MONO_DEBUG
 	vsce package
 

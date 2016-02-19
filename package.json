@@ -1,8 +1,8 @@
 {
 	"name": "mono-debug",
 	"displayName": "%extension.displayName%",
-	"version": "0.10.4",
-	"publisher": "andreweinand",
+	"version": "0.10.5",
+	"publisher": "ms-vscode",
 	"description": "%extension.description%",
 	"author": {
 		"name": "Microsoft Corporation"
@@ -10,7 +10,9 @@
 	"license": "MIT",
 	"private": true,
 	"scripts": {
-		"prepublish": "gulp build",
+		"prepublish": "make build",
+		"compile": "tsc -p ./tests",
+		"watch": "tsc -w -p ./tests",
 		"test": "node ./node_modules/mocha/bin/mocha --timeout 999999 -u tdd ./tests/out/"
 	},
 	"engines": {
@@ -26,14 +28,6 @@
 		"url": "https://github.com/Microsoft/vscode-mono-debug/issues"
 	},
 	"devDependencies": {
-		"gulp": "^3.9.0",
-		"gulp-util": "^3.0.5",
-		"gulp-azure-storage": "*",
-		"gulp-tsb": "*",
-		"git-rev-sync": "*",
-		"del": "*",
-		"run-sequence": "*",
-		"gulp-vinyl-zip": "*",
 		"mocha": "^2.3.4",
 		"typescript": "^1.7.3",
 		"vscode-debugprotocol": "~1.6.0-pre8"
