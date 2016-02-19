@@ -8,9 +8,6 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
-using System.Net.Sockets;
-using System.Collections.Generic;
-using System.Threading;
 
 namespace OpenDebug
 {
@@ -64,7 +61,7 @@ namespace OpenDebug
 			}
 		}
 	}
-		
+
 	public class V8Event : V8Message
 	{
 		[JsonProperty(PropertyName = "event")]
