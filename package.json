@@ -1,5 +1,6 @@
 {
 	"name": "mono-debug",
+	"displayName": "Mono Debug",
 	"version": "0.10.4",
 	"publisher": "isidor",
 	"description": "Visual Studio Code debug adapter for mono",
