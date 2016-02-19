@@ -1,9 +1,10 @@
 {
 	"name": "mono-debug",
 	"displayName": "Mono Debug",
-	"version": "0.10.7",
+	"version": "0.10.8",
 	"publisher": "ms-vscode",
 	"description": "Visual Studio Code debug adapter for Mono",
+	"icon": "images/mono-debug-icon.svg",
 	"categories": [
 		"Debuggers"
 	],
