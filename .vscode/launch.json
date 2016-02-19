@@ -9,9 +9,7 @@
 			"args": [
 				"--extensionDevelopmentPath=${workspaceRoot}"
 			],
-			"stopOnEntry": false,
-			"sourceMaps": true,
-			"outDir": "${workspaceRoot}/out"
+			"stopOnEntry": false
 		},
 		{
 			"name": "Run Tests",
