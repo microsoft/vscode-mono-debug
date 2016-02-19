@@ -286,6 +286,9 @@ namespace OpenDebug
 						}
 					}
 
+					var cmd = string.Format("{0} {1}", mono_path, _process.StartInfo.Arguments);
+					SendOutput(OutputEvent.Category.console, cmd);
+
 					try {
 						_process.Start();
 						_process.BeginOutputReadLine();
