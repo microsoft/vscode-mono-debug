@@ -56,6 +56,22 @@ namespace OpenDebug
 			switch (command) {
 
 			case "initialize":
+				if (args.linesStartAt1 != null) {
+					_clientLinesStartAt1 = (bool)args.linesStartAt1;
+				}
+				var pathFormat = (string)args.pathFormat;
+				if (pathFormat != null) {
+					switch (pathFormat) {
+					case "uri":
+						_clientPathsAreURI = true;
+						break;
+					case "path":
+						_clientPathsAreURI = false;
+						break;
+					default:
+						return new DebugResult(1015, "initialize: bad value '{_format}' for pathFormat", new { _format = pathFormat });
+					}
+				}
 				return Initialize(args).Result;
 
 			case "launch":
@@ -177,24 +193,6 @@ namespace OpenDebug
 
 		public virtual Task<DebugResult> Initialize(dynamic args)
 		{
-			if (args.linesStartAt1 != null) {
-				_clientLinesStartAt1 = (bool)args.linesStartAt1;
-			}
-
-			var pathFormat = (string)args.pathFormat;
-			if (pathFormat != null) {
-				switch (pathFormat) {
-				case "uri":
-					_clientPathsAreURI = true;
-					break;
-				case "path":
-					_clientPathsAreURI = false;
-					break;
-				default:
-					return Task.FromResult(new DebugResult(1015, "initialize: bad value '{_format}' for pathFormat", new { _format = pathFormat }));
-				}
-			}
-
 			return Task.FromResult(new DebugResult());
 		}
 

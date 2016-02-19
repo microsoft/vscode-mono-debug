@@ -52,6 +52,15 @@ namespace OpenDebug
 		// empty
 	}
 
+	public class Capabilities : ResponseBody {
+
+		public bool supportsConfigurationDoneRequest;
+		public bool supportsFunctionBreakpoints;
+		public bool supportsConditionalBreakpoints;
+		public bool supportsEvaluateForHovers;
+		public dynamic[] exceptionBreakpointFilters;
+	}
+
 	public class ErrorResponseBody : ResponseBody {
 
 		public Message error { get; private set; }

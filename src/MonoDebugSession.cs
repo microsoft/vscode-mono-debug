@@ -108,6 +108,28 @@ namespace OpenDebug
 			callback.Invoke(new InitializedEvent());
 		}
 
+		public override Task<DebugResult> Initialize(dynamic args)
+		{
+			var cap = new Capabilities();
+
+			// This debug adapter does not need the configurationDoneRequest.
+			cap.supportsConfigurationDoneRequest = false;
+
+			// This debug adapter does not support function breakpoints.
+			cap.supportsFunctionBreakpoints = false;
+
+			// This debug adapter dosen't support conditional breakpoints.
+			cap.supportsConditionalBreakpoints = false;
+
+			// This debug adapter does not support a side effect free evaluate request for data hovers.
+			cap.supportsEvaluateForHovers = false;
+
+			// This debug adapter does not support exception breakpoint filters
+			cap.exceptionBreakpointFilters = new dynamic[0];
+
+			return Task.FromResult(new DebugResult(cap));
+		}
+
 		public override Task<DebugResult> Launch(dynamic args)
 		{
 			_attachMode = false;
