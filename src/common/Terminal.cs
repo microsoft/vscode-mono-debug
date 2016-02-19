@@ -290,7 +290,10 @@ namespace OpenDebug
 			var arg = "";
 			if (args != null) {
 				foreach (var r in args) {
-					arg += " " + Terminal.Quote(r);
+					if (arg.Length > 0) {
+						arg += " ";
+					}
+					arg += Terminal.Quote(r);
 				}
 			}
 			return arg;
