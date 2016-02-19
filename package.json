@@ -36,7 +36,7 @@
 		"gulp-vinyl-zip": "*",
 		"mocha": "^2.3.4",
 		"typescript": "^1.7.3",
-		"vscode-debugprotocol": "~1.6.0-pre4"
+		"vscode-debugprotocol": "~1.6.0-pre8"
 	},
 	"contributes": {
 		"debuggers": [{
