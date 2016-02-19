@@ -4,5 +4,6 @@
 !bin/Release/*
 !package.json
 !package.nls.json
+!README.md
 !LICENSE.txt
 !ThirdPartyNotices.txt
