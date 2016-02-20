@@ -1,12 +1,13 @@
 
-MONO_DEBUG = "./bin/Release/mono-debug.exe"
+MONO_DEBUG_RELEASE = "./bin/Release/mono-debug.exe"
+MONO_DEBUG_DEBUG = "./bin/Debug/mono-debug.exe"
 SDB_EXE = "./sdb/bin/sdb.exe"
 SDB_MAKE = "./sdb/Makefile"
 
 all: vsix
 	@echo "vsix created"
 
-vsix: $MONO_DEBUG
+vsix: $MONO_DEBUG_RELEASE
 	vsce package
 
 $SDB_MAKE:
@@ -15,12 +16,19 @@ $SDB_MAKE:
 $SDB_EXE: $SDB_MAKE
 	cd sdb; make -f Makefile
 
-build: $MONO_DEBUG
+build: $MONO_DEBUG_RELEASE
 	tsc -p ./tests
 	@echo "build finished"
 
-$MONO_DEBUG: $SDB_EXE
+debug: $MONO_DEBUG_DEBUG
+	tsc -p ./tests
+	@echo "build finished"
+
+$MONO_DEBUG_RELEASE: $SDB_EXE
 	xbuild /p:Configuration=Release mono-debug.sln
+
+$MONO_DEBUG_DEBUG: $SDB_EXE
+	xbuild /p:Configuration=Debug mono-debug.sln
 
 
 clean:

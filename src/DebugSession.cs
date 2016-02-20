@@ -6,34 +6,34 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.CSharp.RuntimeBinder;
 
-namespace OpenDebug
+namespace VSCodeDebug
 {
     public interface IDebugSession
 	{
-		DebugResult Dispatch(string command, dynamic args);
+		DebugResponse Dispatch(string command, dynamic args);
 
-		Task<DebugResult> Initialize(dynamic arguments);
-		Task<DebugResult> Launch(dynamic arguments);
-		Task<DebugResult> Attach(dynamic arguments);
-		Task<DebugResult> Disconnect();
+		Task<DebugResponse> Initialize(dynamic arguments);
+		Task<DebugResponse> Launch(dynamic arguments);
+		Task<DebugResponse> Attach(dynamic arguments);
+		Task<DebugResponse> Disconnect();
 
-		Task<DebugResult> SetBreakpoints(Source source, int[] lines);
-		Task<DebugResult> SetFunctionBreakpoints();
-		Task<DebugResult> SetExceptionBreakpoints(string[] filter);
+		Task<DebugResponse> SetBreakpoints(Source source, int[] lines);
+		Task<DebugResponse> SetFunctionBreakpoints();
+		Task<DebugResponse> SetExceptionBreakpoints(string[] filter);
 
-		Task<DebugResult> Continue(int threadId);
-		Task<DebugResult> Next(int threadId);
-		Task<DebugResult> StepIn(int threadId);
-		Task<DebugResult> StepOut(int threadId);
-		Task<DebugResult> Pause(int threadId);
+		Task<DebugResponse> Continue(int threadId);
+		Task<DebugResponse> Next(int threadId);
+		Task<DebugResponse> StepIn(int threadId);
+		Task<DebugResponse> StepOut(int threadId);
+		Task<DebugResponse> Pause(int threadId);
 
-		Task<DebugResult> Threads();
-		Task<DebugResult> StackTrace(int threadId, int levels);
-		Task<DebugResult> Scopes(int frameId);
-		Task<DebugResult> Variables(int reference);
-		Task<DebugResult> Source(int sourceReference);
+		Task<DebugResponse> Threads();
+		Task<DebugResponse> StackTrace(int threadId, int levels);
+		Task<DebugResponse> Scopes(int frameId);
+		Task<DebugResponse> Variables(int reference);
+		Task<DebugResponse> Source(int sourceReference);
 
-		Task<DebugResult> Evaluate(string context, int frameId, string expression);
+		Task<DebugResponse> Evaluate(string context, int frameId, string expression);
 	}
 
 	public abstract class DebugSession : IDebugSession
@@ -49,7 +49,7 @@ namespace OpenDebug
 			_debuggerPathsAreURI = debuggerPathsAreURI;
 		}
 
-		public virtual DebugResult Dispatch(string command, dynamic args)
+		public virtual DebugResponse Dispatch(string command, dynamic args)
 		{
 			int thread;
 
@@ -69,7 +69,7 @@ namespace OpenDebug
 						_clientPathsAreURI = false;
 						break;
 					default:
-						return new DebugResult(1015, "initialize: bad value '{_format}' for pathFormat", new { _format = pathFormat });
+						return new DebugResponse(1015, "initialize: bad value '{_format}' for pathFormat", new { _format = pathFormat });
 					}
 				}
 				return Initialize(args).Result;
@@ -115,14 +115,14 @@ namespace OpenDebug
 			case "variables":
 				int varRef = GetInt(args, "variablesReference", -1);
 				if (varRef == -1) {
-					return new DebugResult(1009, "variables: property 'variablesReference' is missing");
+					return new DebugResponse(1009, "variables: property 'variablesReference' is missing");
 				}
 				return Variables(varRef).Result;
 
 			case "source":
 				int sourceRef = GetInt(args, "sourceReference", -1);
 				if (sourceRef == -1) {
-					return new DebugResult(1010, "source: property 'sourceReference' is missing");
+					return new DebugResponse(1010, "source: property 'sourceReference' is missing");
 				}
 				return Source(sourceRef).Result;
 
@@ -162,7 +162,7 @@ namespace OpenDebug
 					var lines = args.lines.ToObject<int[]>();
 					return SetBreakpoints(src2, lines).Result;
 				}
-				return new DebugResult(1012, "setBreakpoints: property 'source' is empty or misformed");
+				return new DebugResponse(1012, "setBreakpoints: property 'source' is empty or misformed");
 
 			case "setFunctionBreakpoints":
 				return SetFunctionBreakpoints().Result;
@@ -182,82 +182,82 @@ namespace OpenDebug
 				int frameId = GetInt(args, "frameId", -1);
 				var expression = GetString(args, "expression");
 				if (expression == null) {
-					return new DebugResult(1013, "evaluate: property 'expression' is missing, null, or empty");
+					return new DebugResponse(1013, "evaluate: property 'expression' is missing, null, or empty");
 				}
 				return Evaluate(context, frameId, expression).Result;
 
 			default:
-				return new DebugResult(1014, "unrecognized request: {_request}", new { _request = command });
+				return new DebugResponse(1014, "unrecognized request: {_request}", new { _request = command });
 			}
 		}
 
-		public virtual Task<DebugResult> Initialize(dynamic args)
+		public virtual Task<DebugResponse> Initialize(dynamic args)
 		{
-			return Task.FromResult(new DebugResult());
+			return Task.FromResult(new DebugResponse());
 		}
 
-		public abstract Task<DebugResult> Launch(dynamic arguments);
+		public abstract Task<DebugResponse> Launch(dynamic arguments);
 
-		public virtual Task<DebugResult> Attach(dynamic arguments)
+		public virtual Task<DebugResponse> Attach(dynamic arguments)
 		{
-			return Task.FromResult(new DebugResult(1016, "Attach not supported"));
+			return Task.FromResult(new DebugResponse(1016, "Attach not supported"));
 		}
 
-		public virtual Task<DebugResult> Disconnect()
+		public virtual Task<DebugResponse> Disconnect()
 		{
-			return Task.FromResult(new DebugResult());
+			return Task.FromResult(new DebugResponse());
 		}
 
-		public virtual Task<DebugResult> SetFunctionBreakpoints()
+		public virtual Task<DebugResponse> SetFunctionBreakpoints()
 		{
-			return Task.FromResult(new DebugResult());
+			return Task.FromResult(new DebugResponse());
 		}
 
-		public virtual Task<DebugResult> SetExceptionBreakpoints(string[] filter)
+		public virtual Task<DebugResponse> SetExceptionBreakpoints(string[] filter)
 		{
-			return Task.FromResult(new DebugResult());
+			return Task.FromResult(new DebugResponse());
 		}
 
-		public abstract Task<DebugResult> SetBreakpoints(Source source, int[] lines);
+		public abstract Task<DebugResponse> SetBreakpoints(Source source, int[] lines);
 
-		public abstract Task<DebugResult> Continue(int thread);
+		public abstract Task<DebugResponse> Continue(int thread);
 
-		public abstract Task<DebugResult> Next(int thread);
+		public abstract Task<DebugResponse> Next(int thread);
 
-		public virtual Task<DebugResult> StepIn(int thread)
+		public virtual Task<DebugResponse> StepIn(int thread)
 		{
-			return Task.FromResult(new DebugResult(1017, "StepIn not supported"));
+			return Task.FromResult(new DebugResponse(1017, "StepIn not supported"));
 		}
 
-		public virtual Task<DebugResult> StepOut(int thread)
+		public virtual Task<DebugResponse> StepOut(int thread)
 		{
-			return Task.FromResult(new DebugResult(1018, "StepOut not supported"));
+			return Task.FromResult(new DebugResponse(1018, "StepOut not supported"));
 		}
 
-		public virtual Task<DebugResult> Pause(int thread)
+		public virtual Task<DebugResponse> Pause(int thread)
 		{
-			return Task.FromResult(new DebugResult(1019, "Pause not supported"));
+			return Task.FromResult(new DebugResponse(1019, "Pause not supported"));
 		}
 
-		public abstract Task<DebugResult> StackTrace(int thread, int levels);
+		public abstract Task<DebugResponse> StackTrace(int thread, int levels);
 
-		public abstract Task<DebugResult> Scopes(int frameId);
+		public abstract Task<DebugResponse> Scopes(int frameId);
 
-		public abstract Task<DebugResult> Variables(int reference);
+		public abstract Task<DebugResponse> Variables(int reference);
 
-		public virtual Task<DebugResult> Source(int sourceId)
+		public virtual Task<DebugResponse> Source(int sourceId)
 		{
-			return Task.FromResult(new DebugResult(1020, "Source not supported"));
+			return Task.FromResult(new DebugResponse(1020, "Source not supported"));
 		}
 
-		public virtual Task<DebugResult> Threads()
+		public virtual Task<DebugResponse> Threads()
 		{
-			return Task.FromResult(new DebugResult(new ThreadsResponseBody()));
+			return Task.FromResult(new DebugResponse(new ThreadsResponseBody()));
 		}
 
-		public virtual Task<DebugResult> Evaluate(string context, int frameId, string expression)
+		public virtual Task<DebugResponse> Evaluate(string context, int frameId, string expression)
 		{
-			return Task.FromResult(new DebugResult(1021, "Evaluate not supported"));
+			return Task.FromResult(new DebugResponse(1021, "Evaluate not supported"));
 		}
 
 		// protected

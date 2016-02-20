@@ -7,7 +7,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 
-namespace OpenDebug
+namespace VSCodeDebug
 {
 	internal class Program
 	{
@@ -88,14 +88,14 @@ namespace OpenDebug
 
 		private static void Dispatch(Stream inputStream, Stream outputStream)
 		{
-			V8ServerProtocol protocol = new V8ServerProtocol(inputStream, outputStream);
+			ServerProtocol protocol = new ServerProtocol(inputStream, outputStream);
 
 			protocol.TRACE = trace_requests;
 			protocol.TRACE_RESPONSE = trace_responses;
 
 			IDebugSession debugSession = null;
 
-			var r = protocol.Start((string command, dynamic args, V8Response response) => {
+			var r = protocol.Start((string command, dynamic args, DPResponse response) => {
 
 				if (args == null) {
 					args = new { };
@@ -108,7 +108,12 @@ namespace OpenDebug
 						return;
 					}
 
-					debugSession = EngineFactory.CreateDebugSession(adapterID, (e) => protocol.SendEvent(e.type, e));
+					OperatingSystem os = Environment.OSVersion;
+
+					if ((os.Platform == PlatformID.MacOSX || os.Platform == PlatformID.Unix) && adapterID == "mono") {
+						debugSession = new SDBDebugSession((e) => protocol.SendEvent(e.type, e));
+					}
+						
 					if (debugSession == null) {
 						response.SetBody(new ErrorResponseBody(new Message(1103, "initialize: can't create debug session for adapter '{_id}'", new { _id = adapterID })));
 						return;
@@ -118,7 +123,7 @@ namespace OpenDebug
 				if (debugSession != null) {
 
 					try {
-						DebugResult dr = debugSession.Dispatch(command, args);
+						DebugResponse dr = debugSession.Dispatch(command, args);
 						if (dr != null) {
 							response.SetBody(dr.Body);
 						}

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 using System.Collections.Generic;
 
-namespace OpenDebug
+namespace VSCodeDebug
 {
 	public class Handles<T>
 	{

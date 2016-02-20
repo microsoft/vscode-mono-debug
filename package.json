@@ -1,7 +1,7 @@
 {
 	"name": "mono-debug",
 	"displayName": "Mono Debug",
-	"version": "0.10.10",
+	"version": "0.10.11",
 	"publisher": "ms-vscode",
 	"description": "Visual Studio Code debugger extension for Mono",
 	"icon": "images/mono-debug-icon.svg",
@@ -15,6 +15,7 @@
 	"private": true,
 	"scripts": {
 		"prepublish": "make build",
+		"vscode:prepublish": "make build",
 		"compile": "make build",
 		"watch": "tsc -w -p ./tests",
 		"test": "node ./node_modules/mocha/bin/mocha --timeout 999999 -u tdd ./tests/out/"

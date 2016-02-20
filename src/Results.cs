@@ -5,13 +5,12 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace OpenDebug
+namespace VSCodeDebug
 {
 	/*
 	 * This monomorphic class is used to return results from a debugger request or to return errors.
-	 * In addition events can be attached that are fired after the request results have been returned to the caller.
 	 */
-	public sealed class DebugResult
+	public sealed class DebugResponse
 	{
 		public bool Success { get; private set; } // boolean indicating success
 		public ResponseBody Body { get; private set; }	// depending on value of success either the result or an error
@@ -19,14 +18,14 @@ namespace OpenDebug
 		/*
 		 * A success result without additional data.
 		 */
-		public DebugResult() {
+		public DebugResponse() {
 			Success = true;
 		}
 
 		/*
 		 * A result with a response body. If body is a ErrorResponseBody then Success will be set to false.
 		 */
-		public DebugResult(ResponseBody body) {
+		public DebugResponse(ResponseBody body) {
 			Success = true;
 			Body = body;
 			if (body is ErrorResponseBody) {
@@ -37,7 +36,7 @@ namespace OpenDebug
 		/*
 		 * A failure result with a full error message.
 		 */
-		public DebugResult(int id, string format, dynamic arguments = null) {
+		public DebugResponse(int id, string format, dynamic arguments = null) {
 			Success = false;
 			Body = new ErrorResponseBody(new Message(id, format, arguments));
 		}

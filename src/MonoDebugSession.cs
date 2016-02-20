@@ -14,7 +14,7 @@ using Mono.Debugging.Client;
 using Microsoft.CSharp.RuntimeBinder;
 
 
-namespace OpenDebug
+namespace VSCodeDebug
 {
 	public class SDBDebugSession : DebugSession, IDebugSession
 	{
@@ -108,7 +108,7 @@ namespace OpenDebug
 			callback.Invoke(new InitializedEvent());
 		}
 
-		public override Task<DebugResult> Initialize(dynamic args)
+		public override Task<DebugResponse> Initialize(dynamic args)
 		{
 			var cap = new Capabilities();
 
@@ -127,21 +127,21 @@ namespace OpenDebug
 			// This debug adapter does not support exception breakpoint filters
 			cap.exceptionBreakpointFilters = new dynamic[0];
 
-			return Task.FromResult(new DebugResult(cap));
+			return Task.FromResult(new DebugResponse(cap));
 		}
 
-		public override Task<DebugResult> Launch(dynamic args)
+		public override Task<DebugResponse> Launch(dynamic args)
 		{
 			_attachMode = false;
 
 			// validate argument 'program'
 			string programPath = getString(args, "program");
 			if (programPath == null) {
-				return Task.FromResult(new DebugResult(1001, "launch: property 'program' is missing or empty"));
+				return Task.FromResult(new DebugResponse(1001, "launch: property 'program' is missing or empty"));
 			}
 			programPath = ConvertClientPathToDebugger(programPath);
 			if (!File.Exists(programPath) && !Directory.Exists(programPath)) {
-				return Task.FromResult(new DebugResult(1002, "launch: program '{path}' does not exist", new { path = programPath }));
+				return Task.FromResult(new DebugResponse(1002, "launch: program '{path}' does not exist", new { path = programPath }));
 			}
 
 			// validate argument 'args'
@@ -158,11 +158,11 @@ namespace OpenDebug
 			if (workingDirectory != null) {
 				workingDirectory = workingDirectory.Trim();
 				if (workingDirectory.Length == 0) {
-					return Task.FromResult(new DebugResult(1003, "launch: property 'workingDirectory' is empty"));
+					return Task.FromResult(new DebugResponse(1003, "launch: property 'workingDirectory' is empty"));
 				}
 				workingDirectory = ConvertClientPathToDebugger(workingDirectory);
 				if (!Directory.Exists(workingDirectory)) {
-					return Task.FromResult(new DebugResult(1004, "launch: workingDirectory '{path}' does not exist", new { path = workingDirectory }));
+					return Task.FromResult(new DebugResponse(1004, "launch: workingDirectory '{path}' does not exist", new { path = workingDirectory }));
 				}
 			}
 			workingDirectory = null;	// TODO@AW Why?
@@ -172,11 +172,11 @@ namespace OpenDebug
 			if (runtimeExecutable != null) {
 				runtimeExecutable = runtimeExecutable.Trim();
 				if (runtimeExecutable.Length == 0) {
-					return Task.FromResult(new DebugResult(1005, "launch: property 'runtimeExecutable' is empty"));
+					return Task.FromResult(new DebugResponse(1005, "launch: property 'runtimeExecutable' is empty"));
 				}
 				runtimeExecutable = ConvertClientPathToDebugger(runtimeExecutable);
 				if (!File.Exists(runtimeExecutable)) {
-					return Task.FromResult(new DebugResult(1006, "launch: runtimeExecutable '{path}' does not exist", new { path = runtimeExecutable }));
+					return Task.FromResult(new DebugResponse(1006, "launch: runtimeExecutable '{path}' does not exist", new { path = runtimeExecutable }));
 				}
 			}
 
@@ -217,7 +217,7 @@ namespace OpenDebug
 				string mono_path = runtimeExecutable;
 				if (mono_path == null) {
 					if (!Terminal.IsOnPath(MONO)) {
-						return Task.FromResult(new DebugResult(3001, "launch: can't find runtime '{_runtime}' on PATH", new { _runtime = MONO }));
+						return Task.FromResult(new DebugResponse(3001, "launch: can't find runtime '{_runtime}' on PATH", new { _runtime = MONO }));
 					}
 					mono_path = MONO;     // try to find mono through PATH
 				}
@@ -244,7 +244,7 @@ namespace OpenDebug
 				if (externalConsole) {
 					var result = Terminal.LaunchInTerminal(workingDirectory, mono_path, mono_args, program, arguments, env);
 					if (!result.Success) {
-						return Task.FromResult(new DebugResult(3002, "launch: can't launch terminal ({reason})", new { reason = result.Message }));
+						return Task.FromResult(new DebugResponse(3002, "launch: can't launch terminal ({reason})", new { reason = result.Message }));
 					}
 				} else {
 
@@ -295,7 +295,7 @@ namespace OpenDebug
 						_process.BeginErrorReadLine();
 					}
 					catch (Exception e) {
-						return Task.FromResult(new DebugResult(3002, "launch: can't launch terminal ({reason})", new { reason = e.Message }));
+						return Task.FromResult(new DebugResponse(3002, "launch: can't launch terminal ({reason})", new { reason = e.Message }));
 					}
 				}
 
@@ -336,34 +336,34 @@ namespace OpenDebug
 				// TODO@AW in case of errors?
 			}
 
-			return Task.FromResult(new DebugResult());
+			return Task.FromResult(new DebugResponse());
 		}
 
-		public override Task<DebugResult> Attach(dynamic args)
+		public override Task<DebugResponse> Attach(dynamic args)
 		{
 			_attachMode = true;
 
 			// validate argument 'address'
 			var host = getString(args, "address");
 			if (host == null) {
-				return Task.FromResult(new DebugResult(1007, "attach: property 'address' is missing or empty"));
+				return Task.FromResult(new DebugResponse(1007, "attach: property 'address' is missing or empty"));
 			}
 
 			// validate argument 'port'
 			var port = getInt(args, "port", -1);
 			if (port == -1) {
-				return Task.FromResult(new DebugResult(1008, "attach: property 'port' is missing"));
+				return Task.FromResult(new DebugResponse(1008, "attach: property 'port' is missing"));
 			}
 
 			IPAddress address = Utilities.ResolveIPAddress(host);
 			if (address == null) {
-				return Task.FromResult(new DebugResult(3003, "attach: invalid address '{address}'", new { address = address }));
+				return Task.FromResult(new DebugResponse(3003, "attach: invalid address '{address}'", new { address = address }));
 			}
 			Debugger.Connect(address, port);
-			return Task.FromResult(new DebugResult());
+			return Task.FromResult(new DebugResponse());
 		}
 
-		public override Task<DebugResult> Disconnect()
+		public override Task<DebugResponse> Disconnect()
 		{
 			//CommandLine.WaitForSuspend();
 
@@ -384,61 +384,61 @@ namespace OpenDebug
 				}
 			}
 
-			return Task.FromResult(new DebugResult());
+			return Task.FromResult(new DebugResponse());
 		}
 
-		public override Task<DebugResult> Continue(int thread)
+		public override Task<DebugResponse> Continue(int thread)
 		{
 			CommandLine.WaitForSuspend();
 			Debugger.Continue();
-			return Task.FromResult(new DebugResult());
+			return Task.FromResult(new DebugResponse());
 		}
 
-		public override Task<DebugResult> Next(int thread)
+		public override Task<DebugResponse> Next(int thread)
 		{
 			CommandLine.WaitForSuspend();
 			Debugger.StepOverLine();
-			return Task.FromResult(new DebugResult());
+			return Task.FromResult(new DebugResponse());
 		}
 
-		public override Task<DebugResult> StepIn(int thread)
+		public override Task<DebugResponse> StepIn(int thread)
 		{
 			CommandLine.WaitForSuspend();
 			Debugger.StepIntoLine();
-			return Task.FromResult(new DebugResult());
+			return Task.FromResult(new DebugResponse());
 		}
 
-		public override Task<DebugResult> StepOut(int thread)
+		public override Task<DebugResponse> StepOut(int thread)
 		{
 			CommandLine.WaitForSuspend();
 			Debugger.StepOutOfMethod();
-			return Task.FromResult(new DebugResult());
+			return Task.FromResult(new DebugResponse());
 		}
 
-		public override Task<DebugResult> Pause(int thread)
+		public override Task<DebugResponse> Pause(int thread)
 		{
 			Debugger.Pause();
-			return Task.FromResult(new DebugResult());
+			return Task.FromResult(new DebugResponse());
 		}
 
-		public override Task<DebugResult> SetExceptionBreakpoints(string[] filter)
+		public override Task<DebugResponse> SetExceptionBreakpoints(string[] filter)
 		{
 			//CommandLine.WaitForSuspend();
-			return Task.FromResult(new DebugResult());
+			return Task.FromResult(new DebugResponse());
 		}
 
-		public override Task<DebugResult> SetBreakpoints(Source source, int[] clientLines)
+		public override Task<DebugResponse> SetBreakpoints(Source source, int[] clientLines)
 		{
 			if (source.path == null) {
 				// we do not support special sources
-				return Task.FromResult(new DebugResult(new SetBreakpointsResponseBody()));
+				return Task.FromResult(new DebugResponse(new SetBreakpointsResponseBody()));
 			}
 
 			string path = ConvertClientPathToDebugger(source.path);
 
 			if (!HasMonoExtension(path)) {
 				// we only support breakpoints in files mono can handle
-				return Task.FromResult(new DebugResult(new SetBreakpointsResponseBody()));
+				return Task.FromResult(new DebugResponse(new SetBreakpointsResponseBody()));
 			}
 
 			//CommandLine.WaitForSuspend();
@@ -486,10 +486,10 @@ namespace OpenDebug
 			foreach (var l in clientLines) {
 				breakpoints.Add(new Breakpoint(true, l));
 			}
-			return Task.FromResult(new DebugResult(new SetBreakpointsResponseBody(breakpoints)));
+			return Task.FromResult(new DebugResponse(new SetBreakpointsResponseBody(breakpoints)));
 		}
 
-		public override Task<DebugResult> StackTrace(int threadReference, int maxLevels)
+		public override Task<DebugResponse> StackTrace(int threadReference, int maxLevels)
 		{
 			CommandLine.WaitForSuspend();
 			var stackFrames = new List<StackFrame>();
@@ -520,10 +520,10 @@ namespace OpenDebug
 				}
 			}
 
-			return Task.FromResult(new DebugResult(new StackTraceResponseBody(stackFrames)));
+			return Task.FromResult(new DebugResponse(new StackTraceResponseBody(stackFrames)));
 		}
 
-		public override Task<DebugResult> Scopes(int frameId) {
+		public override Task<DebugResponse> Scopes(int frameId) {
 
 			var scopes = new List<Scope>();
 
@@ -543,10 +543,10 @@ namespace OpenDebug
 				scopes.Add(new Scope("Local", _variableHandles.Create(locals)));
 			}
 
-			return Task.FromResult(new DebugResult(new ScopesResponseBody(scopes)));
+			return Task.FromResult(new DebugResponse(new ScopesResponseBody(scopes)));
 		}
 
-		public override Task<DebugResult> Variables(int reference)
+		public override Task<DebugResponse> Variables(int reference)
 		{
 			CommandLine.WaitForSuspend();
 			var variables = new List<Variable>();
@@ -581,10 +581,10 @@ namespace OpenDebug
 				}
 			}
 
-			return Task.FromResult(new DebugResult(new VariablesResponseBody(variables)));
+			return Task.FromResult(new DebugResponse(new VariablesResponseBody(variables)));
 		}
 
-		public override Task<DebugResult> Threads()
+		public override Task<DebugResponse> Threads()
 		{
 			var threads = new List<Thread>();
 			var process = Debugger.ActiveProcess;
@@ -599,10 +599,10 @@ namespace OpenDebug
 				}
 				threads = d.Values.ToList();
 			}
-			return Task.FromResult(new DebugResult(new ThreadsResponseBody(threads)));
+			return Task.FromResult(new DebugResponse(new ThreadsResponseBody(threads)));
 		}
 
-		public override Task<DebugResult> Evaluate(string context, int frameId, string expression)
+		public override Task<DebugResponse> Evaluate(string context, int frameId, string expression)
 		{
 			string error = null;
 
@@ -630,7 +630,7 @@ namespace OpenDebug
 						if (val.HasChildren) {
 							handle = _variableHandles.Create(val.GetAllChildren());
 						}
-						return Task.FromResult(new DebugResult(new EvaluateResponseBody(val.DisplayValue, handle)));
+						return Task.FromResult(new DebugResponse(new EvaluateResponseBody(val.DisplayValue, handle)));
 					}
 				}
 				else {
@@ -640,7 +640,7 @@ namespace OpenDebug
 			else {
 				error = "no active stackframe";
 			}
-			return Task.FromResult(new DebugResult(3004, "evaluate request failed ({_reason})", new { _reason = error } ));
+			return Task.FromResult(new DebugResponse(3004, "evaluate request failed ({_reason})", new { _reason = error } ));
 		}
 
 		//---- private ------------------------------------------

@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Reflection;
 
-namespace OpenDebug
+namespace VSCodeDebug
 {
 	public class Utilities
 	{

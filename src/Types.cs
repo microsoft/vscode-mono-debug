@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 using System.IO;
 
-namespace OpenDebug
+namespace VSCodeDebug
 {
 	public class Message {
 		public int id { get; set; }

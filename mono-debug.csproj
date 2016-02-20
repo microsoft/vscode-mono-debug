@@ -60,18 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="src\common\Events.cs" />
-    <Compile Include="src\common\Handles.cs" />
-    <Compile Include="src\common\IDebugSession.cs" />
-    <Compile Include="src\common\PathUtilities.cs" />
-    <Compile Include="src\common\Program.cs" />
-    <Compile Include="src\common\Results.cs" />
-    <Compile Include="src\common\Terminal.cs" />
-    <Compile Include="src\common\Types.cs" />
-    <Compile Include="src\common\Utilities.cs" />
-    <Compile Include="src\common\V8Protocol.cs" />
     <Compile Include="src\MonoDebugSession.cs" />
-    <Compile Include="src\MonoEngineFactory.cs" />
     <Compile Include="src\sdb\CommandLine.cs" />
     <Compile Include="src\sdb\Debugger.cs" />
     <Compile Include="sdb\src\Color.cs">
@@ -98,6 +87,16 @@
     <Compile Include="sdb\src\Utilities.cs">
       <Link>src\sdb\src\Utilities.cs</Link>
     </Compile>
+    <Compile Include="src\Terminal.cs" />
+    <Compile Include="src\Program.cs" />
+    <Compile Include="src\PathUtilities.cs" />
+    <Compile Include="src\Handles.cs" />
+    <Compile Include="src\Results.cs" />
+    <Compile Include="src\Utilities.cs" />
+    <Compile Include="src\Types.cs" />
+    <Compile Include="src\Events.cs" />
+    <Compile Include="src\DebugProtocol.cs" />
+    <Compile Include="src\DebugSession.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -116,7 +115,6 @@
   </Target>
   <ItemGroup>
     <Folder Include="src\" />
-    <Folder Include="src\common\" />
     <Folder Include="src\sdb\" />
     <Folder Include="src\sdb\src\" />
   </ItemGroup>

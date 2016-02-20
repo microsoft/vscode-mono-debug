@@ -5,7 +5,7 @@
 using System;
 using System.IO;
 
-namespace OpenDebug
+namespace VSCodeDebug
 {
     public class PathUtilities
     {

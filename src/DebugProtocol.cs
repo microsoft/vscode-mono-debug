@@ -9,31 +9,31 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
-namespace OpenDebug
+namespace VSCodeDebug
 {
-	public class V8Message
+	public class DPMessage
 	{
 		public int seq;
 		public string type;
 
-		public V8Message(string typ) {
+		public DPMessage(string typ) {
 			type = typ;
 		}
 	}
 
-	public class V8Request : V8Message
+	public class DPRequest : DPMessage
 	{
 		public string command;
 		public dynamic arguments;
 
-		public V8Request(int id, string cmd, dynamic arg) : base("request") {
+		public DPRequest(int id, string cmd, dynamic arg) : base("request") {
 			seq = id;
 			command = cmd;
 			arguments = arg;
 		}
 	}
 
-	public class V8Response : V8Message
+	public class DPResponse : DPMessage
 	{
 		public bool success;
 		public string message;
@@ -41,10 +41,10 @@ namespace OpenDebug
 		public string command;
 		public dynamic body;
 
-		public V8Response() : base("response") {
+		public DPResponse() : base("response") {
 		}
 
-		public V8Response(int rseq, string cmd) : base("response") {
+		public DPResponse(int rseq, string cmd) : base("response") {
 			request_seq = rseq;
 			command = cmd;
 		}
@@ -62,31 +62,31 @@ namespace OpenDebug
 		}
 	}
 
-	public class V8Event : V8Message
+	public class DPEvent : DPMessage
 	{
 		[JsonProperty(PropertyName = "event")]
 		public string eventType;
 		public dynamic body;
 
-		public V8Event() : base("event") {
+		public DPEvent() : base("event") {
 		}
 
-		public V8Event(dynamic m) : base("event") {
+		public DPEvent(dynamic m) : base("event") {
 			seq = m.seq;
 			eventType = m["event"];
 			body = m.body;
 		}
 
-		public V8Event(string type, dynamic bdy = null) : base("event") {
+		public DPEvent(string type, dynamic bdy = null) : base("event") {
 			eventType = type;
 			body = bdy;
 		}
 	}
 
 	/*
-     * The V8ServerProtocol can be used to implement a server that uses the V8 protocol.
+     * The ServerProtocol can be used to implement a server that uses the VSCode debug protocol.
      */
-	public class V8ServerProtocol
+	public class ServerProtocol
 	{
 		public bool TRACE;
 		public bool TRACE_RESPONSE;
@@ -107,10 +107,10 @@ namespace OpenDebug
 
 		private bool _stopRequested;
 
-		private Action<string, dynamic, V8Response> _callback;
+		private Action<string, dynamic, DPResponse> _callback;
 
 
-		public V8ServerProtocol(Stream inputStream, Stream outputStream) {
+		public ServerProtocol(Stream inputStream, Stream outputStream) {
 			_sequenceNumber = 1;
 			_inputStream = inputStream;
 			_outputStream = outputStream;
@@ -118,7 +118,7 @@ namespace OpenDebug
 			_rawData = new ByteBuffer();
 		}
 
-		public async Task<int> Start(Action<string, dynamic, V8Response> cb)
+		public async Task<int> Start(Action<string, dynamic, DPResponse> cb)
 		{
 			_callback = cb;
 
@@ -147,7 +147,7 @@ namespace OpenDebug
 
 		public void SendEvent(string eventType, dynamic body)
 		{
-			SendMessage(new V8Event(eventType, body));
+			SendMessage(new DPEvent(eventType, body));
 		}
 
 		// ---- private ------------------------------------------------------------------------
@@ -186,13 +186,13 @@ namespace OpenDebug
 
 		private void Dispatch(string req)
 		{
-			var request = JsonConvert.DeserializeObject<V8Request>(req);
+			var request = JsonConvert.DeserializeObject<DPRequest>(req);
 			if (request != null && request.type == "request") {
 				if (TRACE)
 					Console.Error.WriteLine(string.Format("C {0}: {1}", request.command, JsonConvert.SerializeObject(request.arguments)));
 
 				if (_callback != null) {
-					var response = new V8Response(request.seq, request.command);
+					var response = new DPResponse(request.seq, request.command);
 
 					_callback.Invoke(request.command, request.arguments, response);
 
@@ -201,7 +201,7 @@ namespace OpenDebug
 			}
 		}
 
-		private void SendMessage(V8Message message)
+		private void SendMessage(DPMessage message)
 		{
 			message.seq = _sequenceNumber++;
 
@@ -209,7 +209,7 @@ namespace OpenDebug
 				Console.Error.WriteLine(string.Format(" R: {0}", JsonConvert.SerializeObject(message)));
 			}
 			if (TRACE && message.type == "event") {
-				V8Event e = (V8Event)message;
+				DPEvent e = (DPEvent)message;
 				Console.Error.WriteLine(string.Format("E {0}: {1}", e.eventType, JsonConvert.SerializeObject(e.body)));
 			}
 
@@ -223,7 +223,7 @@ namespace OpenDebug
 			}
 		}
 
-		private static byte[] ConvertToBytes(V8Message request)
+		private static byte[] ConvertToBytes(DPMessage request)
 		{
 			var asJson = JsonConvert.SerializeObject(request);
 			byte[] jsonBytes = Encoding.GetBytes(asJson);

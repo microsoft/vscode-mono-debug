@@ -2,7 +2,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Launch Extension",
+			"name": "Run Extension",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
@@ -10,6 +10,13 @@
 				"--extensionDevelopmentPath=${workspaceRoot}"
 			],
 			"stopOnEntry": false
+		},
+		{
+			"name": "Run Server",
+			"type": "mono",
+			"request": "launch",
+			"program": "${workspaceRoot}/bin/Debug/monoDebug.exe",
+			"args": [ "--server=4711" ]
 		},
 		{
 			"name": "Run Tests",
