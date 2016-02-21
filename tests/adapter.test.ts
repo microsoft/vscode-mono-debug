@@ -7,7 +7,7 @@
 
 import assert = require('assert');
 import * as Path from 'path';
-import {DebugClient} from './DebugClient';
+import {DebugClient} from './debugClient';
 import {DebugProtocol} from 'vscode-debugprotocol';
 
 suite('Node Debug Adapter', () => {
