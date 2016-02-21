@@ -26,7 +26,7 @@ suite('Node Debug Adapter', () => {
 	});
 
 	teardown(done => {
-		dc.stop(done); 
+		dc.stop(done);
 	});
 
 	suite('basic', () => {
@@ -44,7 +44,7 @@ suite('Node Debug Adapter', () => {
 
 		test('should produce error for invalid \'pathFormat\'', done => {
 			dc.initializeRequest({
-				adapterID: 'mock',
+				adapterID: 'mono',
 				linesStartAt1: true,
 				columnsStartAt1: true,
 				pathFormat: 'url'
