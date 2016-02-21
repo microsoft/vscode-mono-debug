@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{6B18B22D-6B1A-4BF9-BD46-DF84EE2181C5}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>OpenDebugMono</RootNamespace>
+    <RootNamespace>VSCodeDebug</RootNamespace>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
@@ -88,15 +88,11 @@
       <Link>src\sdb\src\Utilities.cs</Link>
     </Compile>
     <Compile Include="src\Terminal.cs" />
-    <Compile Include="src\Program.cs" />
-    <Compile Include="src\PathUtilities.cs" />
     <Compile Include="src\Handles.cs" />
-    <Compile Include="src\Results.cs" />
     <Compile Include="src\Utilities.cs" />
-    <Compile Include="src\Types.cs" />
-    <Compile Include="src\Events.cs" />
-    <Compile Include="src\DebugProtocol.cs" />
     <Compile Include="src\DebugSession.cs" />
+    <Compile Include="src\MonoDebug.cs" />
+    <Compile Include="src\Protocol.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

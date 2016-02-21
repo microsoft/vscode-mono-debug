@@ -118,7 +118,7 @@ namespace VSCodeDebug
 
 			if (environmentVariables != null) {
 				// we cannot set the env vars on the process StartInfo because we need to set StartInfo.UseShellExecute to true at the same time.
-				// instead we set the env vars on OpenDebug itself because we know that OpenDebug lives as long as a debug session.
+				// instead we set the env vars on MonoDebug itself because we know that MonoDebug lives as long as a debug session.
 				foreach (var entry in environmentVariables) {
 					System.Environment.SetEnvironmentVariable(entry.Key, entry.Value);
 				}
@@ -267,7 +267,7 @@ namespace VSCodeDebug
 
 			if (environmentVariables != null) {
 				// we cannot set the env vars on the process StartInfo because we need to set StartInfo.UseShellExecute to true at the same time.
-				// instead we set the env vars on OpenDebug itself because we know that OpenDebug lives as long as a debug session.
+				// instead we set the env vars on MonoDebug itself because we know that MonoDebug lives as long as a debug session.
 				foreach (var entry in environmentVariables) {
 					System.Environment.SetEnvironmentVariable(entry.Key, entry.Value);
 				}

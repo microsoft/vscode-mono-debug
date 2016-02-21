@@ -11,82 +11,82 @@ using Newtonsoft.Json;
 
 namespace VSCodeDebug
 {
-	public class DPMessage
+	public class ProtocolMessage
 	{
 		public int seq;
-		public string type;
+		public string type { get; }
 
-		public DPMessage(string typ) {
+		public ProtocolMessage(string typ) {
 			type = typ;
+		}
+
+		public ProtocolMessage(string typ, int sq) {
+			type = typ;
+			seq = sq;
 		}
 	}
 
-	public class DPRequest : DPMessage
+	public class Request : ProtocolMessage
 	{
-		public string command;
-		public dynamic arguments;
+		public string command { get; set; }
+		public dynamic arguments { get; set; }
 
-		public DPRequest(int id, string cmd, dynamic arg) : base("request") {
-			seq = id;
+		public Request(int id, string cmd, dynamic arg) : base("request", id) {
 			command = cmd;
 			arguments = arg;
 		}
 	}
 
-	public class DPResponse : DPMessage
+	/*
+	 * subclasses of ResponseBody are serialized as the response body.
+	 * Don't change their instance variables since that will break the debug protocol.
+	 */
+	public class ResponseBody {
+		// empty
+	}
+
+	public class Response : ProtocolMessage
 	{
-		public bool success;
-		public string message;
-		public int request_seq;
-		public string command;
-		public dynamic body;
+		public bool success { get; private set; }
+		public string message { get; private set; }
+		public int request_seq { get; }
+		public string command { get; }
+		public ResponseBody body { get; private set; }
 
-		public DPResponse() : base("response") {
+		public Response(Request req) : base("response") {
+			success = true;
+			request_seq = req.seq;
+			command = req.command;
 		}
 
-		public DPResponse(int rseq, string cmd) : base("response") {
-			request_seq = rseq;
-			command = cmd;
-		}
-
-		public void SetBody(dynamic bdy) {
+		public void SetBody(ResponseBody bdy) {
+			success = true;
 			body = bdy;
-			if (bdy is ErrorResponseBody) {
-				var e = (ErrorResponseBody) bdy;
-				var msg = e.error;
-				success = false;
-				message = Utilities.ExpandVariables(msg.format, msg.variables);
-			} else {
-				success = true;
-			}
+		}
+
+		public void SetErrorBody(string msg, ResponseBody bdy = null) {
+			success = false;
+			message = msg;
+			body = bdy;
 		}
 	}
 
-	public class DPEvent : DPMessage
+	public class Event : ProtocolMessage
 	{
 		[JsonProperty(PropertyName = "event")]
-		public string eventType;
-		public dynamic body;
+		public string eventType { get; }
+		public dynamic body { get; }
 
-		public DPEvent() : base("event") {
-		}
-
-		public DPEvent(dynamic m) : base("event") {
-			seq = m.seq;
-			eventType = m["event"];
-			body = m.body;
-		}
-
-		public DPEvent(string type, dynamic bdy = null) : base("event") {
+		public Event(string type, dynamic bdy = null) : base("event") {
 			eventType = type;
 			body = bdy;
 		}
 	}
 
 	/*
-     * The ServerProtocol can be used to implement a server that uses the VSCode debug protocol.
+     * The ProtocolServer can be used to implement a server that uses the VSCode debug protocol.
      */
-	public class ServerProtocol
+	public abstract class ProtocolServer
 	{
 		public bool TRACE;
 		public bool TRACE_RESPONSE;
@@ -99,7 +99,6 @@ namespace VSCodeDebug
 
 		private int _sequenceNumber;
 
-		private Stream _inputStream;
 		private Stream _outputStream;
 
 		private ByteBuffer _rawData;
@@ -107,28 +106,25 @@ namespace VSCodeDebug
 
 		private bool _stopRequested;
 
-		private Action<string, dynamic, DPResponse> _callback;
 
-
-		public ServerProtocol(Stream inputStream, Stream outputStream) {
+		public ProtocolServer() {
 			_sequenceNumber = 1;
-			_inputStream = inputStream;
-			_outputStream = outputStream;
 			_bodyLength = -1;
 			_rawData = new ByteBuffer();
 		}
 
-		public async Task<int> Start(Action<string, dynamic, DPResponse> cb)
+		public async Task Start(Stream inputStream, Stream outputStream)
 		{
-			_callback = cb;
+			_outputStream = outputStream;
 
 			byte[] buffer = new byte[BUFFER_SIZE];
 
 			_stopRequested = false;
 			while (!_stopRequested) {
-				var read = await _inputStream.ReadAsync(buffer, 0, buffer.Length);
+				var read = await inputStream.ReadAsync(buffer, 0, buffer.Length);
 
 				if (read == 0) {
+					// end of stream
 					break;
 				}
 
@@ -137,7 +133,6 @@ namespace VSCodeDebug
 					ProcessData();
 				}
 			}
-			return 0;
 		}
 
 		public void Stop()
@@ -145,10 +140,12 @@ namespace VSCodeDebug
 			_stopRequested = true;
 		}
 
-		public void SendEvent(string eventType, dynamic body)
+		public void SendEvent(Event e)
 		{
-			SendMessage(new DPEvent(eventType, body));
+			SendMessage(e);
 		}
+
+		protected abstract void DispatchRequest(string command, dynamic args, Response response);
 
 		// ---- private ------------------------------------------------------------------------
 
@@ -186,22 +183,20 @@ namespace VSCodeDebug
 
 		private void Dispatch(string req)
 		{
-			var request = JsonConvert.DeserializeObject<DPRequest>(req);
+			var request = JsonConvert.DeserializeObject<Request>(req);
 			if (request != null && request.type == "request") {
 				if (TRACE)
 					Console.Error.WriteLine(string.Format("C {0}: {1}", request.command, JsonConvert.SerializeObject(request.arguments)));
 
-				if (_callback != null) {
-					var response = new DPResponse(request.seq, request.command);
+				var response = new Response(request);
 
-					_callback.Invoke(request.command, request.arguments, response);
+				DispatchRequest(request.command, request.arguments, response);
 
-					SendMessage(response);
-				}
+				SendMessage(response);
 			}
 		}
 
-		private void SendMessage(DPMessage message)
+		protected void SendMessage(ProtocolMessage message)
 		{
 			message.seq = _sequenceNumber++;
 
@@ -209,7 +204,7 @@ namespace VSCodeDebug
 				Console.Error.WriteLine(string.Format(" R: {0}", JsonConvert.SerializeObject(message)));
 			}
 			if (TRACE && message.type == "event") {
-				DPEvent e = (DPEvent)message;
+				Event e = (Event)message;
 				Console.Error.WriteLine(string.Format("E {0}: {1}", e.eventType, JsonConvert.SerializeObject(e.body)));
 			}
 
@@ -219,11 +214,11 @@ namespace VSCodeDebug
 				_outputStream.Flush();
 			}
 			catch (Exception) {
-				//
+				// ignore
 			}
 		}
 
-		private static byte[] ConvertToBytes(DPMessage request)
+		private static byte[] ConvertToBytes(ProtocolMessage request)
 		{
 			var asJson = JsonConvert.SerializeObject(request);
 			byte[] jsonBytes = Encoding.GetBytes(asJson);

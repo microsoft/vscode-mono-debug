@@ -50,7 +50,7 @@ namespace VSCodeDebug
 			} else {
 				// stdin/stdout
 				Console.Error.WriteLine("waiting for debug protocol on stdin/stdout");
-				Dispatch(Console.OpenStandardInput(), Console.OpenStandardOutput());
+				RunSession(Console.OpenStandardInput(), Console.OpenStandardOutput());
 			}
 		}
 
@@ -68,7 +68,7 @@ namespace VSCodeDebug
 						new System.Threading.Thread(() => {
 							using (var networkStream = new NetworkStream(clientSocket)) {
 								try {
-									Dispatch(networkStream, networkStream);
+									RunSession(networkStream, networkStream);
 								}
 								catch (Exception e) {
 									Console.Error.WriteLine("Exception: " + e);
@@ -86,58 +86,12 @@ namespace VSCodeDebug
 			}).Start();
 		}
 
-		private static void Dispatch(Stream inputStream, Stream outputStream)
+		private static void RunSession(Stream inputStream, Stream outputStream)
 		{
-			ServerProtocol protocol = new ServerProtocol(inputStream, outputStream);
-
-			protocol.TRACE = trace_requests;
-			protocol.TRACE_RESPONSE = trace_responses;
-
-			IDebugSession debugSession = null;
-
-			var r = protocol.Start((string command, dynamic args, DPResponse response) => {
-
-				if (args == null) {
-					args = new { };
-				}
-
-				if (command == "initialize") {
-					string adapterID = Utilities.GetString(args, "adapterID");
-					if (adapterID == null) {
-						response.SetBody(new ErrorResponseBody(new Message(1101, "initialize: property 'adapterID' is missing or empty")));
-						return;
-					}
-
-					OperatingSystem os = Environment.OSVersion;
-
-					if ((os.Platform == PlatformID.MacOSX || os.Platform == PlatformID.Unix) && adapterID == "mono") {
-						debugSession = new SDBDebugSession((e) => protocol.SendEvent(e.type, e));
-					}
-						
-					if (debugSession == null) {
-						response.SetBody(new ErrorResponseBody(new Message(1103, "initialize: can't create debug session for adapter '{_id}'", new { _id = adapterID })));
-						return;
-					}
-				}
-
-				if (debugSession != null) {
-
-					try {
-						DebugResponse dr = debugSession.Dispatch(command, args);
-						if (dr != null) {
-							response.SetBody(dr.Body);
-						}
-					}
-					catch (Exception e) {
-						response.SetBody(new ErrorResponseBody(new Message(1104, "error while processing request '{_request}' (exception: {_exception})", new { _request = command, _exception = e.Message })));
-					}
-
-					if (command == "disconnect") {
-						protocol.Stop();
-					}
-				}
-
-			}).Result;
+			DebugSession debugSession = new MonoDebugSession();
+			debugSession.TRACE = trace_requests;
+			debugSession.TRACE_RESPONSE = trace_responses;
+			debugSession.Start(inputStream, outputStream).Wait();
 		}
 	}
 }

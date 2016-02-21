@@ -130,18 +130,5 @@ namespace VSCodeDebug
 				return match.Groups[0].Value;
 			});
 		}
-
-		public static string GetString(dynamic args, string property, string dflt = null)
-		{
-			var s = (string)args[property];
-			if (s == null) {
-				return dflt;
-			}
-			s = s.Trim();
-			if (s.Length == 0) {
-				return dflt;
-			}
-			return s;
-		}
 	}
 }

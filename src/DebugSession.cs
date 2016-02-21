@@ -3,40 +3,258 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 using System;
-using System.Threading.Tasks;
-using Microsoft.CSharp.RuntimeBinder;
+using System.Collections.Generic;
+using System.Linq;
+using System.IO;
+
 
 namespace VSCodeDebug
 {
-    public interface IDebugSession
-	{
-		DebugResponse Dispatch(string command, dynamic args);
+	// ---- Types -------------------------------------------------------------------------
 
-		Task<DebugResponse> Initialize(dynamic arguments);
-		Task<DebugResponse> Launch(dynamic arguments);
-		Task<DebugResponse> Attach(dynamic arguments);
-		Task<DebugResponse> Disconnect();
+	public class Message {
+		public int id { get; }
+		public string format { get; }
+		public dynamic variables { get; }
 
-		Task<DebugResponse> SetBreakpoints(Source source, int[] lines);
-		Task<DebugResponse> SetFunctionBreakpoints();
-		Task<DebugResponse> SetExceptionBreakpoints(string[] filter);
-
-		Task<DebugResponse> Continue(int threadId);
-		Task<DebugResponse> Next(int threadId);
-		Task<DebugResponse> StepIn(int threadId);
-		Task<DebugResponse> StepOut(int threadId);
-		Task<DebugResponse> Pause(int threadId);
-
-		Task<DebugResponse> Threads();
-		Task<DebugResponse> StackTrace(int threadId, int levels);
-		Task<DebugResponse> Scopes(int frameId);
-		Task<DebugResponse> Variables(int reference);
-		Task<DebugResponse> Source(int sourceReference);
-
-		Task<DebugResponse> Evaluate(string context, int frameId, string expression);
+		public Message(int id, string format, dynamic variables = null) {
+			this.id = id;
+			this.format = format;
+			this.variables = variables;
+		}
 	}
 
-	public abstract class DebugSession : IDebugSession
+	public class StackFrame
+	{
+		public int id { get; }
+		public Source source { get; }
+		public int line { get; }
+		public int column { get; }
+		public string name { get; }
+
+		public StackFrame(int id, string name, Source source, int line, int column) {
+			this.id = id;
+			this.name = name;
+			this.source = source;
+			this.line = line;
+			this.column = column;
+		}
+	}
+
+	public class Scope
+	{
+		public string name { get; }
+		public int variablesReference { get; }
+		public bool expensive { get; }
+
+		public Scope(string name, int variablesReference, bool expensive = false) {
+			this.name = name;
+			this.variablesReference = variablesReference;
+			this.expensive = expensive;
+		}
+	}
+
+	public class Variable
+	{
+		public string name { get; }
+		public string value { get; }
+		public int variablesReference { get; }
+
+		public Variable(string name, string value, int variablesReference = 0) {
+			this.name = name;
+			this.value = value;
+			this.variablesReference = variablesReference;
+		}
+	}
+
+	public class Thread
+	{
+		public int id { get; }
+		public string name { get; }
+
+		public Thread(int id, string name) {
+			this.id = id;
+			if (name == null || name.Length == 0) {
+				this.name = string.Format("Thread #{0}", id);
+			}
+			else {
+				this.name = name;
+			}
+		}
+	}
+
+	public class Source
+	{
+		public string name { get; }
+		public string path { get; }
+		public int sourceReference { get; }
+
+		public Source(string name, string path, int sourceReference = 0) {
+			this.name = name;
+			this.path = path;
+			this.sourceReference = sourceReference;
+		}
+
+		public Source(string path, int sourceReference = 0) {
+			this.name = Path.GetFileName(path);
+			this.path = path;
+			this.sourceReference = sourceReference;
+		}
+	}
+
+	public class Breakpoint
+	{
+		public bool verified { get; }
+		public int line { get; }
+
+		public Breakpoint(bool verified, int line) {
+			this.verified = verified;
+			this.line = line;
+		}
+	}
+
+	// ---- Events -------------------------------------------------------------------------
+
+	public class InitializedEvent : Event
+	{
+		public InitializedEvent()
+			: base("initialized") { }
+	}
+
+	public class StoppedEvent : Event
+	{
+		public StoppedEvent(int tid, string reasn, string txt = null)
+			: base("stopped", new {
+				threadId = tid,
+				reason = reasn,
+				text = txt
+			}) { }
+	}
+
+	public class ExitedEvent : Event
+	{
+		public ExitedEvent(int exCode)
+			: base("exited", new { exitCode = exCode } ) { }
+	}
+
+	public class TerminatedEvent : Event
+	{
+		public TerminatedEvent()
+			: base("terminated") {	}
+	}
+
+	public class ThreadEvent : Event
+	{
+		public ThreadEvent(string reasn, int tid)
+			: base("thread", new {
+				reason = reasn,
+				threadId = tid
+			}) { }
+	}
+
+	public class OutputEvent : Event
+	{
+		public OutputEvent(string cat, string outpt)
+			: base("output", new {
+				category = cat,
+				output = outpt
+			}) { }
+	}
+
+	// ---- Response -------------------------------------------------------------------------
+
+	public class Capabilities : ResponseBody {
+
+		public bool supportsConfigurationDoneRequest;
+		public bool supportsFunctionBreakpoints;
+		public bool supportsConditionalBreakpoints;
+		public bool supportsEvaluateForHovers;
+		public dynamic[] exceptionBreakpointFilters;
+	}
+
+	public class ErrorResponseBody : ResponseBody {
+
+		public Message error { get; }
+
+		public ErrorResponseBody(Message error) {
+			this.error = error;
+		}
+	}
+
+	public class StackTraceResponseBody : ResponseBody
+	{
+		public StackFrame[] stackFrames { get; }
+
+		public StackTraceResponseBody(List<StackFrame> frames = null) {
+			if (frames == null)
+				stackFrames = new StackFrame[0];
+			else
+				stackFrames = frames.ToArray<StackFrame>();
+		}
+	}
+
+	public class ScopesResponseBody : ResponseBody
+	{
+		public Scope[] scopes { get; }
+
+		public ScopesResponseBody(List<Scope> scps = null) {
+			if (scps == null)
+				scopes = new Scope[0];
+			else
+				scopes = scps.ToArray<Scope>();
+		}
+	}
+
+	public class VariablesResponseBody : ResponseBody
+	{
+		public Variable[] variables { get; }
+
+		public VariablesResponseBody(List<Variable> vars = null) {
+			if (vars == null)
+				variables = new Variable[0];
+			else
+				variables = vars.ToArray<Variable>();
+		}
+	}
+
+	public class ThreadsResponseBody : ResponseBody
+	{
+		public Thread[] threads { get; }
+
+		public ThreadsResponseBody(List<Thread> vars = null) {
+			if (vars == null)
+				threads = new Thread[0];
+			else
+				threads = vars.ToArray<Thread>();
+		}
+	}
+
+	public class EvaluateResponseBody : ResponseBody
+	{
+		public string result { get; }
+		public int variablesReference { get; }
+
+		public EvaluateResponseBody(string value, int reff = 0) {
+			result = value;
+			variablesReference = reff;
+		}
+	}
+
+	public class SetBreakpointsResponseBody : ResponseBody
+	{
+		public Breakpoint[] breakpoints { get; }
+
+		public SetBreakpointsResponseBody(List<Breakpoint> bpts = null) {
+			if (bpts == null)
+				breakpoints = new Breakpoint[0];
+			else
+				breakpoints = bpts.ToArray<Breakpoint>();
+		}
+	}
+
+	// ---- The Session --------------------------------------------------------
+
+	public abstract class DebugSession : ProtocolServer
 	{
 		private bool _debuggerLinesStartAt1;
 		private bool _debuggerPathsAreURI;
@@ -44,221 +262,182 @@ namespace VSCodeDebug
 		private bool _clientPathsAreURI = true;
 
 
-		public DebugSession(bool debuggerLinesStartAt1, bool debuggerPathsAreURI = false) {
+		public DebugSession(bool debuggerLinesStartAt1, bool debuggerPathsAreURI = false)
+		{
 			_debuggerLinesStartAt1 = debuggerLinesStartAt1;
 			_debuggerPathsAreURI = debuggerPathsAreURI;
 		}
 
-		public virtual DebugResponse Dispatch(string command, dynamic args)
+		public void SendResponse(Response response, dynamic body = null)
 		{
-			int thread;
+			if (body != null) {
+				response.SetBody(body);
+			}
+			SendMessage(response);
+		}
 
-			switch (command) {
+		public void SendErrorResponse(Response response, int id, string format, dynamic arguments = null)
+		{
+			var msg = new Message(id, format, arguments);
+			var message = Utilities.ExpandVariables(msg.format, msg.variables);
+			response.SetErrorBody(message, new ErrorResponseBody(msg));
+			SendMessage(response);
+		}
 
-			case "initialize":
-				if (args.linesStartAt1 != null) {
-					_clientLinesStartAt1 = (bool)args.linesStartAt1;
-				}
-				var pathFormat = (string)args.pathFormat;
-				if (pathFormat != null) {
-					switch (pathFormat) {
-					case "uri":
-						_clientPathsAreURI = true;
-						break;
-					case "path":
-						_clientPathsAreURI = false;
-						break;
-					default:
-						return new DebugResponse(1015, "initialize: bad value '{_format}' for pathFormat", new { _format = pathFormat });
+		protected override void DispatchRequest(string command, dynamic args, Response response)
+		{
+			if (args == null) {
+				args = new { };
+			}
+
+			try {
+				switch (command) {
+
+				case "initialize":
+					if (args.linesStartAt1 != null) {
+						_clientLinesStartAt1 = (bool)args.linesStartAt1;
 					}
-				}
-				return Initialize(args).Result;
-
-			case "launch":
-				return Launch(args).Result;
-
-			case "attach":
-				return Attach(args).Result;
-
-			case "disconnect":
-				return Disconnect().Result;
-
-			case "next":
-				thread = GetInt(args, "threadId", 0);
-				return Next(thread).Result;
-
-			case "continue":
-				thread = GetInt(args, "threadId", 0);
-				return Continue(thread).Result;
-
-			case "stepIn":
-				thread = GetInt(args, "threadId", 0);
-				return StepIn(thread).Result;
-
-			case "stepOut":
-				thread = GetInt(args, "threadId", 0);
-				return StepOut(thread).Result;
-
-			case "pause":
-				thread = GetInt(args, "threadId", 0);
-				return Pause(thread).Result;
-
-			case "stackTrace":
-				int levels = GetInt(args, "levels", 0);
-				thread = GetInt(args, "threadId", 0);
-				return StackTrace(thread, levels).Result;
-
-			case "scopes":
-				int frameId0 = GetInt(args, "frameId", 0);
-				return Scopes(frameId0).Result;
-
-			case "variables":
-				int varRef = GetInt(args, "variablesReference", -1);
-				if (varRef == -1) {
-					return new DebugResponse(1009, "variables: property 'variablesReference' is missing");
-				}
-				return Variables(varRef).Result;
-
-			case "source":
-				int sourceRef = GetInt(args, "sourceReference", -1);
-				if (sourceRef == -1) {
-					return new DebugResponse(1010, "source: property 'sourceReference' is missing");
-				}
-				return Source(sourceRef).Result;
-
-			case "threads":
-				return Threads().Result;
-
-			case "setBreakpoints":
-				string path = null;
-				string name = null;
-				int reference = 0;
-				int noOfSources = 0;
-
-				dynamic source = args.source;
-				if (source != null) {
-					string p = (string)source.path;
-					if (p != null && p.Trim().Length > 0) {
-						path = p;
-						noOfSources++;
-					}
-					try {
-						reference = (int)source.reference;
-						if (reference > 0) {
-							noOfSources++;
+					var pathFormat = (string)args.pathFormat;
+					if (pathFormat != null) {
+						switch (pathFormat) {
+						case "uri":
+							_clientPathsAreURI = true;
+							break;
+						case "path":
+							_clientPathsAreURI = false;
+							break;
+						default:
+							SendErrorResponse(response, 1015, "initialize: bad value '{_format}' for pathFormat", new { _format = pathFormat });
+							return;
 						}
 					}
-					catch (RuntimeBinderException) {
-						reference = 0;
-					}
-					string nm = (string)source.name;
-					if (nm != null && nm.Trim().Length > 0) {
-						name = nm;
-						noOfSources++;
-					}
-				}
-				if (noOfSources > 0) {
-					var src2 = new Source(name, path, reference);
-					var lines = args.lines.ToObject<int[]>();
-					return SetBreakpoints(src2, lines).Result;
-				}
-				return new DebugResponse(1012, "setBreakpoints: property 'source' is empty or misformed");
+					Initialize(response, args);
+					break;
 
-			case "setFunctionBreakpoints":
-				return SetFunctionBreakpoints().Result;
+				case "launch":
+					Launch(response, args);
+					break;
 
-			case "setExceptionBreakpoints":
-				string[] filters = null;
-				if (args.filters != null) {
-					filters = args.filters.ToObject<string[]>();
-				}
-				else {
-					filters = new string[0];
-				}
-				return SetExceptionBreakpoints(filters).Result;
+				case "attach":
+					Attach(response, args);
+					break;
 
-			case "evaluate":
-				var context = GetString(args, "context");
-				int frameId = GetInt(args, "frameId", -1);
-				var expression = GetString(args, "expression");
-				if (expression == null) {
-					return new DebugResponse(1013, "evaluate: property 'expression' is missing, null, or empty");
-				}
-				return Evaluate(context, frameId, expression).Result;
+				case "disconnect":
+					Disconnect(response, args);
+					break;
 
-			default:
-				return new DebugResponse(1014, "unrecognized request: {_request}", new { _request = command });
+				case "next":
+					Next(response, args);
+					break;
+
+				case "continue":
+					Continue(response, args);
+					break;
+
+				case "stepIn":
+					StepIn(response, args);
+					break;
+
+				case "stepOut":
+					StepOut(response, args);
+					break;
+
+				case "pause":
+					Pause(response, args);
+					break;
+
+				case "stackTrace":
+					StackTrace(response, args);
+					break;
+
+				case "scopes":
+					Scopes(response, args);
+					break;
+
+				case "variables":
+					Variables(response, args);
+					break;
+
+				case "source":
+					Source(response, args);
+					break;
+
+				case "threads":
+					Threads(response, args);
+					break;
+
+				case "setBreakpoints":
+					SetBreakpoints(response, args);
+					break;
+
+				case "setFunctionBreakpoints":
+					SetFunctionBreakpoints(response, args);
+					break;
+
+				case "setExceptionBreakpoints":
+					SetExceptionBreakpoints(response, args);
+					break;
+
+				case "evaluate":
+					Evaluate(response, args);
+					break;
+
+				default:
+					SendErrorResponse(response, 1014, "unrecognized request: {_request}", new { _request = command });
+					break;
+				}
+			}
+			catch (Exception e) {
+				SendErrorResponse(response, 1104, "error while processing request '{_request}' (exception: {_exception})", new { _request = command, _exception = e.Message });
+			}
+
+			if (command == "disconnect") {
+				Stop();
 			}
 		}
 
-		public virtual Task<DebugResponse> Initialize(dynamic args)
+		public abstract void Initialize(Response response, dynamic args);
+
+		public abstract void Launch(Response response, dynamic arguments);
+
+		public abstract void Attach(Response response, dynamic arguments);
+
+		public abstract void Disconnect(Response response, dynamic arguments);
+
+		public virtual void SetFunctionBreakpoints(Response response, dynamic arguments)
 		{
-			return Task.FromResult(new DebugResponse());
 		}
 
-		public abstract Task<DebugResponse> Launch(dynamic arguments);
-
-		public virtual Task<DebugResponse> Attach(dynamic arguments)
+		public virtual void SetExceptionBreakpoints(Response response, dynamic arguments)
 		{
-			return Task.FromResult(new DebugResponse(1016, "Attach not supported"));
 		}
 
-		public virtual Task<DebugResponse> Disconnect()
+		public abstract void SetBreakpoints(Response response, dynamic arguments);
+
+		public abstract void Continue(Response response, dynamic arguments);
+
+		public abstract void Next(Response response, dynamic arguments);
+
+		public abstract void StepIn(Response response, dynamic arguments);
+
+		public abstract void StepOut(Response response, dynamic arguments);
+
+		public abstract void Pause(Response response, dynamic arguments);
+
+		public abstract void StackTrace(Response response, dynamic arguments);
+
+		public abstract void Scopes(Response response, dynamic arguments);
+
+		public abstract void Variables(Response response, dynamic arguments);
+
+		public virtual void Source(Response response, dynamic arguments)
 		{
-			return Task.FromResult(new DebugResponse());
+			SendErrorResponse(response, 1020, "Source not supported");
 		}
 
-		public virtual Task<DebugResponse> SetFunctionBreakpoints()
-		{
-			return Task.FromResult(new DebugResponse());
-		}
+		public abstract void Threads(Response response, dynamic arguments);
 
-		public virtual Task<DebugResponse> SetExceptionBreakpoints(string[] filter)
-		{
-			return Task.FromResult(new DebugResponse());
-		}
-
-		public abstract Task<DebugResponse> SetBreakpoints(Source source, int[] lines);
-
-		public abstract Task<DebugResponse> Continue(int thread);
-
-		public abstract Task<DebugResponse> Next(int thread);
-
-		public virtual Task<DebugResponse> StepIn(int thread)
-		{
-			return Task.FromResult(new DebugResponse(1017, "StepIn not supported"));
-		}
-
-		public virtual Task<DebugResponse> StepOut(int thread)
-		{
-			return Task.FromResult(new DebugResponse(1018, "StepOut not supported"));
-		}
-
-		public virtual Task<DebugResponse> Pause(int thread)
-		{
-			return Task.FromResult(new DebugResponse(1019, "Pause not supported"));
-		}
-
-		public abstract Task<DebugResponse> StackTrace(int thread, int levels);
-
-		public abstract Task<DebugResponse> Scopes(int frameId);
-
-		public abstract Task<DebugResponse> Variables(int reference);
-
-		public virtual Task<DebugResponse> Source(int sourceId)
-		{
-			return Task.FromResult(new DebugResponse(1020, "Source not supported"));
-		}
-
-		public virtual Task<DebugResponse> Threads()
-		{
-			return Task.FromResult(new DebugResponse(new ThreadsResponseBody()));
-		}
-
-		public virtual Task<DebugResponse> Evaluate(string context, int frameId, string expression)
-		{
-			return Task.FromResult(new DebugResponse(1021, "Evaluate not supported"));
-		}
+		public abstract void Evaluate(Response response, dynamic arguments);
 
 		// protected
 
@@ -280,12 +459,6 @@ namespace VSCodeDebug
 			else {
 				return _clientLinesStartAt1 ? line - 1 : line;
 			}
-		}
-
-		protected int ConvertDebuggerColumnToClient(int column)
-		{
-			// TODO@AW same as line
-			return column;
 		}
 
 		protected string ConvertDebuggerPathToClient(string path)
@@ -343,42 +516,6 @@ namespace VSCodeDebug
 					return clientPath;
 				}
 			}
-		}
-
-		// private
-
-		private static bool GetBool(dynamic args, string property)
-		{
-			try {
-				return (bool)args[property];
-			}
-			catch (RuntimeBinderException) {
-			}
-			return false;
-		}
-
-		private static int GetInt(dynamic args, string property, int dflt)
-		{
-			try {
-				return (int)args[property];
-			}
-			catch (RuntimeBinderException) {
-				// ignore and return default value
-			}
-			return dflt;
-		}
-
-		private static string GetString(dynamic args, string property, string dflt = null)
-		{
-			var s = (string)args[property];
-			if (s == null) {
-				return dflt;
-			}
-			s = s.Trim();
-			if (s.Length == 0) {
-				return dflt;
-			}
-			return s;
 		}
 	}
 }

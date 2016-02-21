@@ -204,7 +204,7 @@ namespace Mono.Debugger.Client
 			return "<none>";
 		}
 
-		public static Action<string, SourceLocation, ThreadInfo, string> Callback { get; set; }
+		public static Action<string, ThreadInfo, string> Callback { get; set; }
 
 		static void EnsureCreated()
 		{
@@ -239,7 +239,7 @@ namespace Mono.Debugger.Client
 					//{
 						if (Callback != null)
 						{
-							Callback.Invoke(isStdErr ? "ErrorOutput" : "Output", null, null, text);
+							Callback.Invoke(isStdErr ? "ErrorOutput" : "Output", null, text);
 						}
 						else
 						{
@@ -308,7 +308,7 @@ namespace Mono.Debugger.Client
 
 					if (Callback != null)
 					{
-						Callback.Invoke("TargetStopped", ActiveFrame.SourceLocation, e.Thread, null);
+						Callback.Invoke("TargetStopped", e.Thread, null);
 					}
 
 					CommandLine.ResumeEvent.Set();
@@ -345,7 +345,7 @@ namespace Mono.Debugger.Client
 
 					if (Callback != null)
 					{
-						Callback.Invoke("TargetHitBreakpoint", ActiveFrame.SourceLocation, e.Thread, null);
+						Callback.Invoke("TargetHitBreakpoint", e.Thread, null);
 					}
 
 					CommandLine.ResumeEvent.Set();
@@ -378,7 +378,7 @@ namespace Mono.Debugger.Client
 
 					if (Callback != null)
 					{
-						Callback.Invoke("TargetExited", null, null, null);
+						Callback.Invoke("TargetExited", null, null);
 					}
 
 					CommandLine.ResumeEvent.Set();
@@ -395,7 +395,7 @@ namespace Mono.Debugger.Client
 
 					if (Callback != null)
 					{
-						Callback.Invoke("TargetExceptionThrown", ActiveFrame.SourceLocation, e.Thread, null);
+						Callback.Invoke("TargetExceptionThrown", e.Thread, null);
 					}
 
 					CommandLine.ResumeEvent.Set();
@@ -412,7 +412,7 @@ namespace Mono.Debugger.Client
 
 					if (Callback != null)
 					{
-						Callback.Invoke("TargetUnhandledException", ActiveFrame.SourceLocation, e.Thread, null);
+						Callback.Invoke("TargetUnhandledException", e.Thread, null);
 					}
 
 					CommandLine.ResumeEvent.Set();
@@ -425,7 +425,7 @@ namespace Mono.Debugger.Client
 
 					if (Callback != null)
 					{
-						Callback.Invoke("TargetThreadStarted", null, e.Thread, null);
+						Callback.Invoke("TargetThreadStarted", e.Thread, null);
 					}
 				};
 
@@ -436,7 +436,7 @@ namespace Mono.Debugger.Client
 
 					if (Callback != null)
 					{
-						Callback.Invoke("TargetThreadStopped", null, e.Thread, null);
+						Callback.Invoke("TargetThreadStopped", e.Thread, null);
 					}
 				};
 			}
