@@ -22,12 +22,11 @@
 // THE SOFTWARE.
 //
 
-using System;
 using System.Threading;
 
 namespace Mono.Debugger.Client
 {
-	public static class CommandLine
+    public static class CommandLine
 	{
 		internal static AutoResetEvent ResumeEvent { get; private set; }
 
