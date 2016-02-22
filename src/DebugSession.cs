@@ -16,11 +16,15 @@ namespace VSCodeDebug
 		public int id { get; }
 		public string format { get; }
 		public dynamic variables { get; }
+		public dynamic showUser { get; }
+		public dynamic sendTelemetry { get; }
 
-		public Message(int id, string format, dynamic variables = null) {
+		public Message(int id, string format, dynamic variables = null, bool user = true, bool telemetry = false) {
 			this.id = id;
 			this.format = format;
 			this.variables = variables;
+			this.showUser = user;
+			this.sendTelemetry = telemetry;
 		}
 	}
 
@@ -276,9 +280,9 @@ namespace VSCodeDebug
 			SendMessage(response);
 		}
 
-		public void SendErrorResponse(Response response, int id, string format, dynamic arguments = null)
+		public void SendErrorResponse(Response response, int id, string format, dynamic arguments = null, bool telemetry = false)
 		{
-			var msg = new Message(id, format, arguments);
+			var msg = new Message(id, format, arguments, !telemetry, telemetry);
 			var message = Utilities.ExpandVariables(msg.format, msg.variables);
 			response.SetErrorBody(message, new ErrorResponseBody(msg));
 			SendMessage(response);
