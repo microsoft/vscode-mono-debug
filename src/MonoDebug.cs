@@ -54,6 +54,14 @@ namespace VSCodeDebug
 			}
 		}
 
+		private static void RunSession(Stream inputStream, Stream outputStream)
+		{
+			DebugSession debugSession = new MonoDebugSession();
+			debugSession.TRACE = trace_requests;
+			debugSession.TRACE_RESPONSE = trace_responses;
+			debugSession.Start(inputStream, outputStream).Wait();
+		}
+
 		private static void RunServer(int port)
 		{
 			TcpListener serverSocket = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
@@ -74,24 +82,12 @@ namespace VSCodeDebug
 									Console.Error.WriteLine("Exception: " + e);
 								}
 							}
-							#if DNXCORE50
-							clientSocket.Dispose();
-							#else
 							clientSocket.Close();
-							#endif
 							Console.Error.WriteLine(">> client connection closed");
 						}).Start();
 					}
 				}
 			}).Start();
-		}
-
-		private static void RunSession(Stream inputStream, Stream outputStream)
-		{
-			DebugSession debugSession = new MonoDebugSession();
-			debugSession.TRACE = trace_requests;
-			debugSession.TRACE_RESPONSE = trace_responses;
-			debugSession.Start(inputStream, outputStream).Wait();
 		}
 	}
 }

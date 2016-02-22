@@ -28,8 +28,8 @@ namespace VSCodeDebug
 
 	public class Request : ProtocolMessage
 	{
-		public string command { get; set; }
-		public dynamic arguments { get; set; }
+		public string command;
+		public dynamic arguments;
 
 		public Request(int id, string cmd, dynamic arg) : base("request", id) {
 			command = cmd;
@@ -38,7 +38,7 @@ namespace VSCodeDebug
 	}
 
 	/*
-	 * subclasses of ResponseBody are serialized as the response body.
+	 * subclasses of ResponseBody are serialized as the body of a response.
 	 * Don't change their instance variables since that will break the debug protocol.
 	 */
 	public class ResponseBody {
