@@ -130,7 +130,7 @@ namespace VSCodeDebug
 				exceptionBreakpointFilters = new dynamic[0]
 			});
 
-			// Mono Debug is ready to accept breakpoints immediately (so it doesn't have to wait until the target is known)
+			// Mono Debug is ready to accept breakpoints immediately
 			SendEvent(new InitializedEvent());
 		}
 
@@ -141,12 +141,12 @@ namespace VSCodeDebug
 			// validate argument 'program'
 			string programPath = getString(args, "program");
 			if (programPath == null) {
-				SendErrorResponse(response, 1001, "launch: property 'program' is missing or empty");
+				SendErrorResponse(response, 1001, "property 'program' is missing or empty");
 				return;
 			}
 			programPath = ConvertClientPathToDebugger(programPath);
 			if (!File.Exists(programPath) && !Directory.Exists(programPath)) {
-				SendErrorResponse(response, 1002, "launch: program '{path}' does not exist", new { path = programPath });
+				SendErrorResponse(response, 1002, "program '{path}' does not exist", new { path = programPath });
 				return;
 			}
 
@@ -164,28 +164,27 @@ namespace VSCodeDebug
 			if (workingDirectory != null) {
 				workingDirectory = workingDirectory.Trim();
 				if (workingDirectory.Length == 0) {
-					SendErrorResponse(response, 1003, "launch: property 'workingDirectory' is empty");
+					SendErrorResponse(response, 1003, "property 'cwd' is empty");
 					return;
 				}
 				workingDirectory = ConvertClientPathToDebugger(workingDirectory);
 				if (!Directory.Exists(workingDirectory)) {
-					SendErrorResponse(response, 1004, "launch: workingDirectory '{path}' does not exist", new { path = workingDirectory });
+					SendErrorResponse(response, 1004, "cwd '{path}' does not exist", new { path = workingDirectory });
 					return;
 				}
 			}
-			workingDirectory = null;	// TODO@AW Why?
 
 			// validate argument 'runtimeExecutable'
 			var runtimeExecutable = (string)args.runtimeExecutable;
 			if (runtimeExecutable != null) {
 				runtimeExecutable = runtimeExecutable.Trim();
 				if (runtimeExecutable.Length == 0) {
-					SendErrorResponse(response, 1005, "launch: property 'runtimeExecutable' is empty");
+					SendErrorResponse(response, 1005, "property 'runtimeExecutable' is empty");
 					return;
 				}
 				runtimeExecutable = ConvertClientPathToDebugger(runtimeExecutable);
 				if (!File.Exists(runtimeExecutable)) {
-					SendErrorResponse(response, 1006, "launch: runtimeExecutable '{path}' does not exist", new { path = runtimeExecutable });
+					SendErrorResponse(response, 1006, "runtimeExecutable '{path}' does not exist", new { path = runtimeExecutable });
 					return;
 				}
 			}
@@ -212,14 +211,6 @@ namespace VSCodeDebug
 				}
 			}
 
-			bool externalConsole = false;
-			try {
-				externalConsole = (bool)args["externalConsole"];
-			}
-			catch (RuntimeBinderException) {
-				// ignore
-			}
-
 			if (Utilities.IsOSX() || Utilities.IsLinux()) {
 				const string host = "127.0.0.1";
 				int port = Utilities.FindFreePort(55555);
@@ -227,7 +218,7 @@ namespace VSCodeDebug
 				string mono_path = runtimeExecutable;
 				if (mono_path == null) {
 					if (!Terminal.IsOnPath(MONO)) {
-						SendErrorResponse(response, 3001, "launch: can't find runtime '{_runtime}' on PATH", new { _runtime = MONO });
+						SendErrorResponse(response, 3001, "can't find runtime '{_runtime}' on PATH", new { _runtime = MONO });
 						return;
 					}
 					mono_path = MONO;     // try to find mono through PATH
@@ -247,15 +238,15 @@ namespace VSCodeDebug
 					program = Path.GetFileName(programPath);
 				}
 				else {
-					// if working dir is given and if the executable is within that folder, we make the executable path relative to the working dir
-					//program = Utilities.MakeRelativePath(workingDirectory, programPath);		// TODO@AW
-					program = programPath;
+					// if working dir is given and if the executable is within that folder, we make the program path relative to the working dir
+					program = Utilities.MakeRelativePath(workingDirectory, programPath);
 				}
 
+				bool externalConsole = getBool(args, "externalConsole", false);
 				if (externalConsole) {
 					var result = Terminal.LaunchInTerminal(workingDirectory, mono_path, mono_args, program, arguments, env);
 					if (!result.Success) {
-						SendErrorResponse(response, 3002, "launch: can't launch terminal ({reason})", new { reason = result.Message });
+						SendErrorResponse(response, 3002, "can't launch terminal ({reason})", new { reason = result.Message });
 						return;
 					}
 				} else {
@@ -307,7 +298,7 @@ namespace VSCodeDebug
 						_process.BeginErrorReadLine();
 					}
 					catch (Exception e) {
-						SendErrorResponse(response, 3002, "launch: can't launch terminal ({reason})", new { reason = e.Message });
+						SendErrorResponse(response, 3002, "can't launch terminal ({reason})", new { reason = e.Message });
 						return;
 					}
 				}
@@ -359,20 +350,20 @@ namespace VSCodeDebug
 			// validate argument 'address'
 			var host = getString(args, "address");
 			if (host == null) {
-				SendErrorResponse(response, 1007, "attach: property 'address' is missing or empty");
+				SendErrorResponse(response, 1007, "property 'address' is missing or empty");
 				return;
 			}
 
 			// validate argument 'port'
 			var port = getInt(args, "port", -1);
 			if (port == -1) {
-				SendErrorResponse(response, 1008, "attach: property 'port' is missing");
+				SendErrorResponse(response, 1008, "property 'port' is missing");
 				return;
 			}
 
 			IPAddress address = Utilities.ResolveIPAddress(host);
 			if (address == null) {
-				SendErrorResponse(response, 3003, "attach: invalid address '{address}'", new { address = address });
+				SendErrorResponse(response, 3003, "invalid address '{address}'", new { address = address });
 				return;
 			}
 			Debugger.Connect(address, port);
@@ -446,7 +437,7 @@ namespace VSCodeDebug
 				}
 			}
 			if (path == null) {
-				SendErrorResponse(response, 1012, "setBreakpoints: property 'source' is empty or misformed");
+				SendErrorResponse(response, 1012, "setBreakpoints: property 'source' is empty or misformed", null, true);
 				return;
 			}
 			path = ConvertClientPathToDebugger(path);
@@ -515,7 +506,7 @@ namespace VSCodeDebug
 
 			ThreadInfo thread = Debugger.ActiveThread;
 			if (thread.Id != threadReference) {
-				Console.Error.WriteLine("stackTrace: unexpected: active thread should be the one requested");
+				// Console.Error.WriteLine("stackTrace: unexpected: active thread should be the one requested");
 				thread = FindThread(threadReference);
 				if (thread != null) {
 					thread.SetActive();
@@ -570,7 +561,7 @@ namespace VSCodeDebug
 		{
 			int reference = getInt(args, "variablesReference", -1);
 			if (reference == -1) {
-				SendErrorResponse(response, 1009, "variables: property 'variablesReference' is missing");
+				SendErrorResponse(response, 1009, "variables: property 'variablesReference' is missing", null, true);
 				return;
 			}
 
@@ -741,6 +732,17 @@ namespace VSCodeDebug
 				}
 			}
 			return false;
+		}
+
+		private static bool getBool(dynamic container, string propertyName, bool dflt = false)
+		{
+			try {
+				return (bool)container[propertyName];
+			}
+			catch (Exception) {
+				// ignore and return default value
+			}
+			return dflt;
 		}
 
 		private static int getInt(dynamic container, string propertyName, int dflt = 0)
