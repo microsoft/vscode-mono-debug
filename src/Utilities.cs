@@ -116,10 +116,14 @@ namespace VSCodeDebug
 
 		public static string ExpandVariables(string format, dynamic variables, bool underscoredOnly = true)
 		{
+			if (variables == null) {
+				variables = new { };
+			}
 			Type type = variables.GetType();
 			return VARIABLE.Replace(format, match => {
 				string name = match.Groups[1].Value;
 				if (!underscoredOnly || name.StartsWith("_")) {
+					
 					PropertyInfo property = type.GetProperty(name);
 					if (property != null) {
 						object value = property.GetValue(variables, null);
@@ -129,6 +133,25 @@ namespace VSCodeDebug
 				}
 				return match.Groups[0].Value;
 			});
+		}
+
+		/**
+		 * converts the given absPath into a path that is relative to the given dirPath.
+		 */
+		public static string MakeRelativePath(string dirPath, string absPath)
+		{
+			if (!dirPath.EndsWith("/")) {
+				dirPath += "/";
+			}
+			if (absPath.StartsWith(dirPath)) {
+				return absPath.Replace(dirPath, "");
+			}
+			return absPath;
+			/*
+			Uri uri1 = new Uri(path);
+			Uri uri2 = new Uri(dir_path);
+			return uri2.MakeRelativeUri(uri1).ToString();
+			*/
 		}
 	}
 }
