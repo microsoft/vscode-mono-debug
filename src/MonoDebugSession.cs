@@ -108,8 +108,7 @@ namespace VSCodeDebug
 		{
 			OperatingSystem os = Environment.OSVersion;
 			if (os.Platform != PlatformID.MacOSX && os.Platform != PlatformID.Unix) {
-				string adapterID = getString(args, "adapterID");
-				SendErrorResponse(response, 1103, "initialize: can't create debug session for adapter '{_id}'", new { _id = adapterID });
+				SendErrorResponse(response, 1103, "Mono Debug is not supported on this platform ({_platform})", new { _platform = os.Platform.ToString() } );
 				return;
 			}
 
