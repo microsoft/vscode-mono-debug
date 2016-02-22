@@ -108,7 +108,7 @@ namespace VSCodeDebug
 		{
 			OperatingSystem os = Environment.OSVersion;
 			if (os.Platform != PlatformID.MacOSX && os.Platform != PlatformID.Unix) {
-				SendErrorResponse(response, 1103, "Mono Debug is not supported on this platform ({_platform})", new { _platform = os.Platform.ToString() } );
+				SendErrorResponse(response, 3000, "Mono Debug is not supported on this platform ({_platform})", new { _platform = os.Platform.ToString() }, true, true);
 				return;
 			}
 
@@ -140,12 +140,12 @@ namespace VSCodeDebug
 			// validate argument 'program'
 			string programPath = getString(args, "program");
 			if (programPath == null) {
-				SendErrorResponse(response, 1001, "property 'program' is missing or empty");
+				SendErrorResponse(response, 3001, "property 'program' is missing or empty", null);
 				return;
 			}
 			programPath = ConvertClientPathToDebugger(programPath);
 			if (!File.Exists(programPath) && !Directory.Exists(programPath)) {
-				SendErrorResponse(response, 1002, "program '{path}' does not exist", new { path = programPath });
+				SendErrorResponse(response, 3002, "program '{path}' does not exist", new { path = programPath });
 				return;
 			}
 
@@ -163,12 +163,12 @@ namespace VSCodeDebug
 			if (workingDirectory != null) {
 				workingDirectory = workingDirectory.Trim();
 				if (workingDirectory.Length == 0) {
-					SendErrorResponse(response, 1003, "property 'cwd' is empty");
+					SendErrorResponse(response, 3003, "property 'cwd' is empty");
 					return;
 				}
 				workingDirectory = ConvertClientPathToDebugger(workingDirectory);
 				if (!Directory.Exists(workingDirectory)) {
-					SendErrorResponse(response, 1004, "cwd '{path}' does not exist", new { path = workingDirectory });
+					SendErrorResponse(response, 3004, "cwd '{path}' does not exist", new { path = workingDirectory });
 					return;
 				}
 			}
@@ -178,12 +178,12 @@ namespace VSCodeDebug
 			if (runtimeExecutable != null) {
 				runtimeExecutable = runtimeExecutable.Trim();
 				if (runtimeExecutable.Length == 0) {
-					SendErrorResponse(response, 1005, "property 'runtimeExecutable' is empty");
+					SendErrorResponse(response, 3005, "property 'runtimeExecutable' is empty");
 					return;
 				}
 				runtimeExecutable = ConvertClientPathToDebugger(runtimeExecutable);
 				if (!File.Exists(runtimeExecutable)) {
-					SendErrorResponse(response, 1006, "runtimeExecutable '{path}' does not exist", new { path = runtimeExecutable });
+					SendErrorResponse(response, 3006, "runtimeExecutable '{path}' does not exist", new { path = runtimeExecutable });
 					return;
 				}
 			}
@@ -217,7 +217,7 @@ namespace VSCodeDebug
 				string mono_path = runtimeExecutable;
 				if (mono_path == null) {
 					if (!Terminal.IsOnPath(MONO)) {
-						SendErrorResponse(response, 3001, "can't find runtime '{_runtime}' on PATH", new { _runtime = MONO });
+						SendErrorResponse(response, 3011, "can't find runtime '{_runtime}' on PATH", new { _runtime = MONO });
 						return;
 					}
 					mono_path = MONO;     // try to find mono through PATH
@@ -245,7 +245,7 @@ namespace VSCodeDebug
 				if (externalConsole) {
 					var result = Terminal.LaunchInTerminal(workingDirectory, mono_path, mono_args, program, arguments, env);
 					if (!result.Success) {
-						SendErrorResponse(response, 3002, "can't launch terminal ({reason})", new { reason = result.Message });
+						SendErrorResponse(response, 3012, "can't launch terminal ({reason})", new { reason = result.Message });
 						return;
 					}
 				} else {
@@ -297,7 +297,7 @@ namespace VSCodeDebug
 						_process.BeginErrorReadLine();
 					}
 					catch (Exception e) {
-						SendErrorResponse(response, 3002, "can't launch terminal ({reason})", new { reason = e.Message });
+						SendErrorResponse(response, 3012, "can't launch terminal ({reason})", new { reason = e.Message });
 						return;
 					}
 				}
@@ -349,20 +349,20 @@ namespace VSCodeDebug
 			// validate argument 'address'
 			var host = getString(args, "address");
 			if (host == null) {
-				SendErrorResponse(response, 1007, "property 'address' is missing or empty");
+				SendErrorResponse(response, 3007, "property 'address' is missing or empty");
 				return;
 			}
 
 			// validate argument 'port'
 			var port = getInt(args, "port", -1);
 			if (port == -1) {
-				SendErrorResponse(response, 1008, "property 'port' is missing");
+				SendErrorResponse(response, 3008, "property 'port' is missing");
 				return;
 			}
 
 			IPAddress address = Utilities.ResolveIPAddress(host);
 			if (address == null) {
-				SendErrorResponse(response, 3003, "invalid address '{address}'", new { address = address });
+				SendErrorResponse(response, 3013, "invalid address '{address}'", new { address = address });
 				return;
 			}
 			Debugger.Connect(address, port);
@@ -436,7 +436,7 @@ namespace VSCodeDebug
 				}
 			}
 			if (path == null) {
-				SendErrorResponse(response, 1012, "setBreakpoints: property 'source' is empty or misformed", null, true);
+				SendErrorResponse(response, 3010, "setBreakpoints: property 'source' is empty or misformed", null, false, true);
 				return;
 			}
 			path = ConvertClientPathToDebugger(path);
@@ -560,7 +560,7 @@ namespace VSCodeDebug
 		{
 			int reference = getInt(args, "variablesReference", -1);
 			if (reference == -1) {
-				SendErrorResponse(response, 1009, "variables: property 'variablesReference' is missing", null, true);
+				SendErrorResponse(response, 3009, "variables: property 'variablesReference' is missing", null, false, true);
 				return;
 			}
 
@@ -663,7 +663,7 @@ namespace VSCodeDebug
 					error = "no active stackframe";
 				}
 			}
-			SendErrorResponse(response, 3004, "evaluate request failed ({_reason})", new { _reason = error } );
+			SendErrorResponse(response, 3014, "evaluate request failed ({_reason})", new { _reason = error } );
 		}
 
 		//---- private ------------------------------------------

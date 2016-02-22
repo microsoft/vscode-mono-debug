@@ -280,9 +280,9 @@ namespace VSCodeDebug
 			SendMessage(response);
 		}
 
-		public void SendErrorResponse(Response response, int id, string format, dynamic arguments = null, bool telemetry = false)
+		public void SendErrorResponse(Response response, int id, string format, dynamic arguments = null, bool user = true, bool telemetry = false)
 		{
-			var msg = new Message(id, format, arguments, !telemetry, telemetry);
+			var msg = new Message(id, format, arguments, user, telemetry);
 			var message = Utilities.ExpandVariables(msg.format, msg.variables);
 			response.SetErrorBody(message, new ErrorResponseBody(msg));
 			SendMessage(response);
