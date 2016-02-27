@@ -7,3 +7,4 @@
 /obj/
 *.vsix
 mono-debug.userprefs
+npm-debug.log

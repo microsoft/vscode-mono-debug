@@ -5,7 +5,7 @@
 		"removeComments": false,
 		"preserveConstEnums": true,
 		"target": "es5",
-		"sourceMap": true,
+		"inlineSourceMap": true,
 		"outDir": "out"
 	}
 }
