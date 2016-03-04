@@ -70,6 +70,17 @@ suite('Node Debug Adapter', () => {
 			]);
 		});
 
+		test('should run program to the end (and not stop on Debugger.Break())', () => {
+
+			const PROGRAM = Path.join(DATA_ROOT, 'simple_break/Program.exe');
+
+			return Promise.all([
+				dc.configurationSequence(),
+				dc.launch({ program: PROGRAM, noDebug: true }),
+				dc.waitForEvent('terminated')
+			]);
+		});
+
 		test('should stop on debugger statement', () => {
 
 			const PROGRAM = Path.join(DATA_ROOT, 'simple_break/Program.exe');

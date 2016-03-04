@@ -7,7 +7,9 @@ namespace Tests
 
 		public static void Main(string[] args) {
 
-			Debugger.Break();
+			if (System.Diagnostics.Debugger.IsAttached) {
+				Debugger.Break();
+			}
 
 			Console.WriteLine("Hello World!");
 

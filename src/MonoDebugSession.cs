@@ -210,136 +210,129 @@ namespace VSCodeDebug
 				}
 			}
 
-			if (Utilities.IsOSX() || Utilities.IsLinux()) {
-				const string host = "127.0.0.1";
-				int port = Utilities.FindFreePort(55555);
+			const string host = "127.0.0.1";
+			int port = Utilities.FindFreePort(55555);
 
-				string mono_path = runtimeExecutable;
-				if (mono_path == null) {
-					if (!Terminal.IsOnPath(MONO)) {
-						SendErrorResponse(response, 3011, "Can't find runtime '{_runtime}' on PATH.", new { _runtime = MONO });
-						return;
-					}
-					mono_path = MONO;     // try to find mono through PATH
+			string mono_path = runtimeExecutable;
+			if (mono_path == null) {
+				if (!Terminal.IsOnPath(MONO)) {
+					SendErrorResponse(response, 3011, "Can't find runtime '{_runtime}' on PATH.", new { _runtime = MONO });
+					return;
 				}
-
-				var mono_args = new String[runtimeArguments != null ? runtimeArguments.Length + 2 : 2];
-				mono_args[0] = "--debug";
-				mono_args[1] = String.Format("--debugger-agent=transport=dt_socket,server=y,address={0}:{1}", host, port);
-				if (runtimeArguments != null) {
-					runtimeArguments.CopyTo(mono_args, 2);
-				}
-
-				string program;
-				if (workingDirectory == null) {
-					// if no working dir given, we use the direct folder of the executable
-					workingDirectory = Path.GetDirectoryName(programPath);
-					program = Path.GetFileName(programPath);
-				}
-				else {
-					// if working dir is given and if the executable is within that folder, we make the program path relative to the working dir
-					program = Utilities.MakeRelativePath(workingDirectory, programPath);
-				}
-
-				bool externalConsole = getBool(args, "externalConsole", false);
-				if (externalConsole) {
-					var result = Terminal.LaunchInTerminal(workingDirectory, mono_path, mono_args, program, arguments, env);
-					if (!result.Success) {
-						SendErrorResponse(response, 3012, "Can't launch terminal ({reason}).", new { reason = result.Message });
-						return;
-					}
-				} else {
-
-					_process = new System.Diagnostics.Process();
-					_process.StartInfo.CreateNoWindow = true;
-					_process.StartInfo.UseShellExecute = false;
-					_process.StartInfo.WorkingDirectory = workingDirectory;
-					_process.StartInfo.FileName = mono_path;
-					_process.StartInfo.Arguments = string.Format("{0} {1} {2}", Terminal.ConcatArgs(mono_args), Terminal.Quote(program), Terminal.ConcatArgs(arguments));
-
-					_stdoutEOF = false;
-					_process.StartInfo.RedirectStandardOutput = true;
-					_process.OutputDataReceived += (object sender, System.Diagnostics.DataReceivedEventArgs e) => {
-						if (e.Data == null) {
-							_stdoutEOF = true;
-						}
-						SendOutput("stdout", e.Data);
-					};
-
-					_stderrEOF = false;
-					_process.StartInfo.RedirectStandardError = true;
-					_process.ErrorDataReceived += (object sender, System.Diagnostics.DataReceivedEventArgs e) => {
-						if (e.Data == null) {
-							_stderrEOF = true;
-						}
-						SendOutput("stderr", e.Data);
-					};
-
-					_process.EnableRaisingEvents = true;
-					_process.Exited += (object sender, EventArgs e) => {
-						Terminate("node process exited");
-					};
-
-					if (env != null) {
-						// we cannot set the env vars on the process StartInfo because we need to set StartInfo.UseShellExecute to true at the same time.
-						// instead we set the env vars on MonoDebug itself because we know that MonoDebug lives as long as a debug session.
-						foreach (var entry in env) {
-							System.Environment.SetEnvironmentVariable(entry.Key, entry.Value);
-						}
-					}
-
-					var cmd = string.Format("{0} {1}", mono_path, _process.StartInfo.Arguments);
-					SendOutput("console", cmd);
-
-					try {
-						_process.Start();
-						_process.BeginOutputReadLine();
-						_process.BeginErrorReadLine();
-					}
-					catch (Exception e) {
-						SendErrorResponse(response, 3012, "Can't launch terminal ({reason}).", new { reason = e.Message });
-						return;
-					}
-				}
-
-				Debugger.Connect(IPAddress.Parse(host), port);
+				mono_path = MONO;     // try to find mono through PATH
 			}
-			else {	// Generic & Windows
-				CommandLine.WaitForSuspend();
 
-				if (workingDirectory == null) {
-					// if no working dir given, we use the direct folder of the executable
-					workingDirectory = Path.GetDirectoryName(programPath);
+			bool debug = ! getBool(args, "noDebug", false);
+			var list = new List<String>();
+			if (debug) {
+				list.Add("--debug");
+				list.Add(String.Format("--debugger-agent=transport=dt_socket,server=y,address={0}:{1}", host, port));
+			}
+			if (runtimeArguments != null) {
+				foreach (string item in runtimeArguments) {
+					list.Add(item);
 				}
-				Debugger.WorkingDirectory = workingDirectory;
+			}
+			var mono_args = list.ToArray();
 
-				if (arguments != null) {
-					string pargs = "";
-					foreach (var a in arguments) {
-						if (args.Length > 0) {
-							pargs += ' ';
+			string program;
+			if (workingDirectory == null) {
+				// if no working dir given, we use the direct folder of the executable
+				workingDirectory = Path.GetDirectoryName(programPath);
+				program = Path.GetFileName(programPath);
+			}
+			else {
+				// if working dir is given and if the executable is within that folder, we make the program path relative to the working dir
+				program = Utilities.MakeRelativePath(workingDirectory, programPath);
+			}
+
+			bool externalConsole = getBool(args, "externalConsole", false);
+			if (externalConsole) {
+
+				var result = Terminal.LaunchInTerminal(workingDirectory, mono_path, mono_args, program, arguments, env);
+				if (!result.Success) {
+					SendErrorResponse(response, 3012, "Can't launch terminal ({reason}).", new { reason = result.Message });
+					return;
+				}
+
+				if (result.ProcessId > 0) {
+					// since we got the mono runtime pid, we try to track it
+					try {
+						_process = System.Diagnostics.Process.GetProcessById(result.ProcessId);
+						if (_process != null) {
+							_process.EnableRaisingEvents = true;
+							_process.Exited += (object sender, EventArgs e) => {
+								Terminate("runtime process exited");
+							};
 						}
-						pargs += Terminal.Quote(a);
-					}
-					Debugger.Arguments = pargs;
-				}
-
-				if (environmentVariables != null) {
-					var dict = Debugger.EnvironmentVariables;
-					foreach (var entry in environmentVariables) {
-						dict.Add(entry.Key, entry.Value);
+					} catch (Exception) {
 					}
 				}
 
-				// TODO@AW we should use the runtimeExecutable
-				// TODO@AW we should pass runtimeArgs
+			} else {
 
-				var file = new FileInfo(programPath);
-				Debugger.Run(file);
-				// TODO@AW in case of errors?
+				_process = new System.Diagnostics.Process();
+				_process.StartInfo.CreateNoWindow = true;
+				_process.StartInfo.UseShellExecute = false;
+				_process.StartInfo.WorkingDirectory = workingDirectory;
+				_process.StartInfo.FileName = mono_path;
+				_process.StartInfo.Arguments = string.Format("{0} {1} {2}", Terminal.ConcatArgs(mono_args), Terminal.Quote(program), Terminal.ConcatArgs(arguments));
+
+				_stdoutEOF = false;
+				_process.StartInfo.RedirectStandardOutput = true;
+				_process.OutputDataReceived += (object sender, System.Diagnostics.DataReceivedEventArgs e) => {
+					if (e.Data == null) {
+						_stdoutEOF = true;
+					}
+					SendOutput("stdout", e.Data);
+				};
+
+				_stderrEOF = false;
+				_process.StartInfo.RedirectStandardError = true;
+				_process.ErrorDataReceived += (object sender, System.Diagnostics.DataReceivedEventArgs e) => {
+					if (e.Data == null) {
+						_stderrEOF = true;
+					}
+					SendOutput("stderr", e.Data);
+				};
+
+				_process.EnableRaisingEvents = true;
+				_process.Exited += (object sender, EventArgs e) => {
+					Terminate("runtime process exited");
+				};
+
+				if (env != null) {
+					// we cannot set the env vars on the process StartInfo because we need to set StartInfo.UseShellExecute to true at the same time.
+					// instead we set the env vars on MonoDebug itself because we know that MonoDebug lives as long as a debug session.
+					foreach (var entry in env) {
+						System.Environment.SetEnvironmentVariable(entry.Key, entry.Value);
+					}
+				}
+
+				var cmd = string.Format("{0} {1}", mono_path, _process.StartInfo.Arguments);
+				SendOutput("console", cmd);
+
+				try {
+					_process.Start();
+					_process.BeginOutputReadLine();
+					_process.BeginErrorReadLine();
+				}
+				catch (Exception e) {
+					SendErrorResponse(response, 3012, "Can't launch terminal ({reason}).", new { reason = e.Message });
+					return;
+				}
+			}
+
+			if (debug) {
+				Debugger.Connect(IPAddress.Parse(host), port);
 			}
 
 			SendResponse(response);
+
+			if (_process == null && !debug) {
+				// we cannot track mono runtime process so terminate this session
+				Terminate("cannot track mono runtime");
+			}
 		}
 
 		public override void Attach(Response response, dynamic args)
