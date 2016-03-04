@@ -255,8 +255,7 @@ namespace VSCodeDebug
 					return;
 				}
 
-				if (result.ProcessId > 0) {
-					// since we got the mono runtime pid, we try to track it
+				if (!debug && result.ProcessId > 0) {	// in 'run' mode we try to track the mono runtime process
 					try {
 						_process = System.Diagnostics.Process.GetProcessById(result.ProcessId);
 						if (_process != null) {

@@ -5,6 +5,8 @@
 /node_modules/
 /packages/
 /obj/
+/mono-debug-*/
 *.vsix
+*.zip
 mono-debug.userprefs
 npm-debug.log
