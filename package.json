@@ -35,7 +35,8 @@
 	"devDependencies": {
 		"mocha": "^2.4.5",
 		"typescript": "^1.8.2",
-		"vscode-debugprotocol": "^1.6.1"
+		"vscode-debugprotocol": "^1.6.1",
+		"vscode-debugadapter-testsupport": "1.7.0-pre.6"
 	},
 	"contributes": {
 		"debuggers": [{

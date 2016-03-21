@@ -17,11 +17,11 @@ $SDB_EXE: $SDB_MAKE
 	cd sdb; make -f Makefile
 
 build: $MONO_DEBUG_RELEASE
-	tsc -p ./tests
+	node_modules/.bin/tsc -p ./tests
 	@echo "build finished"
 
 debug: $MONO_DEBUG_DEBUG
-	tsc -p ./tests
+	node_modules/.bin/tsc -p ./tests
 	@echo "build finished"
 
 $MONO_DEBUG_RELEASE: $SDB_EXE

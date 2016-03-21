@@ -7,7 +7,7 @@
 
 import assert = require('assert');
 import * as Path from 'path';
-import {DebugClient} from './debugClient';
+import {DebugClient} from 'vscode-debugadapter-testsupport';
 import {DebugProtocol} from 'vscode-debugprotocol';
 
 suite('Node Debug Adapter', () => {
@@ -22,11 +22,19 @@ suite('Node Debug Adapter', () => {
 
 	setup(done => {
 		dc = new DebugClient('mono', DEBUG_ADAPTER, 'mono');
-		dc.start(done);
+		dc.start().then(_ => {
+			done();
+		}).catch(err => {
+			done(err);
+		});
 	});
 
 	teardown(done => {
-		dc.stop(done);
+		dc.stop().then(_ => {
+			done();
+		}).catch(err => {
+			done(err);
+		});
 	});
 
 	suite('basic', () => {
