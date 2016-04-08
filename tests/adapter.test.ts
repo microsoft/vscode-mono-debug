@@ -20,22 +20,13 @@ suite('Node Debug Adapter', () => {
 
 	let dc: DebugClient;
 
-	setup(done => {
+	setup( () => {
 		dc = new DebugClient('mono', DEBUG_ADAPTER, 'mono');
-		dc.start().then(_ => {
-			done();
-		}).catch(err => {
-			done(err);
-		});
+		return dc.start();
 	});
 
-	teardown(done => {
-		dc.stop().then(_ => {
-			done();
-		}).catch(err => {
-			done(err);
-		});
-	});
+	teardown( () => dc.stop() );
+	
 
 	suite('basic', () => {
 
