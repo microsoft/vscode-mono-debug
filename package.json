@@ -1,7 +1,7 @@
 {
 	"name": "mono-debug",
 	"displayName": "Mono Debug",
-	"version": "0.10.19",
+	"version": "0.10.20",
 	"publisher": "ms-vscode",
 	"description": "Visual Studio Code debugger extension for Mono",
 	"icon": "images/mono-debug-icon.svg",
@@ -21,7 +21,8 @@
 		"test": "node ./node_modules/mocha/bin/mocha --timeout 999999 -u tdd ./tests/out/"
 	},
 	"engines": {
-		"vscode": "^0.10.1"
+		"vscode": "^1.0.0",
+		"node": "^4.1.1"
 	},
 	"dependencies": {
 	},
@@ -35,8 +36,8 @@
 	"devDependencies": {
 		"mocha": "^2.4.5",
 		"typescript": "^1.8.5",
-		"vscode-debugprotocol": "1.8.0-pre.3",
-		"vscode-debugadapter-testsupport": "1.8.0-pre.3"
+		"vscode-debugprotocol": "^1.8.0",
+		"vscode-debugadapter-testsupport": "^1.8.0"
 	},
 	"contributes": {
 		"debuggers": [{
