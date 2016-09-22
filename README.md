@@ -55,9 +55,13 @@ shell, and an installed Mono framework.
 
 First, clone the mono-debug project:
 
-    $ git clone https://github.com/Microsoft/vscode-mono-debug
+```
+$ git clone https://github.com/Microsoft/vscode-mono-debug
+```
 
 To build the extension vsix, run:
 
-    $ cd vscode-mono-debug
-    $ make
+```
+$ cd vscode-mono-debug
+$ make
+```
