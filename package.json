@@ -36,14 +36,21 @@
 	"devDependencies": {
 		"mocha": "^2.4.5",
 		"typescript": "^1.8.5",
-		"vscode-debugprotocol": "^1.8.0",
-		"vscode-debugadapter-testsupport": "^1.8.0"
+		"vscode-debugprotocol": "^1.10.0",
+		"vscode-debugadapter-testsupport": "^1.10.0"
 	},
 	"contributes": {
+		"breakpoints": [
+			{
+				"language": "csharp"
+			},
+			{
+				"language": "fsharp"
+			}
+		],
 		"debuggers": [{
 			"type": "mono",
 			"label": "%mono.label%",
-			"enableBreakpointsFor": { "languageIds": ["csharp", "fsharp"] },
 			"program": "./bin/Release/mono-debug.exe",
 			"osx": {
 				"runtime": "mono"
