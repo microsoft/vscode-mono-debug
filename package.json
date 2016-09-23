@@ -1,7 +1,7 @@
 {
 	"name": "mono-debug",
 	"displayName": "Mono Debug",
-	"version": "0.10.20",
+	"version": "0.10.21",
 	"publisher": "ms-vscode",
 	"description": "Visual Studio Code debugger extension for Mono",
 	"icon": "images/mono-debug-icon.svg",
@@ -21,8 +21,7 @@
 		"test": "node ./node_modules/mocha/bin/mocha --timeout 999999 -u tdd ./tests/out/"
 	},
 	"engines": {
-		"vscode": "^1.0.0",
-		"node": "^4.1.1"
+		"vscode": "^1.0.0"
 	},
 	"dependencies": {
 	},
@@ -34,10 +33,15 @@
 		"url": "https://github.com/Microsoft/vscode-mono-debug/issues"
 	},
 	"devDependencies": {
+		"@types/es6-collections": "^0.5.29",
+		"@types/es6-promise": "0.0.32",
+		"@types/mocha": "^2.2.32",
+		"@types/node": "^6.0.39",
 		"mocha": "^2.4.5",
-		"typescript": "^1.8.5",
-		"vscode-debugprotocol": "^1.10.0",
-		"vscode-debugadapter-testsupport": "^1.10.0"
+		"typescript": "^2.0.3",
+		"vscode-debugprotocol": "^1.13.0",
+		"vscode-debugadapter-testsupport": "^1.13.0",
+		"vsce": "^1.14.0"
 	},
 	"contributes": {
 		"breakpoints": [
@@ -50,7 +54,7 @@
 		],
 		"debuggers": [{
 			"type": "mono",
-			"label": "%mono.label%",
+			"label": "C# Mono",
 			"program": "./bin/Release/mono-debug.exe",
 			"osx": {
 				"runtime": "mono"
@@ -67,7 +71,7 @@
 					"program": "${workspaceRoot}/program.exe",
 					"args": [],
 					"cwd": "${workspaceRoot}",
-                    "preLaunchTask": "",
+					"preLaunchTask": "",
 					"runtimeExecutable": null,
 					"env": { },
 					"externalConsole": false

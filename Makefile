@@ -8,7 +8,10 @@ all: vsix
 	@echo "vsix created"
 
 vsix: $MONO_DEBUG_RELEASE
-	vsce package
+	./node_modules/.bin/vsce package
+
+publish: $MONO_DEBUG_RELEASE
+	./node_modules/.bin/vsce publish
 
 $SDB_MAKE:
 	git submodule update --init --recursive
