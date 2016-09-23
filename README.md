@@ -61,5 +61,6 @@ To build the extension vsix, run:
 
 ```
 $ cd vscode-mono-debug
+$ npm install
 $ make
 ```
