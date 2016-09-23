@@ -1,8 +1,6 @@
 # VS Code Mono Debug
 
-A simple VS Code debug extension for the Mono VM. It is based on the [SDB](https://github.com/mono/sdb) command line debugger.
-
-Mono Debug was already bundled with VS Code up to version 0.10.9. Starting with VS Code 0.10.10 you will have to install this extension for debugging Mono programs.
+A simple VS Code debugger extension for the Mono VM. It is based on the [SDB](https://github.com/mono/sdb) command line debugger.
 
 **Please note that this extension only works on OS X and linux because the underlying [SDB](https://github.com/mono/sdb) command line debugger does not support Windows.**
 
