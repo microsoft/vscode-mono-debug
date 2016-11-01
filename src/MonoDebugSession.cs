@@ -107,7 +107,7 @@ namespace VSCodeDebug
 		public override void Initialize(Response response, dynamic args)
 		{
 			OperatingSystem os = Environment.OSVersion;
-			if (os.Platform != PlatformID.MacOSX && os.Platform != PlatformID.Unix) {
+			if (os.Platform != PlatformID.MacOSX && os.Platform != PlatformID.Unix && os.Platform != PlatformID.Win32NT) {
 				SendErrorResponse(response, 3000, "Mono Debug is not supported on this platform ({_platform}).", new { _platform = os.Platform.ToString() }, true, true);
 				return;
 			}
