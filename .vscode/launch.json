@@ -2,9 +2,9 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Run Extension",
 			"type": "extensionHost",
 			"request": "launch",
+			"name": "Extension",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceRoot}"
@@ -12,16 +12,16 @@
 			"stopOnEntry": false
 		},
 		{
-			"name": "Run Server",
 			"type": "mono",
 			"request": "launch",
+			"name": "Server",
 			"program": "${workspaceRoot}/bin/Debug/monoDebug.exe",
 			"args": [ "--server=4711" ]
 		},
 		{
-			"name": "Run Tests",
 			"type": "node",
 			"request": "launch",
+			"name": "Tests",
 			"cwd": "${workspaceRoot}",
 			"program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
 			"args": [
@@ -34,7 +34,13 @@
 				"--nolazy"
 			],
 			"sourceMaps": true,
-			"outDir": "${workspaceRoot}/tests/out"
+			"outFiles": [ "${workspaceRoot}/tests/out/**/*.js" ]
+		}
+	],
+	"compounds": [
+		{
+			"name": "Extension + Server",
+			"configurations": [ "Extension", "Server" ]
 		}
 	]
 }
