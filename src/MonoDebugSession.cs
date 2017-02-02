@@ -584,7 +584,7 @@ namespace VSCodeDebug
 					}
 
 					if (more) {
-						variables.Add(new Variable("...", null));
+						variables.Add(new Variable("...", null, null));
 					}
 				}
 			}
@@ -711,8 +711,7 @@ namespace VSCodeDebug
 
 		private Variable CreateVariable(ObjectValue v)
 		{
-			var pname = String.Format("{0} {1}", v.TypeName, v.Name);
-			return new Variable(pname, v.DisplayValue, v.HasChildren ? _variableHandles.Create(v.GetAllChildren()) : 0);
+			return new Variable(v.Name, v.DisplayValue, v.TypeName, v.HasChildren ? _variableHandles.Create(v.GetAllChildren()) : 0);
 		}
 
 		private bool HasMonoExtension(string path)
