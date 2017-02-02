@@ -2,7 +2,7 @@
 	"version": "0.1.0",
 	"command": "npm",
 	"isShellCommand": true,
-	"isWatching": true,
+	"isBackground": true,
 	"showOutput": "always",
 	"args": [
 		"run", "watch"
