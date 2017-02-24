@@ -711,7 +711,11 @@ namespace VSCodeDebug
 
 		private Variable CreateVariable(ObjectValue v)
 		{
-			return new Variable(v.Name, v.DisplayValue, v.TypeName, v.HasChildren ? _variableHandles.Create(v.GetAllChildren()) : 0);
+			var dv = v.DisplayValue;
+			if (dv.Length > 1 && dv [0] == '{' && dv [dv.Length - 1] == '}') {
+				dv = dv.Substring (1, dv.Length - 2);
+			}
+			return new Variable(v.Name, dv, v.TypeName, v.HasChildren ? _variableHandles.Create(v.GetAllChildren()) : 0);
 		}
 
 		private bool HasMonoExtension(string path)
