@@ -1,7 +1,7 @@
 {
 	"name": "mono-debug",
 	"displayName": "Mono Debug",
-	"version": "0.13.0",
+	"version": "0.14.0",
 	"publisher": "ms-vscode",
 	"description": "Visual Studio Code debugger extension for Mono",
 	"icon": "images/mono-debug-icon.svg",
@@ -39,8 +39,8 @@
 		"@types/node": "^6.0.39",
 		"mocha": "^2.4.5",
 		"typescript": "^2.0.3",
-		"vscode-debugprotocol": "^1.16.0",
-		"vscode-debugadapter-testsupport": "^1.16.0",
+		"vscode-debugprotocol": "^1.17.0",
+		"vscode-debugadapter-testsupport": "^1.17.0",
 		"vsce": "^1.18.0"
 	},
 	"contributes": {
