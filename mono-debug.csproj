@@ -63,14 +63,11 @@
     <Compile Include="src\MonoDebugSession.cs" />
     <Compile Include="src\sdb\CommandLine.cs" />
     <Compile Include="src\sdb\Debugger.cs" />
-    <Compile Include="src\sdb\Color.cs" />
-    <Compile Include="src\sdb\CommandAttribute.cs" />
     <Compile Include="src\sdb\Configuration.cs" />
     <Compile Include="src\sdb\CustomLogger.cs" />
     <Compile Include="src\sdb\Log.cs" />
     <Compile Include="src\sdb\SessionKind.cs" />
     <Compile Include="src\sdb\State.cs" />
-    <Compile Include="src\sdb\Utilities.cs" />
     <Compile Include="src\Terminal.cs" />
     <Compile Include="src\Handles.cs" />
     <Compile Include="src\Utilities.cs" />
@@ -96,6 +93,5 @@
   <ItemGroup>
     <Folder Include="src\" />
     <Folder Include="src\sdb\" />
-    <Folder Include="src\sdb\src\" />
   </ItemGroup>
 </Project>

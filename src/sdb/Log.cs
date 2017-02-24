@@ -28,8 +28,6 @@ namespace Mono.Debugger.Client
 {
     public static class Log
     {
-        static readonly bool _debug = Environment.GetEnvironmentVariable("SDB_DEBUG") == "enable";
-
         public static object Lock { get; private set; }
 
         static Log()
@@ -39,7 +37,7 @@ namespace Mono.Debugger.Client
 
         static void Output(bool nl, string color, string format, object[] args)
         {
-            var str = color + (args.Length == 0 ? format : string.Format(format, args)) + Color.Reset;
+            var str = color + (args.Length == 0 ? format : string.Format(format, args));
 
             lock (Lock)
             {
@@ -50,11 +48,6 @@ namespace Mono.Debugger.Client
             }
         }
 
-        public static void InfoSameLine(string format, params object[] args)
-        {
-            Output(false, string.Empty, format, args);
-        }
-
         public static void Info(string format, params object[] args)
         {
             Output(true, string.Empty, format, args);
@@ -62,44 +55,12 @@ namespace Mono.Debugger.Client
 
         public static void NoticeSameLine(string format, params object[] args)
         {
-            Output(false, Color.DarkCyan, format, args);
-        }
-
-        public static void Notice(string format, params object[] args)
-        {
-            Output(true, Color.DarkCyan, format, args);
-        }
-
-        public static void EmphasisSameLine(string format, params object[] args)
-        {
-            Output(false, Color.DarkGreen, format, args);
-        }
-
-        public static void Emphasis(string format, params object[] args)
-        {
-            Output(true, Color.DarkGreen, format, args);
-        }
-
-        public static void ErrorSameLine(string format, params object[] args)
-        {
-            Output(false, Color.DarkRed, format, args);
+            Output(false, string.Empty, format, args);
         }
 
         public static void Error(string format, params object[] args)
         {
-            Output(true, Color.DarkRed, format, args);
-        }
-
-        public static void DebugSameLine(string format, params object[] args)
-        {
-            if (_debug || Configuration.Current.DebugLogging)
-                Output(false, Color.DarkYellow, format, args);
-        }
-
-        public static void Debug(string format, params object[] args)
-        {
-            if (_debug || Configuration.Current.DebugLogging)
-                Output(true, Color.DarkYellow, format, args);
+            Output(true, string.Empty, format, args);
         }
     }
 }

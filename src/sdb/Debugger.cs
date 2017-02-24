@@ -26,12 +26,9 @@ using Mono.Debugging.Client;
 using Mono.Debugging.Soft;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading;
 
 namespace Mono.Debugger.Client
 {
@@ -42,8 +39,23 @@ namespace Mono.Debugger.Client
 		static Debugger()
 		{
 			EnsureCreated();
-			ResetOptions();
-			ResetState();
+
+			Options = new DebuggerSessionOptions {
+				EvaluationOptions = EvaluationOptions.DefaultOptions
+			};
+			Options.EvaluationOptions.UseExternalTypeResolver = true;
+
+			WorkingDirectory = Environment.CurrentDirectory;
+			Arguments = string.Empty;
+			EnvironmentVariables = new SortedDictionary<string, string> ();
+			Breakpoints = new SortedDictionary<long, BreakEvent> ();
+			BreakEvents = new BreakpointStore ();
+
+			// Make sure breakpoints/catchpoints take effect.
+			lock (_lock) {
+				if (_session != null)
+					_session.Breakpoints = BreakEvents;
+			}
 
 			_debuggeeKilled = true;
 
@@ -66,11 +78,7 @@ namespace Mono.Debugger.Client
 
 		public static SortedDictionary<string, string> EnvironmentVariables { get; private set; }
 
-		public static SortedDictionary<long, string> Watches { get; private set; }
-
 		public static SortedDictionary<long, BreakEvent> Breakpoints { get; private set; }
-
-		public static SortedDictionary<string, string> Aliases { get; private set; }
 
 		public static BreakpointStore BreakEvents { get; private set; }
 
@@ -81,8 +89,6 @@ namespace Mono.Debugger.Client
 		}
 
 		static volatile bool _debuggeeKilled;
-
-		static long _nextWatchId;
 
 		static long _nextBreakpointId;
 
@@ -166,44 +172,6 @@ namespace Mono.Debugger.Client
 			}
 		}
 
-		static void PrintException(string prefix, ExceptionInfo ex)
-		{
-			// HACK: Until we get a `WaitHandle` property on the
-			// `Mono.Debugging.Client.ExceptionInfo` type...
-			ex.Message.Discard();
-
-			while (ex.Message == "Loading...")
-				Thread.Sleep(10);
-
-			Log.Error("{0}{1}: {2}", prefix, ex.Type, ex.Message);
-		}
-
-		static void PrintException(ExceptionInfo ex)
-		{
-			PrintException(string.Empty, ex);
-
-			var prefix = "> ";
-			var inner = ex;
-
-			while ((inner = inner.InnerException) != null)
-			{
-				PrintException(prefix, inner);
-
-				prefix = "--" + prefix;
-			}
-		}
-
-		static string StringizeTarget()
-		{
-			if (CurrentExecutable != null)
-				return CurrentExecutable.Name;
-
-			if (CurrentAddress != null)
-				return string.Format("{0}:{1}", CurrentAddress, CurrentPort);
-
-			return "<none>";
-		}
-
 		public static Action<string, ThreadInfo, string> Callback { get; set; }
 
 		static void EnsureCreated()
@@ -235,20 +203,17 @@ namespace Mono.Debugger.Client
 
 				_session.OutputWriter = (isStdErr, text) =>
 				{
-					//lock (Log.Lock)
-					//{
-						if (Callback != null)
-						{
-							Callback.Invoke(isStdErr ? "ErrorOutput" : "Output", null, text);
-						}
+					if (Callback != null)
+					{
+						Callback.Invoke(isStdErr ? "ErrorOutput" : "Output", null, text);
+					}
+					else
+					{
+						if (isStdErr)
+							Console.Error.Write(text);
 						else
-						{
-							if (isStdErr)
-								Console.Error.Write(text);
-							else
-								Console.Write(text);
-						}
-					//}
+							Console.Write(text);
+					}
 				};
 
 				_session.TypeResolverHandler += (identifier, location) =>
@@ -271,41 +236,20 @@ namespace Mono.Debugger.Client
 
 				_session.TargetEvent += (sender, e) =>
 				{
-					Log.Debug("Event: '{0}'", e.Type);
 				};
 
 				_session.TargetStarted += (sender, e) =>
 				{
 					_activeFrame = null;
-
-					/*
-					if (_showResumeMessage)
-						Log.Notice("Inferior process '{0}' ('{1}') resumed",
-							ActiveProcess.Id, StringizeTarget());
-					*/
 				};
 
 				_session.TargetReady += (sender, e) =>
 				{
 					_activeProcess = _session.GetProcesses().SingleOrDefault();
-
-					// The inferior process has launched, so we can safely
-					// set our `SIGINT` handler without it interfering with
-					// the inferior.
-					CommandLine.SetControlCHandler();
-
-					/*
-					Log.Notice("Inferior process '{0}' ('{1}') started",
-						ActiveProcess.Id, StringizeTarget());
-					*/
 				};
 
 				_session.TargetStopped += (sender, e) =>
 				{
-					//Log.Notice("Inferior process '{0}' ('{1}') suspended",
-					//	ActiveProcess.Id, StringizeTarget());
-					//Log.Emphasis(Utilities.StringizeFrame(ActiveFrame, true));
-
 					if (Callback != null)
 					{
 						Callback.Invoke("TargetStopped", e.Thread, null);
@@ -316,33 +260,11 @@ namespace Mono.Debugger.Client
 
 				_session.TargetInterrupted += (sender, e) =>
 				{
-					Log.Notice("Inferior process '{0}' ('{1}') interrupted",
-						ActiveProcess.Id, StringizeTarget());
-					Log.Emphasis(Utilities.StringizeFrame(ActiveFrame, true));
-
 					CommandLine.ResumeEvent.Set();
 				};
 
 				_session.TargetHitBreakpoint += (sender, e) =>
 				{
-					// var bp = e.BreakEvent as Breakpoint;
-					// var fbp = e.BreakEvent as FunctionBreakpoint;
-
-					/*
-					if (fbp != null)
-						Log.Notice("Hit method breakpoint on '{0}'", fbp.FunctionName);
-					else
-					{
-						var cond = bp.ConditionExpression != null ?
-							string.Format(" (condition '{0}' met)", bp.ConditionExpression) :
-							string.Empty;
-
-						Log.Notice("Hit breakpoint at '{0}:{1}'{2}", bp.FileName, bp.Line, cond);
-					}
-
-					Log.Emphasis(Utilities.StringizeFrame(ActiveFrame, true));
-					*/
-
 					if (Callback != null)
 					{
 						Callback.Invoke("TargetHitBreakpoint", e.Thread, null);
@@ -353,23 +275,6 @@ namespace Mono.Debugger.Client
 
 				_session.TargetExited += (sender, e) =>
 				{
-					var p = ActiveProcess;
-
-					/*
-					// Can happen when a remote connection attempt fails.
-					if (p == null)
-					{
-						if (_kind == SessionKind.Listening)
-							Log.Notice("Listening socket closed");
-						else if (_kind == SessionKind.Connected)
-							Log.Notice("Connection attempt terminated");
-						else
-							Log.Notice("Failed to connect to '{0}'", StringizeTarget());
-					}
-					else
-						Log.Notice("Inferior process '{0}' ('{1}') exited", ActiveProcess.Id, StringizeTarget());
-					*/
-
 					// Make sure we clean everything up on a normal exit.
 					Kill();
 
@@ -386,13 +291,6 @@ namespace Mono.Debugger.Client
 
 				_session.TargetExceptionThrown += (sender, e) =>
 				{
-					var ex = ActiveException;
-
-					//Log.Notice("Trapped first-chance exception of type '{0}'", ex.Type);
-					//Log.Emphasis(Utilities.StringizeFrame(ActiveFrame, true));
-
-					PrintException(ex);
-
 					if (Callback != null)
 					{
 						Callback.Invoke("TargetExceptionThrown", e.Thread, null);
@@ -403,13 +301,6 @@ namespace Mono.Debugger.Client
 
 				_session.TargetUnhandledException += (sender, e) =>
 				{
-					var ex = ActiveException;
-
-					//Log.Notice("Trapped unhandled exception of type '{0}'", ex.Type);
-					//Log.Emphasis(Utilities.StringizeFrame(ActiveFrame, true));
-
-					PrintException(ex);
-
 					if (Callback != null)
 					{
 						Callback.Invoke("TargetUnhandledException", e.Thread, null);
@@ -420,9 +311,6 @@ namespace Mono.Debugger.Client
 
 				_session.TargetThreadStarted += (sender, e) =>
 				{
-					//Log.Notice("Inferior thread '{0}' ('{1}') started",
-					//	e.Thread.Id, e.Thread.Name);
-
 					if (Callback != null)
 					{
 						Callback.Invoke("TargetThreadStarted", e.Thread, null);
@@ -431,9 +319,6 @@ namespace Mono.Debugger.Client
 
 				_session.TargetThreadStopped += (sender, e) =>
 				{
-					//Log.Notice("Inferior thread '{0}' ('{1}') exited",
-					//	e.Thread.Id, e.Thread.Name);
-
 					if (Callback != null)
 					{
 						Callback.Invoke("TargetThreadStopped", e.Thread, null);
@@ -467,10 +352,6 @@ namespace Mono.Debugger.Client
 						TimeBetweenConnectionAttempts = Configuration.Current.ConnectionAttemptInterval
 					}
 				};
-
-				// We need to ignore `SIGINT` while we start the inferior
-				// process so that it inherits that signal disposition.
-				CommandLine.UnsetControlCHandler();
 
 				_session.Run(info, Options);
 
@@ -653,144 +534,9 @@ namespace Mono.Debugger.Client
 					_session.SetNextStatement(offset);
 		}
 
-		public static void SetLine(string fileName, int line)
-		{
-			lock (_lock)
-				if (_session != null && !_session.IsRunning && !_session.HasExited)
-					_session.SetNextStatement(fileName, line, 1);
-		}
-
-		public static long GetWatchId()
-		{
-			return _nextWatchId++;
-		}
-
 		public static long GetBreakpointId()
 		{
 			return _nextBreakpointId++;
-		}
-
-		public static void ResetState()
-		{
-			// No need to lock on this data.
-			WorkingDirectory = Environment.CurrentDirectory;
-			Arguments = string.Empty;
-			EnvironmentVariables = new SortedDictionary<string, string>();
-			Watches = new SortedDictionary<long, string>();
-			_nextWatchId = 0;
-			Breakpoints = new SortedDictionary<long, BreakEvent>();
-			Aliases = new SortedDictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-			BreakEvents = new BreakpointStore();
-
-			// Make sure breakpoints/catchpoints take effect.
-			lock (_lock)
-				if (_session != null)
-					_session.Breakpoints = BreakEvents;
-		}
-
-		public static void ResetOptions()
-		{
-			// No need to lock on this data.
-
-			Options = new DebuggerSessionOptions
-			{
-				EvaluationOptions = EvaluationOptions.DefaultOptions
-			};
-
-			Options.EvaluationOptions.UseExternalTypeResolver = true;
-		}
-
-		[Serializable]
-		sealed class DebuggerState
-		{
-			public string WorkingDirectory { get; set; }
-
-			public string Arguments { get; set; }
-
-			public SortedDictionary<string, string> EnvironmentVariables { get; set; }
-
-			public SortedDictionary<long, string> Watches { get; set; }
-
-			public long NextWatchId { get; set; }
-
-			public Dictionary<long, Tuple<BreakEvent, bool>> Breakpoints { get; set; }
-
-			public long NextBreakpointId { get; set; }
-
-			public ReadOnlyCollection<Catchpoint> Catchpoints { get; set; }
-
-			public SortedDictionary<string, string> Aliases { get; set; }
-		}
-
-		public static void Write(FileInfo file)
-		{
-			var state = new DebuggerState
-			{
-				WorkingDirectory = WorkingDirectory,
-				Arguments = Arguments,
-				EnvironmentVariables = EnvironmentVariables,
-				Watches = Watches,
-				NextWatchId = _nextWatchId,
-				Breakpoints = Breakpoints.ToDictionary(x => x.Key,
-					x => Tuple.Create(x.Value, BreakEvents.Contains(x.Value))),
-				NextBreakpointId = _nextBreakpointId,
-				Catchpoints = BreakEvents.GetCatchpoints(),
-				Aliases = Aliases,
-			};
-
-			try
-			{
-				using (var stream = file.Open(FileMode.Create, FileAccess.Write))
-					new BinaryFormatter().Serialize(stream, state);
-			}
-			catch (Exception ex)
-			{
-				Log.Error("Could not write database file '{0}':", file);
-				Log.Error(ex.ToString());
-			}
-		}
-
-		public static void Read(FileInfo file)
-		{
-			DebuggerState state;
-
-			try
-			{
-				using (var stream = file.Open(FileMode.Open, FileAccess.Read))
-					state = (DebuggerState)new BinaryFormatter().Deserialize(stream);
-			}
-			catch (Exception ex)
-			{
-				Log.Error("Could not read database file '{0}':", file);
-				Log.Error(ex.ToString());
-
-				return;
-			}
-
-			ResetState();
-
-			WorkingDirectory = state.WorkingDirectory;
-			Arguments = state.Arguments;
-			EnvironmentVariables = state.EnvironmentVariables;
-			Watches = state.Watches;
-			Aliases = state.Aliases;
-
-			Breakpoints.Clear();
-			BreakEvents.Clear();
-
-			foreach (var kvp in state.Breakpoints)
-			{
-				Breakpoints.Add(kvp.Key, kvp.Value.Item1);
-
-				if (kvp.Value.Item2)
-					BreakEvents.Add(kvp.Value.Item1);
-			}
-
-			foreach (var cp in state.Catchpoints)
-				BreakEvents.Add(cp);
-
-			_nextWatchId = state.NextWatchId;
-			_nextBreakpointId = state.NextBreakpointId;
 		}
 	}
 }

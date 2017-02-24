@@ -37,14 +37,6 @@ namespace Mono.Debugger.Client
 			ResumeEvent = new AutoResetEvent(false);
 		}
 
-		internal static void SetControlCHandler()
-		{
-		}
-
-		internal static void UnsetControlCHandler()
-		{
-		}
-
 		public static void WaitForSuspend() {
 			if (InferiorExecuting)
 			{

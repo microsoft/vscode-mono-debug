@@ -101,85 +101,6 @@ namespace Mono.Debugger.Client
             Extra = new Dictionary<string, Tuple<TypeCode, object, object>>();
         }
 
-        public void Declare(string name, TypeCode type, object defaultValue)
-        {
-            if (!Extra.ContainsKey(name))
-                Extra.Add(name, Tuple.Create(type, defaultValue, defaultValue));
-        }
-
-        static string GetFilePath()
-        {
-            var cfg = Environment.GetEnvironmentVariable("SDB_CFG");
-
-            if (cfg != null)
-                return cfg == string.Empty ? null : cfg;
-
-            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-
-            return Path.Combine(home, ".sdb.cfg");
-        }
-
-        public static void Write()
-        {
-            var file = GetFilePath();
-
-            if (file == null)
-                return;
-
-            try
-            {
-                using (var stream = new FileStream(file, FileMode.Create, FileAccess.Write))
-                    new BinaryFormatter().Serialize(stream, Current);
-            }
-            catch (Exception ex)
-            {
-                Log.Error("Could not write configuration file '{0}':", file);
-                Log.Error(ex.ToString());
-            }
-        }
-
-        public static bool Read()
-        {
-            var file = GetFilePath();
-
-            if (file == null)
-                return false;
-
-            try
-            {
-                using (var stream = new FileStream(file, FileMode.Open, FileAccess.Read))
-                {
-                    Current = (Configuration)new BinaryFormatter().Deserialize(stream);
-
-                    // Some logic to fix up older serialized
-                    // configuration data follows...
-
-                    if (Current.Extra == null)
-                        Current.Extra = new Dictionary<string, Tuple<TypeCode, object, object>>();
-
-                    if (Current.DefaultDatabaseFile == null)
-                        Current.DefaultDatabaseFile = string.Empty;
-
-                    if (Current.RuntimeExecutable == null)
-                        Current.RuntimeExecutable = string.Empty;
-                }
-            }
-            catch (Exception ex)
-            {
-                // If it's an FNFE, chances are the file just
-                // hasn't been written yet.
-                if (!(ex is FileNotFoundException))
-                {
-                    Log.Error("Could not read configuration file '{0}':", file);
-                    Log.Error(ex.ToString());
-                }
-
-                return false;
-            }
-
-            return true;
-        }
-
         public static void Defaults()
         {
             // Cute hack to set all properties to their default values.
@@ -236,11 +157,6 @@ namespace Mono.Debugger.Client
                                         IntegerDisplayFormat.Hexadecimal :
                                         IntegerDisplayFormat.Decimal;
             eval.MemberEvaluationTimeout = Current.MemberEvaluationTimeout;
-
-            if (Current.EnableControlC)
-                CommandLine.SetControlCHandler();
-            else
-                CommandLine.UnsetControlCHandler();
         }
     }
 }
