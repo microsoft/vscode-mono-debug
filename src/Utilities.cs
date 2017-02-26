@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Reflection;
+using Mono.Debugging.Client;
 
 namespace VSCodeDebug
 {
@@ -152,6 +153,26 @@ namespace VSCodeDebug
 			Uri uri2 = new Uri(dir_path);
 			return uri2.MakeRelativeUri(uri1).ToString();
 			*/
+		}
+	}
+
+	class CustomLogger : ICustomLogger
+	{
+		public void LogError(string message, Exception ex)
+		{
+		}
+
+		public void LogAndShowException(string message, Exception ex)
+		{
+		}
+
+		public void LogMessage(string format, params object[] args)
+		{
+		}
+
+		public string GetNewDebuggerLogFilename()
+		{
+			return null;
 		}
 	}
 }

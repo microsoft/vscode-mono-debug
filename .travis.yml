@@ -10,7 +10,6 @@ git:
 
 before_install:
   - git submodule update --init --recursive
-  - cd sdb; make -f Makefile; cd ..
   - git clone https://github.com/creationix/nvm.git ./.nvm
   - source ./.nvm/nvm.sh
   - nvm install 4.1

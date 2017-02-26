@@ -8,9 +8,8 @@ using System.IO;
 using System.Threading;
 using System.Linq;
 using System.Net;
-using Mono.Debugger.Client;
 using Mono.Debugging.Client;
-using Microsoft.CSharp.RuntimeBinder;
+//using Microsoft.CSharp.RuntimeBinder;
 
 
 namespace VSCodeDebug
@@ -23,6 +22,19 @@ namespace VSCodeDebug
 			".fs", ".fsi", ".ml", ".mli", ".fsx", ".fsscript"
 		};
 		private const int MAX_CHILDREN = 100;
+		private const int MAX_CONNECTION_ATTEMPTS = 10;
+		private const int CONNECTION_ATTEMPT_INTERVAL = 500;
+
+		private AutoResetEvent _resumeEvent = new AutoResetEvent(false);
+		private bool _debuggeeExecuting = false;
+		private readonly object _lock = new object();
+		private Mono.Debugging.Soft.SoftDebuggerSession _session;
+		private volatile bool _debuggeeKilled = true;
+		private ProcessInfo _activeProcess;
+		private Mono.Debugging.Client.StackFrame _activeFrame;
+		private long _nextBreakpointId = 0;
+		private SortedDictionary<long, BreakEvent> _breakpoints;
+		private DebuggerSessionOptions _debuggerSessionOptions;
 
 		private System.Diagnostics.Process _process;
 		private Handles<ObjectValue[]> _variableHandles;
@@ -41,73 +53,107 @@ namespace VSCodeDebug
 			_frameHandles = new Handles<Mono.Debugging.Client.StackFrame>();
 			_seenThreads = new Dictionary<int, Thread>();
 
-			Configuration.Current.MaxConnectionAttempts = 10;
-			Configuration.Current.ConnectionAttemptInterval = 500;
-
-			// install an event handler in SDB
-			Debugger.Callback = (type, threadinfo, text) => {
-				int tid;
-				switch (type) {
-				case "TargetStopped":
-					Stopped();
-					SendEvent(CreateStoppedEvent("step", threadinfo));
-					break;
-
-				case "TargetHitBreakpoint":
-					Stopped();
-					SendEvent(CreateStoppedEvent("breakpoint", threadinfo));
-					break;
-
-				case "TargetExceptionThrown":
-				case "TargetUnhandledException":
-					Stopped();
-					ExceptionInfo ex = Debugger.ActiveException;
-					if (ex != null) {
-						_exception = ex.Instance;
-					}
-					SendEvent(CreateStoppedEvent("exception", threadinfo, Debugger.ActiveException.Message));
-					break;
-
-				case "TargetExited":
-					Terminate("target exited");
-					break;
-
-				case "TargetThreadStarted":
-					tid = (int)threadinfo.Id;
-					lock (_seenThreads) {
-						_seenThreads[tid] = new Thread(tid, threadinfo.Name);
-					}
-					SendEvent(new ThreadEvent("started", tid));
-					break;
-
-				case "TargetThreadStopped":
-					tid = (int)threadinfo.Id;
-					lock (_seenThreads) {
-						_seenThreads.Remove(tid);
-					}
-					SendEvent(new ThreadEvent("exited", tid));
-					break;
-
-				case "Output":
-					SendOutput("stdout", text);
-					break;
-
-				case "ErrorOutput":
-					SendOutput("stderr", text);
-					break;
-
-				default:
-					SendEvent(new Event(type));
-					break;
-				}
+			_debuggerSessionOptions = new DebuggerSessionOptions {
+				EvaluationOptions = EvaluationOptions.DefaultOptions
 			};
 
+			_session = new Mono.Debugging.Soft.SoftDebuggerSession();
+			_session.Breakpoints = new BreakpointStore();
+
+			_breakpoints = new SortedDictionary<long, BreakEvent>();
+
+			DebuggerLoggingService.CustomLogger = new CustomLogger();
+
+			_session.ExceptionHandler = ex => {
+				return true;
+			};
+
+			_session.LogWriter = (isStdErr, text) => {
+			};
+
+			_session.TargetStopped += (sender, e) => {
+				Stopped();
+				SendEvent(CreateStoppedEvent("step", e.Thread));
+				_resumeEvent.Set();
+			};
+
+			_session.TargetHitBreakpoint += (sender, e) => {
+				Stopped();
+				SendEvent(CreateStoppedEvent("breakpoint", e.Thread));
+				_resumeEvent.Set();
+			};
+
+			_session.TargetExceptionThrown += (sender, e) => {
+				Stopped();
+				var ex = DebuggerActiveException();
+				if (ex != null) {
+					_exception = ex.Instance;
+					SendEvent(CreateStoppedEvent("exception", e.Thread, ex.Message));
+				}
+				_resumeEvent.Set();
+			};
+
+			_session.TargetUnhandledException += (sender, e) => {
+				Stopped ();
+				var ex = DebuggerActiveException();
+				if (ex != null) {
+					_exception = ex.Instance;
+					SendEvent(CreateStoppedEvent("exception", e.Thread, ex.Message));
+				}
+				_resumeEvent.Set();
+			};
+
+			_session.TargetStarted += (sender, e) => {
+				_activeFrame = null;
+			};
+
+			_session.TargetReady += (sender, e) => {
+				_activeProcess = _session.GetProcesses().SingleOrDefault();
+			};
+
+			_session.TargetExited += (sender, e) => {
+
+				DebuggerKill();
+
+				_debuggeeKilled = true;
+
+				Terminate("target exited");
+
+				_resumeEvent.Set();
+			};
+
+			_session.TargetInterrupted += (sender, e) => {
+				_resumeEvent.Set();
+			};
+
+			_session.TargetEvent += (sender, e) => {
+			};
+
+			_session.TargetThreadStarted += (sender, e) => {
+				int tid = (int)e.Thread.Id;
+				lock (_seenThreads) {
+					_seenThreads[tid] = new Thread(tid, e.Thread.Name);
+				}
+				SendEvent(new ThreadEvent("started", tid));
+			};
+
+			_session.TargetThreadStopped += (sender, e) => {
+				int tid = (int)e.Thread.Id;
+				lock (_seenThreads) {
+					_seenThreads.Remove(tid);
+				}
+				SendEvent(new ThreadEvent("exited", tid));
+			};
+
+			_session.OutputWriter = (isStdErr, text) => {
+				SendOutput(isStdErr ? "stderr" : "stdout", text);
+			};
 		}
 
 		public override void Initialize(Response response, dynamic args)
 		{
 			OperatingSystem os = Environment.OSVersion;
-			if (os.Platform != PlatformID.MacOSX && os.Platform != PlatformID.Unix) {
+			if (os.Platform != PlatformID.MacOSX && os.Platform != PlatformID.Unix && os.Platform != PlatformID.Win32NT) {
 				SendErrorResponse(response, 3000, "Mono Debug is not supported on this platform ({_platform}).", new { _platform = os.Platform.ToString() }, true, true);
 				return;
 			}
@@ -323,7 +369,7 @@ namespace VSCodeDebug
 			}
 
 			if (debug) {
-				Debugger.Connect(IPAddress.Parse(host), port);
+				Connect(IPAddress.Parse(host), port);
 			}
 
 			SendResponse(response);
@@ -357,7 +403,8 @@ namespace VSCodeDebug
 				SendErrorResponse(response, 3013, "Invalid address '{address}'.", new { address = address });
 				return;
 			}
-			Debugger.Connect(address, port);
+
+			Connect(address, port);
 
 			SendResponse(response);
 		}
@@ -365,17 +412,27 @@ namespace VSCodeDebug
 		public override void Disconnect(Response response, dynamic args)
 		{
 			if (_attachMode) {
-				Debugger.Disconnect();
+
+				lock (_lock) {
+					if (_session != null) {
+						_debuggeeExecuting = true;
+						_breakpoints.Clear();
+						_session.Breakpoints.Clear();
+						_session.Continue();
+						_session = null;
+					}
+				}
+
 			} else {
 				// Let's not leave dead Mono processes behind...
 				if (_process != null) {
 					_process.Kill();
 					_process = null;
 				} else {
-					Debugger.Pause();
-					Debugger.Kill();
+					PauseDebugger();
+					DebuggerKill();
 
-					while (!Debugger.DebuggeeKilled) {
+					while (!_debuggeeKilled) {
 						System.Threading.Thread.Sleep(10);
 					}
 				}
@@ -386,36 +443,56 @@ namespace VSCodeDebug
 
 		public override void Continue(Response response, dynamic args)
 		{
-			CommandLine.WaitForSuspend();
-			Debugger.Continue();
+			WaitForSuspend();
 			SendResponse(response);
+			lock (_lock) {
+				if (_session != null && !_session.IsRunning && !_session.HasExited) {
+					_session.Continue();
+					_debuggeeExecuting = true;
+				}
+			}
 		}
 
 		public override void Next(Response response, dynamic args)
 		{
-			CommandLine.WaitForSuspend();
-			Debugger.StepOverLine();
+			WaitForSuspend();
 			SendResponse(response);
+			lock (_lock) {
+				if (_session != null && !_session.IsRunning && !_session.HasExited) {
+					_session.NextLine();
+					_debuggeeExecuting = true;
+				}
+			}
 		}
 
 		public override void StepIn(Response response, dynamic args)
 		{
-			CommandLine.WaitForSuspend();
-			Debugger.StepIntoLine();
+			WaitForSuspend();
 			SendResponse(response);
+			lock (_lock) {
+				if (_session != null && !_session.IsRunning && !_session.HasExited) {
+					_session.StepLine();
+					_debuggeeExecuting = true;
+				}
+			}
 		}
 
 		public override void StepOut(Response response, dynamic args)
 		{
-			CommandLine.WaitForSuspend();
-			Debugger.StepOutOfMethod();
+			WaitForSuspend();
 			SendResponse(response);
+			lock (_lock) {
+				if (_session != null && !_session.IsRunning && !_session.HasExited) {
+					_session.Finish();
+					_debuggeeExecuting = true;
+				}
+			}
 		}
 
 		public override void Pause(Response response, dynamic args)
 		{
-			Debugger.Pause();
 			SendResponse(response);
+			PauseDebugger();
 		}
 
 		public override void SetBreakpoints(Response response, dynamic args)
@@ -447,7 +524,7 @@ namespace VSCodeDebug
 
 			// find all breakpoints for the given path and remember their id and line number
 			var bpts = new List<Tuple<int, int>>();
-			foreach (var be in Debugger.Breakpoints) {
+			foreach (var be in _breakpoints) {
 				var bp = be.Value as Mono.Debugging.Client.Breakpoint;
 				if (bp != null && bp.FileName == path) {
 					bpts.Add(new Tuple<int,int>((int)be.Key, (int)bp.Line));
@@ -463,9 +540,9 @@ namespace VSCodeDebug
 					// Console.WriteLine("cleared bpt #{0} for line {1}", bpt.Item1, bpt.Item2);
 
 					BreakEvent b;
-					if (Debugger.Breakpoints.TryGetValue(bpt.Item1, out b)) {
-						Debugger.Breakpoints.Remove(bpt.Item1);
-						Debugger.BreakEvents.Remove(b);
+					if (_breakpoints.TryGetValue(bpt.Item1, out b)) {
+						_breakpoints.Remove(bpt.Item1);
+						_session.Breakpoints.Remove(b);
 					}
 				}
 			}
@@ -473,8 +550,8 @@ namespace VSCodeDebug
 			for (int i = 0; i < clientLines.Length; i++) {
 				var l = ConvertClientLineToDebugger(clientLines[i]);
 				if (!lin2.Contains(l)) {
-					var id = Debugger.GetBreakpointId();
-					Debugger.Breakpoints.Add(id, Debugger.BreakEvents.Add(path, l));
+					var id = _nextBreakpointId++;
+					_breakpoints.Add(id, _session.Breakpoints.Add(path, l));
 					// Console.WriteLine("added bpt #{0} for line {1}", id, l);
 				}
 			}
@@ -484,7 +561,7 @@ namespace VSCodeDebug
 				breakpoints.Add(new Breakpoint(true, l));
 			}
 
-			response.SetBody(new SetBreakpointsResponseBody(breakpoints));
+			SendResponse(response, new SetBreakpointsResponseBody(breakpoints));
 		}
 
 		public override void StackTrace(Response response, dynamic args)
@@ -492,10 +569,10 @@ namespace VSCodeDebug
 			int maxLevels = getInt(args, "levels", 10);
 			int threadReference = getInt(args, "threadId", 0);
 
-			CommandLine.WaitForSuspend();
+			WaitForSuspend();
 			var stackFrames = new List<StackFrame>();
 
-			ThreadInfo thread = Debugger.ActiveThread;
+			ThreadInfo thread = DebuggerActiveThread();
 			if (thread.Id != threadReference) {
 				// Console.Error.WriteLine("stackTrace: unexpected: active thread should be the one requested");
 				thread = FindThread(threadReference);
@@ -535,12 +612,7 @@ namespace VSCodeDebug
 				scopes.Add(new Scope("Exception", _variableHandles.Create(new ObjectValue[] { _exception })));
 			}
 
-			var parameters = new[] { frame.GetThisReference() }.Concat(frame.GetParameters()).Where(x => x != null);
-			if (parameters.Any()) {
-				scopes.Add(new Scope("Argument", _variableHandles.Create(parameters.ToArray())));
-			}
-
-			var locals = frame.GetLocalVariables();
+			var locals = new[] { frame.GetThisReference() }.Concat(frame.GetParameters()).Concat(frame.GetLocalVariables()).Where(x => x != null).ToArray();
 			if (locals.Length > 0) {
 				scopes.Add(new Scope("Local", _variableHandles.Create(locals)));
 			}
@@ -556,7 +628,7 @@ namespace VSCodeDebug
 				return;
 			}
 
-			CommandLine.WaitForSuspend();
+			WaitForSuspend();
 			var variables = new List<Variable>();
 
 			ObjectValue[] children;
@@ -595,7 +667,7 @@ namespace VSCodeDebug
 		public override void Threads(Response response, dynamic args)
 		{
 			var threads = new List<Thread>();
-			var process = Debugger.ActiveProcess;
+			var process = _activeProcess;
 			if (process != null) {
 				Dictionary<int, Thread> d;
 				lock (_seenThreads) {
@@ -622,7 +694,7 @@ namespace VSCodeDebug
 				var frame = _frameHandles.Get(frameId, null);
 				if (frame != null) {
 					if (frame.ValidateExpression(expression)) {
-						var val = frame.GetExpressionValue(expression, Debugger.Options.EvaluationOptions);
+						var val = frame.GetExpressionValue(expression, _debuggerSessionOptions.EvaluationOptions);
 						val.WaitHandle.WaitOne();
 
 						var flags = val.Flags;
@@ -691,9 +763,8 @@ namespace VSCodeDebug
 
 		private ThreadInfo FindThread(int threadReference)
 		{
-			var process = Debugger.ActiveProcess;
-			if (process != null) {
-				foreach (var t in process.GetThreads()) {
+			if (_activeProcess != null) {
+				foreach (var t in _activeProcess.GetThreads()) {
 					if (t.Id == threadReference) {
 						return t;
 					}
@@ -761,6 +832,86 @@ namespace VSCodeDebug
 				return dflt;
 			}
 			return s;
+		}
+
+		//-----------------------
+
+		private void WaitForSuspend()
+		{
+			if (_debuggeeExecuting) {
+				_resumeEvent.WaitOne();
+				_debuggeeExecuting = false;
+			}
+		}
+
+		private ThreadInfo DebuggerActiveThread()
+		{
+			lock (_lock) {
+				return _session == null ? null : _session.ActiveThread;
+			}
+		}
+
+		private Backtrace DebuggerActiveBacktrace() {
+			var thr = DebuggerActiveThread();
+			return thr == null ? null : thr.Backtrace;
+		}
+
+		private Mono.Debugging.Client.StackFrame DebuggerActiveFrame() {
+			var f = _activeFrame;
+			if (f != null)
+				return f;
+
+			var bt = DebuggerActiveBacktrace();
+			if (bt != null)
+				return _activeFrame = bt.GetFrame(0);
+
+			return null;
+		}
+
+		private ExceptionInfo DebuggerActiveException() {
+			var bt = DebuggerActiveBacktrace();
+			return bt == null ? null : bt.GetFrame(0).GetException();
+		}
+
+		private void Connect(IPAddress address, int port)
+		{
+			lock (_lock) {
+
+				_debuggeeKilled = false;
+
+				var args0 = new Mono.Debugging.Soft.SoftDebuggerConnectArgs(string.Empty, address, port) {
+					MaxConnectionAttempts = MAX_CONNECTION_ATTEMPTS,
+					TimeBetweenConnectionAttempts = CONNECTION_ATTEMPT_INTERVAL
+				};
+
+				_session.Run(new Mono.Debugging.Soft.SoftDebuggerStartInfo(args0), _debuggerSessionOptions);
+
+				_debuggeeExecuting = true;
+			}
+		}
+
+		private void PauseDebugger()
+		{
+			lock (_lock) {
+				if (_session != null && _session.IsRunning)
+					_session.Stop();
+			}
+		}
+
+		private void DebuggerKill()
+		{
+			lock (_lock) {
+				if (_session != null) {
+
+					_debuggeeExecuting = true;
+
+					if (!_session.HasExited)
+						_session.Exit();
+
+					_session.Dispose();
+					_session = null;
+				}
+			}
 		}
 	}
 }

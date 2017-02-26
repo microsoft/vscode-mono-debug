@@ -1,3 +1,0 @@
-[submodule "sdb"]
-	path = sdb
-	url = https://github.com/mono/sdb

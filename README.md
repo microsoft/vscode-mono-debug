@@ -2,8 +2,6 @@
 
 A simple VS Code debugger extension for the Mono VM. It is based on the [SDB](https://github.com/mono/sdb) command line debugger.
 
-**Please note that this extension only works on OS X and linux because the underlying [SDB](https://github.com/mono/sdb) command line debugger does not support Windows.**
-
 ## Installing Mono
 
 On Linux or OS X, the Mono debugging support of VS Code requires [Mono](http://www.mono-project.com/) version 3.12 or later.
