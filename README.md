@@ -2,11 +2,11 @@
 
 A simple VS Code debugger extension for the Mono VM. Its implementation was inspired by the [SDB](https://github.com/mono/sdb) command line debugger.
 
+![Mono Debug](images/mono-debug.png)
+
 ## Installing Mono
 
-On Linux or OS X, the Mono debugging support of VS Code requires [Mono](http://www.mono-project.com/) version 3.12 or later.
-
-You can either download the latest Mono version for Linux or OS X at [Mono project](http://www.mono-project.com/download/) or you can use your package manager.
+You can either download the latest Mono version for Linux, macOS, or Windows at [Mono project](http://www.mono-project.com/download/) or you can use your package manager.
 
 * On OS X: `brew install mono`
 * On Linux: `sudo apt-get install mono-complete`

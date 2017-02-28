@@ -1,4 +1,4 @@
-## 0.15.2
+## 0.15.3
 * Combined 'argument' scope with 'locals' scope in variables view
 * Enabled support for Windows by removing dependency on SDB, thanks for the PR from [t-h-e](https://github.com/t-h-e) - [Microsoft/vscode-mono-debug#15](https://github.com/Microsoft/vscode-mono-debug/pull/15)
 
