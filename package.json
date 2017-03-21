@@ -1,7 +1,7 @@
 {
 	"name": "mono-debug",
 	"displayName": "Mono Debug",
-	"version": "0.15.3",
+	"version": "0.15.4",
 	"publisher": "ms-vscode",
 	"description": "Visual Studio Code debugger extension for Mono",
 	"icon": "images/mono-debug-icon.svg",
@@ -17,13 +17,16 @@
 		"prepublish": "make build",
 		"vscode:prepublish": "make build",
 		"compile": "make build",
-		"watch": "node ./node_modules/typescript/bin/tsc -w -p ./tests",
-		"test": "node ./node_modules/mocha/bin/mocha --timeout 999999 -u tdd ./tests/out/"
+		"watch": "node ./node_modules/typescript/bin/tsc -w -p ./src/typescript",
+		"test": "node ./node_modules/mocha/bin/mocha --timeout 10000 -u tdd ./out/tests",
+		"postinstall": "node ./node_modules/vscode/bin/install"
 	},
 	"engines": {
-		"vscode": "^1.0.0"
+		"vscode": "^1.8.0",
+		"node": "^6.3.0"
 	},
 	"dependencies": {
+		"vscode-nls": "^2.0.2"
 	},
 	"repository": {
 		"type": "git",
@@ -41,9 +44,22 @@
 		"typescript": "^2.0.3",
 		"vscode-debugprotocol": "^1.17.0",
 		"vscode-debugadapter-testsupport": "^1.17.0",
-		"vsce": "^1.18.0"
+		"vsce": "^1.18.0",
+		"vscode": "^1.0.3",
+		"vscode-nls-dev": "^2.0.1"
 	},
+	"main": "./out/extension",
+	"activationEvents": [
+		"onCommand:extension.mono-debug.configureExceptions"
+	],
 	"contributes": {
+		"commands": [
+			{
+				"command": "extension.mono-debug.configureExceptions",
+				"title": "%configure.exceptions%",
+				"category": "Debug"
+			}
+		],
 		"breakpoints": [
 			{
 				"language": "csharp"

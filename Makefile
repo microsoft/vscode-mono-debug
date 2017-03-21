@@ -11,12 +11,12 @@ vsix: $MONO_DEBUG_RELEASE
 publish: $MONO_DEBUG_RELEASE
 	./node_modules/.bin/vsce publish
 
-build: $MONO_DEBUG_RELEASE
-	node_modules/.bin/tsc -p ./tests
+build: $MONO_DEBUG_RELEASE tests
+	node_modules/.bin/tsc -p ./src/typescript
 	@echo "build finished"
 
-debug: $MONO_DEBUG_DEBUG
-	node_modules/.bin/tsc -p ./tests
+debug: $MONO_DEBUG_DEBUG tests
+	node_modules/.bin/tsc -p ./src/typescript
 	@echo "build finished"
 
 $MONO_DEBUG_RELEASE:
@@ -24,6 +24,11 @@ $MONO_DEBUG_RELEASE:
 
 $MONO_DEBUG_DEBUG:
 	xbuild /p:Configuration=Debug mono-debug.sln
+
+tests:
+	cd testdata/simple; make
+	cd testdata/output; make
+	cd testdata/simple_break; make
 
 clean:
 	git clean -xfd

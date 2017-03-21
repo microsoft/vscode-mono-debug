@@ -1,6 +1,8 @@
 {
 	"mono.label": "C# Mono",
 
+	"configure.exceptions": "Configure Exceptions",
+
 	"mono.launch.config.name": "Launch",
 	"mono.attach.config.name": "Attach",
 

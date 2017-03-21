@@ -28,13 +28,13 @@
 				"-u", "tdd",
 				"--timeout", "999999",
 				"--colors",
-				"./tests/out"
+				"./out/tests"
 			],
 			"runtimeArgs": [
 				"--nolazy"
 			],
 			"sourceMaps": true,
-			"outFiles": [ "${workspaceRoot}/tests/out/**/*.js" ]
+			"outFiles": [ "${workspaceRoot}/out/tests/**/*.js" ]
 		}
 	],
 	"compounds": [

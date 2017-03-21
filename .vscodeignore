@@ -2,6 +2,8 @@
 */**
 **/.DS_Store
 !bin/Release/*
+!out/extension.js
+!node_modules/vscode-nls/**/*
 !package.json
 !package.nls.json
 !README.md
