@@ -9,13 +9,21 @@ using System.Threading;
 using System.Linq;
 using System.Net;
 using Mono.Debugging.Client;
-//using Microsoft.CSharp.RuntimeBinder;
 
 
 namespace VSCodeDebug
 {
 	public class MonoDebugSession : DebugSession
 	{
+
+		private readonly string[] EXCEPTIONS = new String[] {
+			"System.Exception",
+			"System.SystemException",
+			"System.NullReferenceException",
+			"System.IndexOutOfRangeException",
+			"System.ArithmeticException"
+		};
+
 		private const string MONO = "mono";
 		private readonly string[] MONO_EXTENSIONS = new String[] {
 			".cs", ".csx",
@@ -34,6 +42,7 @@ namespace VSCodeDebug
 		private Mono.Debugging.Client.StackFrame _activeFrame;
 		private long _nextBreakpointId = 0;
 		private SortedDictionary<long, BreakEvent> _breakpoints;
+		private List<Catchpoint> _catchpoints;
 		private DebuggerSessionOptions _debuggerSessionOptions;
 
 		private System.Diagnostics.Process _process;
@@ -61,6 +70,7 @@ namespace VSCodeDebug
 			_session.Breakpoints = new BreakpointStore();
 
 			_breakpoints = new SortedDictionary<long, BreakEvent>();
+			_catchpoints = new List<Catchpoint>();
 
 			DebuggerLoggingService.CustomLogger = new CustomLogger();
 
@@ -172,11 +182,25 @@ namespace VSCodeDebug
 				supportsEvaluateForHovers = false,
 
 				// This debug adapter does not support exception breakpoint filters
-				exceptionBreakpointFilters = new dynamic[0]
+				exceptionBreakpointFilters = exceptionFilters()
 			});
 
 			// Mono Debug is ready to accept breakpoints immediately
 			SendEvent(new InitializedEvent());
+		}
+
+		private object[] exceptionFilters()
+		{
+			var exceptions = new List<object>();
+
+			foreach (var e in EXCEPTIONS) {
+				exceptions.Add(new {
+					label = e,
+					filter = e
+				});
+			}
+
+			return exceptions.ToArray();
 		}
 
 		public override void Launch(Response response, dynamic args)
@@ -493,6 +517,35 @@ namespace VSCodeDebug
 		{
 			SendResponse(response);
 			PauseDebugger();
+		}
+
+		public override void SetExceptionBreakpoints(Response response, dynamic args)
+		{
+			// validate argument 'filters'
+			string[] filters = null;
+			if (args.filters != null) {
+				filters = args.filters.ToObject<string[]>();
+				if (filters != null && filters.Length == 0) {
+					filters = null;
+				}
+			}
+
+			foreach (var cp in _catchpoints) {
+				_session.Breakpoints.Remove(cp);
+			}
+			_catchpoints.Clear();
+
+				                            
+			if (filters != null) {
+				foreach (var filter in filters) {
+					_catchpoints.Add(_session.Breakpoints.AddCatchpoint(filter));
+				}
+			}
+
+			/** Configuration options for selected exceptions. */
+			//exceptionOptions ?: ExceptionOptions[];
+
+			SendResponse(response);
 		}
 
 		public override void SetBreakpoints(Response response, dynamic args)
