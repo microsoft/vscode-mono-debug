@@ -8,5 +8,7 @@
 /mono-debug-*/
 *.vsix
 *.zip
+*.exe
+*.exe.mdb
 mono-debug.userprefs
 npm-debug.log

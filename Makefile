@@ -11,11 +11,11 @@ vsix: $MONO_DEBUG_RELEASE
 publish: $MONO_DEBUG_RELEASE
 	./node_modules/.bin/vsce publish
 
-build: $MONO_DEBUG_RELEASE tests
+build: $MONO_DEBUG_RELEASE
 	node_modules/.bin/tsc -p ./src/typescript
 	@echo "build finished"
 
-debug: $MONO_DEBUG_DEBUG tests
+debug: $MONO_DEBUG_DEBUG
 	node_modules/.bin/tsc -p ./src/typescript
 	@echo "build finished"
 

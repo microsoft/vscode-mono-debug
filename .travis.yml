@@ -9,11 +9,10 @@ git:
   submodules: false
 
 before_install:
-  - git submodule update --init --recursive
   - git clone https://github.com/creationix/nvm.git ./.nvm
   - source ./.nvm/nvm.sh
-  - nvm install 4.1
-  - nvm use 4.1
+  - nvm install 6.5
+  - nvm use 6.5
 
 install:
   - nuget restore mono-debug.sln
