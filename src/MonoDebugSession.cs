@@ -15,15 +15,6 @@ namespace VSCodeDebug
 {
 	public class MonoDebugSession : DebugSession
 	{
-
-		private readonly string[] EXCEPTIONS = new String[] {
-			"System.Exception",
-			"System.SystemException",
-			"System.NullReferenceException",
-			"System.IndexOutOfRangeException",
-			"System.ArithmeticException"
-		};
-
 		private const string MONO = "mono";
 		private readonly string[] MONO_EXTENSIONS = new String[] {
 			".cs", ".csx",
@@ -182,30 +173,18 @@ namespace VSCodeDebug
 				supportsEvaluateForHovers = false,
 
 				// This debug adapter does not support exception breakpoint filters
-				exceptionBreakpointFilters = exceptionFilters()
+				exceptionBreakpointFilters = new dynamic[0]
 			});
 
 			// Mono Debug is ready to accept breakpoints immediately
 			SendEvent(new InitializedEvent());
 		}
 
-		private object[] exceptionFilters()
-		{
-			var exceptions = new List<object>();
-
-			foreach (var e in EXCEPTIONS) {
-				exceptions.Add(new {
-					label = e,
-					filter = e
-				});
-			}
-
-			return exceptions.ToArray();
-		}
-
 		public override void Launch(Response response, dynamic args)
 		{
 			_attachMode = false;
+
+			SetExceptionBreakpoints(args.__exceptionOptions);
 
 			// validate argument 'program'
 			string programPath = getString(args, "program");
@@ -408,6 +387,8 @@ namespace VSCodeDebug
 		{
 			_attachMode = true;
 
+			SetExceptionBreakpoints(args.__exceptionOptions);
+
 			// validate argument 'address'
 			var host = getString(args, "address");
 			if (host == null) {
@@ -521,30 +502,7 @@ namespace VSCodeDebug
 
 		public override void SetExceptionBreakpoints(Response response, dynamic args)
 		{
-			// validate argument 'filters'
-			string[] filters = null;
-			if (args.filters != null) {
-				filters = args.filters.ToObject<string[]>();
-				if (filters != null && filters.Length == 0) {
-					filters = null;
-				}
-			}
-
-			foreach (var cp in _catchpoints) {
-				_session.Breakpoints.Remove(cp);
-			}
-			_catchpoints.Clear();
-
-				                            
-			if (filters != null) {
-				foreach (var filter in filters) {
-					_catchpoints.Add(_session.Breakpoints.AddCatchpoint(filter));
-				}
-			}
-
-			/** Configuration options for selected exceptions. */
-			//exceptionOptions ?: ExceptionOptions[];
-
+			SetExceptionBreakpoints(args.exceptionOptions);
 			SendResponse(response);
 		}
 
@@ -784,6 +742,42 @@ namespace VSCodeDebug
 		}
 
 		//---- private ------------------------------------------
+
+		private void SetExceptionBreakpoints(dynamic exceptionOptions)
+		{
+			if (exceptionOptions != null) {
+
+				// clear all existig catchpoints
+				foreach (var cp in _catchpoints) {
+					_session.Breakpoints.Remove(cp);
+				}
+				_catchpoints.Clear();
+
+				var exceptions = exceptionOptions.ToObject<dynamic[]>();
+				for (int i = 0; i < exceptions.Length; i++) {
+					
+					var exception = exceptions[i];
+
+					string exName = null;
+					string exBreakMode = exception.breakMode;
+
+					if (exception.path != null) {
+						var paths = exception.path.ToObject<dynamic[]>();
+						var path = paths[0];
+						if (path.names != null) {
+							var names = path.names.ToObject<dynamic[]>();
+							if (names.Length > 0) {
+								exName = names[0];
+							}
+						}
+					}
+
+					if (exName != null && exBreakMode == "always") {
+						_catchpoints.Add(_session.Breakpoints.AddCatchpoint(exName));
+					}
+				}
+			}
+		}
 
 		private void SendOutput(string category, string data) {
 			if (!String.IsNullOrEmpty(data)) {
