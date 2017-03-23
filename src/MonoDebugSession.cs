@@ -755,7 +755,7 @@ namespace VSCodeDebug
 
 				var exceptions = exceptionOptions.ToObject<dynamic[]>();
 				for (int i = 0; i < exceptions.Length; i++) {
-					
+
 					var exception = exceptions[i];
 
 					string exName = null;

@@ -29,9 +29,16 @@ type ExceptionConfigurations = { [exception: string]: DebugProtocol.ExceptionBre
 const DEFAULT_EXCEPTIONS : ExceptionConfigurations = {
 	"System.Exception": "never",
 	"System.SystemException": "never",
-	"System.NullReferenceException": "always",
-	"System.IndexOutOfRangeException": "unhandled",
-	"System.ArithmeticException": "unhandled"
+	"System.ArithmeticException": "never",
+	"System.ArrayTypeMismatchException": "never",
+	"System.DivideByZeroException": "never",
+	"System.IndexOutOfRangeException": "never",
+	"System.InvalidCastException": "never",
+	"System.NullReferenceException": "never",
+	"System.OutOfMemoryException": "never",
+	"System.OverflowException": "never",
+	"System.StackOverflowException": "never",
+	"System.TypeInitializationException": "never"
 };
 
 class BreakOptionItem implements vscode.QuickPickItem {
@@ -41,7 +48,7 @@ class BreakOptionItem implements vscode.QuickPickItem {
 }
 
 // the possible exception options converted into QuickPickItem
-const OPTIONS = ['never', 'always', 'unhandled', 'userUnhandled'].map<BreakOptionItem>((bm: DebugProtocol.ExceptionBreakMode) => {
+const OPTIONS = [ 'never', 'always', 'unhandled' ].map<BreakOptionItem>((bm: DebugProtocol.ExceptionBreakMode) => {
 	return {
 		label: translate(bm),
 		description: '',
@@ -55,21 +62,21 @@ class ExceptionItem implements vscode.QuickPickItem {
 	model: DebugProtocol.ExceptionOptions
 }
 
-function translate(mode: DebugProtocol.ExceptionBreakMode) {
+function translate(mode: DebugProtocol.ExceptionBreakMode): string {
 	switch (mode) {
 		case 'never':
 			return localize('breakmode.never', "Never break");
 		case 'always':
 			return localize('breakmode.always', "Always break");
 		case 'unhandled':
-			return localize('breakmode.unhandled', "Break when exception unhandled");
-		case 'userUnhandled':
-			return localize('breakmode.userUnhandled', "Break if exception is not handled by user code");
+			return localize('breakmode.unhandled', "Break when unhandled");
+		default:
+			return mode;
 	}
 }
 
-function getModel() {
-	
+function getModel() : ExceptionConfigurations {
+
 	let model = DEFAULT_EXCEPTIONS;
 	if (configuration) {
 		const exceptionOptions = configuration.get('exceptionOptions');
@@ -80,7 +87,7 @@ function getModel() {
 	return model;
 }
 
-function configureExceptions() {
+function configureExceptions() : void {
 
 	const options: vscode.QuickPickOptions = {
 		placeHolder: localize('select.exception', "First Select Exception"),
@@ -93,7 +100,7 @@ function configureExceptions() {
 	for (var exception in model) {
 		exceptionItems.push({
 			label: exception,
-			description: translate(model[exception])
+			description: model[exception] !== 'never' ? `⚡ ${translate(model[exception])}` : ''
 		});
 	}
 
@@ -130,7 +137,7 @@ function setExceptionBreakpoints(model: ExceptionConfigurations) : Thenable<Debu
 	return vscode.commands.executeCommand<DebugProtocol.SetExceptionBreakpointsResponse>('workbench.customDebugRequest', 'setExceptionBreakpoints', args);
 }
 
-function convertToExceptionOptions(model: ExceptionConfigurations): DebugProtocol.ExceptionOptions[] {
+function convertToExceptionOptions(model: ExceptionConfigurations) : DebugProtocol.ExceptionOptions[] {
 
 	const exceptionItems: DebugProtocol.ExceptionOptions[] = [];
 	for (var exception in model) {
@@ -152,7 +159,7 @@ class StartSessionResult {
 	content?: string;	// launch.json content for 'save'
 };
 
-function startSession(config: any): StartSessionResult {
+function startSession(config: any) : StartSessionResult {
 
 	if (config && !config.__exceptionOptions) {
 		config.__exceptionOptions = convertToExceptionOptions(getModel());

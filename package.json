@@ -77,9 +77,16 @@
 					"default": {
 						"System.Exception": "never",
 						"System.SystemException": "never",
-						"System.NullReferenceException": "always",
-						"System.IndexOutOfRangeException": "unhandled",
-						"System.ArithmeticException": "unhandled"
+						"System.ArithmeticException": "never",
+						"System.ArrayTypeMismatchException": "never",
+						"System.DivideByZeroException": "never",
+						"System.IndexOutOfRangeException": "never",
+						"System.InvalidCastException": "never",
+						"System.NullReferenceException": "never",
+						"System.OutOfMemoryException": "never",
+						"System.OverflowException": "never",
+						"System.StackOverflowException": "never",
+						"System.TypeInitializationException": "never"
 					}
 				}
 			}
