@@ -1,8 +1,0 @@
-install:
-  - ps: Install-Product node 6.5 x64
-
-build_script:
-  - npm install
-
-test_script:
-  - npm test

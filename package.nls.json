@@ -1,7 +1,17 @@
 {
 	"mono.label": "C# Mono",
 
+	"configure.exceptions.command": "Configure Exceptions",
+
+	"configuration.title": "Mono Debug",
+	"configuration.exceptionOptions.description": "Configure when exceptions should break (never, always, unhandled). Add more as needed.",
+	"configuration.exceptionOptions.description2": "When should this thrown exception break?",
+
 	"configure.exceptions": "Configure Exceptions",
+	"breakMode.never": "never breaks",
+	"breakMode.always": "breaks when exception handled or unhandled",
+	"breakMode.unhandled": "breaks when exception unhandled",
+
 
 	"mono.launch.config.name": "Launch",
 	"mono.attach.config.name": "Attach",

@@ -58,22 +58,22 @@
 
 		"configuration": {
 			"type": "object",
-			"title": "Mono Debug Exception Configuration",
+			"title": "%configuration.title%",
 			"properties": {
 				"mono-debug.exceptionOptions": {
 					"type": "object",
 					"additionalProperties": {
 						"type": "string",
-						"enum": [ "never", "always", "unhandled", "userUnhandled" ],
+						"enum": [ "never", "always", "unhandled" ],
 						"enumDescriptions": [
-							"never breaks",
-							"breaks when exception handled or unhandled",
-							"breaks when exception unhandled"
+							"%breakMode.never%",
+							"%breakMode.always%",
+							"%breakMode.unhandled%"
 						],
-						"description": "Possible conditions when a thrown exception should result in a break.",
+						"description": "%configuration.exceptionOptions.description2%",
 						"default": "never"
 					},
-					"description": "Configuration options for exceptions",
+					"description": "%configuration.exceptionOptions.description%",
 					"default": {
 						"System.Exception": "never",
 						"System.SystemException": "never",
@@ -95,14 +95,8 @@
 		"commands": [
 			{
 				"command": "extension.mono-debug.configureExceptions",
-				"title": "%configure.exceptions%",
+				"title": "%configure.exceptions.command%",
 				"category": "Debug"
-			}
-		],
-		"keybindings": [
-			{
-				"command": "extension.mono-debug.configureExceptions",
-				"key": "f3"
 			}
 		],
 		"breakpoints": [
