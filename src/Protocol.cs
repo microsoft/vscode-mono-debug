@@ -8,18 +8,20 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace VSCodeDebug
 {
 	public class ProtocolMessage
 	{
 		public int seq;
-		public string type { get; }
+		public string type;
 
+		public ProtocolMessage() {
+		}
 		public ProtocolMessage(string typ) {
 			type = typ;
 		}
-
 		public ProtocolMessage(string typ, int sq) {
 			type = typ;
 			seq = sq;
@@ -31,6 +33,12 @@ namespace VSCodeDebug
 		public string command;
 		public dynamic arguments;
 
+		public Request() {
+		}
+		public Request(string cmd, dynamic arg) : base("request") {
+			command = cmd;
+			arguments = arg;
+		}
 		public Request(int id, string cmd, dynamic arg) : base("request", id) {
 			command = cmd;
 			arguments = arg;
@@ -47,12 +55,14 @@ namespace VSCodeDebug
 
 	public class Response : ProtocolMessage
 	{
-		public bool success { get; private set; }
-		public string message { get; private set; }
-		public int request_seq { get; }
-		public string command { get; }
-		public ResponseBody body { get; private set; }
+		public bool success;
+		public string message;
+		public int request_seq;
+		public string command;
+		public ResponseBody body;
 
+		public Response() {
+		}
 		public Response(Request req) : base("response") {
 			success = true;
 			request_seq = req.seq;
@@ -98,6 +108,7 @@ namespace VSCodeDebug
 		protected static readonly Encoding Encoding = System.Text.Encoding.UTF8;
 
 		private int _sequenceNumber;
+		private Dictionary<int, TaskCompletionSource<Response>> _pendingRequests;
 
 		private Stream _outputStream;
 
@@ -107,10 +118,12 @@ namespace VSCodeDebug
 		private bool _stopRequested;
 
 
-		public ProtocolServer() {
+		public ProtocolServer()
+		{
 			_sequenceNumber = 1;
 			_bodyLength = -1;
 			_rawData = new ByteBuffer();
+			_pendingRequests = new Dictionary<int, TaskCompletionSource<Response>>();
 		}
 
 		public async Task Start(Stream inputStream, Stream outputStream)
@@ -143,6 +156,22 @@ namespace VSCodeDebug
 		public void SendEvent(Event e)
 		{
 			SendMessage(e);
+		}
+
+		public Task<Response> SendRequest(string command, dynamic args)
+		{
+			var tcs = new TaskCompletionSource<Response>();
+
+			Request request = null;
+			lock (_pendingRequests) {
+				request = new Request(_sequenceNumber++, command, args);
+				// wait for response
+				_pendingRequests.Add(request.seq, tcs);
+			}
+
+			SendMessage(request);
+
+			return tcs.Task;
 		}
 
 		protected abstract void DispatchRequest(string command, dynamic args, Response response);
@@ -183,23 +212,45 @@ namespace VSCodeDebug
 
 		private void Dispatch(string req)
 		{
-			var request = JsonConvert.DeserializeObject<Request>(req);
-			if (request != null && request.type == "request") {
-				if (TRACE)
-					Console.Error.WriteLine(string.Format("C {0}: {1}", request.command, JsonConvert.SerializeObject(request.arguments)));
+			var message = JsonConvert.DeserializeObject<ProtocolMessage>(req);
+			if (message != null) {
+				switch (message.type) {
 
-				var response = new Response(request);
+				case "request":
+					{
+						var request = JsonConvert.DeserializeObject<Request>(req);
 
-				DispatchRequest(request.command, request.arguments, response);
+						if (TRACE)
+							Console.Error.WriteLine(string.Format("C {0}: {1}", request.command, JsonConvert.SerializeObject(request.arguments)));
 
-				SendMessage(response);
+						var response = new Response(request);
+						DispatchRequest(request.command, request.arguments, response);
+						SendMessage(response);
+					}
+					break;
+
+				case "response":
+					{
+						var response = JsonConvert.DeserializeObject<Response>(req);
+						int seq = response.request_seq;
+						lock (_pendingRequests) {
+							if (_pendingRequests.ContainsKey(seq)) {
+								var tcs = _pendingRequests[seq];
+								_pendingRequests.Remove(seq);
+								tcs.SetResult(response);
+							}
+						}
+					}
+					break;
+				}
 			}
 		}
 
 		protected void SendMessage(ProtocolMessage message)
 		{
-			message.seq = _sequenceNumber++;
-
+			if (message.seq == 0) {
+				message.seq = _sequenceNumber++;		
+			}
 			if (TRACE_RESPONSE && message.type == "response") {
 				Console.Error.WriteLine(string.Format(" R: {0}", JsonConvert.SerializeObject(message)));
 			}

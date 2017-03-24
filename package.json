@@ -179,8 +179,19 @@
 						},
 						"externalConsole": {
 							"type": "boolean",
-							"description": "%mono.launch.externalConsole.description%",
+							"deprecationMessage": "%mono.launch.externalConsole.deprecationMessage%",
 							"default": true
+						},
+						"console": {
+							"type": "string",
+							"enum": [ "internalConsole", "integratedTerminal", "externalTerminal" ],
+							"enumDescriptions": [
+								"%mono.launch.console.internalConsole.description%",
+								"%mono.launch.console.integratedTerminal.description%",
+								"%mono.launch.console.externalTerminal.description%"
+							],
+							"description": "%mono.launch.console.description%",
+							"default": "internalConsole"
 						}
 					}
 				},

@@ -180,7 +180,7 @@ namespace VSCodeDebug
 			SendEvent(new InitializedEvent());
 		}
 
-		public override void Launch(Response response, dynamic args)
+		public override async void Launch(Response response, dynamic args)
 		{
 			_attachMode = false;
 
@@ -196,15 +196,6 @@ namespace VSCodeDebug
 			if (!File.Exists(programPath) && !Directory.Exists(programPath)) {
 				SendErrorResponse(response, 3002, "Program '{path}' does not exist.", new { path = programPath });
 				return;
-			}
-
-			// validate argument 'args'
-			string[] arguments = null;
-			if (args.args != null) {
-				arguments = args.args.ToObject<string[]>();
-				if (arguments != null && arguments.Length == 0) {
-					arguments = null;
-				}
 			}
 
 			// validate argument 'cwd'
@@ -237,14 +228,6 @@ namespace VSCodeDebug
 				}
 			}
 
-			// validate argument 'runtimeArgs'
-			string[] runtimeArguments = null;
-			if (args.runtimeArgs != null) {
-				runtimeArguments = args.runtimeArgs.ToObject<string[]>();
-				if (runtimeArguments != null && runtimeArguments.Length == 0) {
-					runtimeArguments = null;
-				}
-			}
 
 			// validate argument 'env'
 			Dictionary<string, string> env = null;
@@ -264,67 +247,85 @@ namespace VSCodeDebug
 
 			string mono_path = runtimeExecutable;
 			if (mono_path == null) {
-				if (!Terminal.IsOnPath(MONO)) {
+				if (!Utilities.IsOnPath(MONO)) {
 					SendErrorResponse(response, 3011, "Can't find runtime '{_runtime}' on PATH.", new { _runtime = MONO });
 					return;
 				}
 				mono_path = MONO;     // try to find mono through PATH
 			}
 
-			bool debug = ! getBool(args, "noDebug", false);
-			var list = new List<String>();
+
+			var cmdLine = new List<String>();
+
+			bool debug = !getBool(args, "noDebug", false);
 			if (debug) {
-				list.Add("--debug");
-				list.Add(String.Format("--debugger-agent=transport=dt_socket,server=y,address={0}:{1}", host, port));
+				cmdLine.Add("--debug");
+				cmdLine.Add(String.Format("--debugger-agent=transport=dt_socket,server=y,address={0}:{1}", host, port));
 			}
-			if (runtimeArguments != null) {
-				foreach (string item in runtimeArguments) {
-					list.Add(item);
+
+			// add 'runtimeArgs'
+			if (args.runtimeArgs != null) {
+				string[] runtimeArguments = args.runtimeArgs.ToObject<string[]>();
+				if (runtimeArguments != null && runtimeArguments.Length > 0) {
+					cmdLine.AddRange(runtimeArguments);
 				}
 			}
-			var mono_args = list.ToArray();
 
-			string program;
+			// add 'program'
 			if (workingDirectory == null) {
 				// if no working dir given, we use the direct folder of the executable
 				workingDirectory = Path.GetDirectoryName(programPath);
-				program = Path.GetFileName(programPath);
+				cmdLine.Add(Path.GetFileName(programPath));
 			}
 			else {
 				// if working dir is given and if the executable is within that folder, we make the program path relative to the working dir
-				program = Utilities.MakeRelativePath(workingDirectory, programPath);
+				cmdLine.Add(Utilities.MakeRelativePath(workingDirectory, programPath));
 			}
 
-			bool externalConsole = getBool(args, "externalConsole", false);
-			if (externalConsole) {
+			// add 'args'
+			if (args.args != null) {
+				string[] arguments = args.args.ToObject<string[]>();
+				if (arguments != null && arguments.Length > 0) {
+					cmdLine.AddRange(arguments);
+				}
+			}
 
-				var result = Terminal.LaunchInTerminal(workingDirectory, mono_path, mono_args, program, arguments, env);
-				if (!result.Success) {
-					SendErrorResponse(response, 3012, "Can't launch terminal ({reason}).", new { reason = result.Message });
+			// what console?
+			var console = getString(args, "console", null);
+			if (console == null) {
+				// continue to read the deprecated "externalConsole" attribute
+				bool externalConsole = getBool(args, "externalConsole", false);
+				if (externalConsole) {
+					console = "externalTerminal";
+				}
+			}
+
+			if (console == "externalTerminal" || console == "integratedTerminal") {
+				
+				cmdLine.Insert(0, mono_path);
+
+				var termArgs = new {
+					kind = console == "integratedTerminal" ? "integrated" : "external",
+					title = "Node Debug Console",
+					cwd = workingDirectory,
+					args = cmdLine.ToArray(),
+					env = environmentVariables
+				};
+
+				var resp = await SendRequest("runInTerminal", termArgs);
+				if (!resp.success) {
+					SendErrorResponse(response, 3011, "Cannot launch debug target in terminal ({_error}).", new { _error = resp.message });
 					return;
 				}
 
-				if (!debug && result.ProcessId > 0) {	// in 'run' mode we try to track the mono runtime process
-					try {
-						_process = System.Diagnostics.Process.GetProcessById(result.ProcessId);
-						if (_process != null) {
-							_process.EnableRaisingEvents = true;
-							_process.Exited += (object sender, EventArgs e) => {
-								Terminate("runtime process exited");
-							};
-						}
-					} catch (Exception) {
-					}
-				}
-
-			} else {
+			} else { // internalConsole
 
 				_process = new System.Diagnostics.Process();
 				_process.StartInfo.CreateNoWindow = true;
 				_process.StartInfo.UseShellExecute = false;
 				_process.StartInfo.WorkingDirectory = workingDirectory;
 				_process.StartInfo.FileName = mono_path;
-				_process.StartInfo.Arguments = string.Format("{0} {1} {2}", Terminal.ConcatArgs(mono_args), Terminal.Quote(program), Terminal.ConcatArgs(arguments));
+				_process.StartInfo.Arguments = Utilities.ConcatArgs(cmdLine.ToArray());
 
 				_stdoutEOF = false;
 				_process.StartInfo.RedirectStandardOutput = true;

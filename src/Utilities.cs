@@ -9,55 +9,68 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Reflection;
+using System.Diagnostics;
+
 using Mono.Debugging.Client;
 
 namespace VSCodeDebug
 {
 	public class Utilities
 	{
-		private const string OSASCRIPT = "/usr/bin/osascript";	// osascript is the AppleScript interpreter on OS X
-		private const string LINUX_TERM = "/usr/bin/gnome-terminal";	//private const string LINUX_TERM = "/usr/bin/x-terminal-emulator";
-		private const string OSX_BIN_DIR = "/usr/local/bin";
+		private const string WHICH = "/usr/bin/which";
+		private const string WHERE = "where";
 
 		private static readonly Regex VARIABLE = new Regex(@"\{(\w+)\}");
 
+		private static char[] ARGUMENT_SEPARATORS = new char[] { ' ', '\t' };
+
 		/*
-		 * Is this Windows?
+		 * Enclose the given string in quotes if it contains space or tab characters.
 		 */
-		public static bool IsWindows()
+		public static string Quote(string arg)
 		{
-			PlatformID pid = Environment.OSVersion.Platform;
-			return ! (pid == PlatformID.Unix || pid == PlatformID.MacOSX);
+			if (arg.IndexOfAny(ARGUMENT_SEPARATORS) >= 0) {
+				return '"' + arg + '"';
+			}
+			return arg;
 		}
 
 		/*
-		 * Is this OS X?
+		 * Is the given runtime executable on the PATH.
 		 */
-		public static bool IsOSX()
+		public static bool IsOnPath(string runtime)
 		{
-			return File.Exists(OSASCRIPT);  // mono has no better way to determine whether this is OS X
+			var process = new Process();
+
+			process.StartInfo.CreateNoWindow = true;
+			process.StartInfo.UseShellExecute = false;
+			process.StartInfo.RedirectStandardOutput = true;
+			process.StartInfo.FileName = File.Exists(WHICH) ? WHICH : WHERE;
+			process.StartInfo.Arguments = Quote(runtime);
+
+			try {
+				process.Start();
+				process.WaitForExit();
+				return process.ExitCode == 0;
+			} catch (Exception) {
+				// ignore
+			}
+
+			return false;
 		}
 
-		/*
-		 * Is this Linux?
-		 */
-		public static bool IsLinux()
+		public static string ConcatArgs(string[] args)
 		{
-			return File.Exists(LINUX_TERM);  // mono has no better way to determine whether this is Linux
-		}
-
-		/*
-		 * On OS X make sure that /usr/local/bin is on the PATH
-		 */
-		public static void FixPathOnOSX()
-		{
-			if (Utilities.IsOSX()) {
-				var path = System.Environment.GetEnvironmentVariable("PATH");
-				if (!path.Split(':').Contains(OSX_BIN_DIR)) {
-					path += ":" + OSX_BIN_DIR;
-					System.Environment.SetEnvironmentVariable("PATH", path);
+			var arg = "";
+			if (args != null) {
+				foreach (var r in args) {
+					if (arg.Length > 0) {
+						arg += " ";
+					}
+					arg += Utilities.Quote(r);
 				}
 			}
+			return arg;
 		}
 
 		/*
