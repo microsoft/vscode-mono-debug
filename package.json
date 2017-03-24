@@ -45,7 +45,7 @@
 		"typescript": "^2.0.3",
 		"vscode-debugprotocol": "^1.17.0",
 		"vscode-debugadapter-testsupport": "^1.17.0",
-		"vsce": "^1.18.0",
+		"vsce": "^1.19.0",
 		"vscode": "^1.0.3",
 		"vscode-nls-dev": "^2.0.1"
 	},
