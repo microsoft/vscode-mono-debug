@@ -13,8 +13,7 @@ namespace VSCodeDebug
 	{
 		const int DEFAULT_PORT = 4711;
 
-		private static bool trace_requests;
-		private static bool trace_responses;
+		private static bool trace_dap;
 
 		private static void Main(string[] argv)
 		{
@@ -23,18 +22,14 @@ namespace VSCodeDebug
 			// parse command line arguments
 			foreach (var a in argv) {
 				switch (a) {
-				case "--trace":
-					trace_requests = true;
-					break;
-				case "--trace=response":
-					trace_requests = true;
-					trace_responses = true;
+				case "--trace=dap":
+					trace_dap = true;
 					break;
 				case "--server":
 					port = DEFAULT_PORT;
 					break;
 				default:
-					if (a.StartsWith("--server=")) {
+					if (a.StartsWith("--server=", StringComparison.Ordinal)) {
 						if (!int.TryParse(a.Substring("--server=".Length), out port)) {
 							port = DEFAULT_PORT;
 						}
@@ -50,16 +45,9 @@ namespace VSCodeDebug
 			} else {
 				// stdin/stdout
 				Console.Error.WriteLine("waiting for debug protocol on stdin/stdout");
-				RunSession(Console.OpenStandardInput(), Console.OpenStandardOutput());
+				var debugSession = new MonoDebugSession(Console.OpenStandardInput(), Console.OpenStandardOutput());
+				debugSession.Protocol.Run();
 			}
-		}
-
-		private static void RunSession(Stream inputStream, Stream outputStream)
-		{
-			DebugSession debugSession = new MonoDebugSession();
-			debugSession.TRACE = trace_requests;
-			debugSession.TRACE_RESPONSE = trace_responses;
-			debugSession.Start(inputStream, outputStream).Wait();
 		}
 
 		private static void RunServer(int port)
@@ -76,7 +64,15 @@ namespace VSCodeDebug
 						new System.Threading.Thread(() => {
 							using (var networkStream = new NetworkStream(clientSocket)) {
 								try {
-									RunSession(networkStream, networkStream);
+									var adapter = new MonoDebugSession(networkStream, networkStream);
+									if (trace_dap) {
+										adapter.Protocol.TraceCallback = (s) => Console.WriteLine(s);
+									}
+									adapter.Protocol.DispatcherError += (sender, e) => {
+										Console.Error.WriteLine(e.Exception.Message);
+									};
+									adapter.Protocol.Run();
+									adapter.Protocol.WaitForReader();
 								}
 								catch (Exception e) {
 									Console.Error.WriteLine("Exception: " + e);

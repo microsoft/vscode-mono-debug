@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Diagnostics;
 
 using Mono.Debugging.Client;
+using System.Collections.Generic;
 
 namespace VSCodeDebug
 {
@@ -128,10 +129,10 @@ namespace VSCodeDebug
 			return fallback;
 		}
 
-		public static string ExpandVariables(string format, dynamic variables, bool underscoredOnly = true)
+		public static string ExpandVariables(string format, Dictionary<string, object> variables, bool underscoredOnly = true)
 		{
 			if (variables == null) {
-				variables = new { };
+				variables = new Dictionary<string, object>();
 			}
 			Type type = variables.GetType();
 			return VARIABLE.Replace(format, match => {

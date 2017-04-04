@@ -55,7 +55,7 @@
       <HintPath>packages\Mono.Debugging.1.0.20161020.46\lib\net40\Mono.Debugging.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>packages\Newtonsoft.Json.8.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shared.VSCodeDebugProtocol">
       <HintPath>packages\Microsoft.VisualStudio.Shared.VsCodeDebugProtocol.15.0.10309.2\lib\net45\Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll</HintPath>
@@ -66,9 +66,7 @@
     <Compile Include="src\MonoDebugSession.cs" />
     <Compile Include="src\Handles.cs" />
     <Compile Include="src\Utilities.cs" />
-    <Compile Include="src\DebugSession.cs" />
     <Compile Include="src\MonoDebug.cs" />
-    <Compile Include="src\Protocol.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
