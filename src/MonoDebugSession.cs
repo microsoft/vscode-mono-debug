@@ -176,11 +176,6 @@ namespace VSCodeDebug
 				return (InitializeResponse) ErrorResponse(1015, "initialize: bad value '{_format}' for pathFormat", new { _format = arguments.PathFormat });
 			}
 
-			OperatingSystem os = Environment.OSVersion;
-			if (os.Platform != PlatformID.MacOSX && os.Platform != PlatformID.Unix && os.Platform != PlatformID.Win32NT) {
-				return (InitializeResponse) ErrorResponse(3000, "Mono Debug is not supported on this platform ({_platform}).", new { _platform = os.Platform.ToString() }, true, true);
-			}
-
 			// Mono Debug is ready to accept breakpoints immediately
 			Protocol.SendEvent(new InitializedEvent());
 
@@ -271,7 +266,6 @@ namespace VSCodeDebug
 				mono_path = MONO;     // try to find mono through PATH
 			}
 
-
 			var cmdLine = new List<string>();
 
 			bool debug = false;
@@ -312,36 +306,36 @@ namespace VSCodeDebug
 			}
 
 			// what console?
-			var console = arguments.ConfigurationProperties.GetValueAsString("console");
-			if (console == null) {
+			RunInTerminalArguments.KindValue ?kind = null;
+			switch (arguments.ConfigurationProperties.GetValueAsString("console")) {
+			case "externalTerminal":
+				kind = RunInTerminalArguments.KindValue.External;
+				break;
+			case "integratedTerminal":
+				kind = RunInTerminalArguments.KindValue.Integrated;
+				break;
+			case "internalConsole":
+				break;
+			default:
 				// continue to read the deprecated "externalConsole" attribute
 				var externalConsole = arguments.ConfigurationProperties.GetValueAsBool("externalConsole");
 				if (externalConsole != null && (bool)externalConsole) {
-					console = "externalTerminal";
+					kind = RunInTerminalArguments.KindValue.External;
 				}
+				break;
 			}
 
-			if (console == "externalTerminal" || console == "integratedTerminal") {
+			if (kind != null) {
 
 				cmdLine.Insert(0, mono_path);
 
-				var cmd = new RunInTerminalRequest(workingDirectory, cmdLine, console == "integratedTerminal" ? RunInTerminalArguments.KindValue.Integrated : RunInTerminalArguments.KindValue.External, "Node Debug Console", env);
+				var request = new RunInTerminalRequest(workingDirectory, cmdLine, kind, "Node Debug Console", env);
 
-				if (false) {
-					// this blocks:
-					var t = new TaskCompletionSource<RunInTerminalResponse>();
-					Protocol.SendClientRequest(cmd,
-						(RunInTerminalArguments a, RunInTerminalResponse response) => t.SetResult(response),
-						(RunInTerminalArguments a, ProtocolException exception) => t.TrySetException(exception)
-					);
-					var resp = t.Task.Result;
-				} else {
-					// this works:
-					Protocol.SendClientRequest(cmd,
-						  (RunInTerminalArguments a, RunInTerminalResponse response) => { Console.WriteLine("OK"); },
-						  (RunInTerminalArguments a, ProtocolException exception) => { Console.WriteLine("Error"); }
-					);
-				}
+				// TODO: properly handle success and failure callbacks without blocking
+				Protocol.SendClientRequest(request,
+					  (RunInTerminalArguments a, RunInTerminalResponse response) => { },
+					  (RunInTerminalArguments a, ProtocolException exception) => { }
+				);
 
 			} else { // internalConsole
 
