@@ -605,7 +605,7 @@ namespace VSCodeDebug
 					int line = frame.SourceLocation.Line;
 					string sourceName = Path.GetFileName(path);
 
-					var source = new Source(sourceName, ConvertDebuggerPathToClient(path));
+					var source = VSCodeDebug.Source.Create(sourceName, ConvertDebuggerPathToClient(path));
 					stackFrames.Add(new StackFrame(frameHandle, name, source, ConvertDebuggerLineToClient(line), 0));
 				}
 			}
