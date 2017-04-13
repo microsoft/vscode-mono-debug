@@ -301,7 +301,7 @@ namespace VSCodeDebug
 			}
 
 			if (console == "externalTerminal" || console == "integratedTerminal") {
-				
+
 				cmdLine.Insert(0, mono_path);
 
 				var termArgs = new {
@@ -549,7 +549,7 @@ namespace VSCodeDebug
 					lin2.Add(bpt.Item2);
 				}
 				else {
-					// Console.WriteLine("cleared bpt #{0} for line {1}", bpt.Item1, bpt.Item2);
+					// Program.Log("cleared bpt #{0} for line {1}", bpt.Item1, bpt.Item2);
 
 					BreakEvent b;
 					if (_breakpoints.TryGetValue(bpt.Item1, out b)) {
@@ -564,7 +564,7 @@ namespace VSCodeDebug
 				if (!lin2.Contains(l)) {
 					var id = _nextBreakpointId++;
 					_breakpoints.Add(id, _session.Breakpoints.Add(path, l));
-					// Console.WriteLine("added bpt #{0} for line {1}", id, l);
+					// Program.Log("added bpt #{0} for line {1}", id, l);
 				}
 			}
 
@@ -586,7 +586,7 @@ namespace VSCodeDebug
 
 			ThreadInfo thread = DebuggerActiveThread();
 			if (thread.Id != threadReference) {
-				// Console.Error.WriteLine("stackTrace: unexpected: active thread should be the one requested");
+				// Program.Log("stackTrace: unexpected: active thread should be the one requested");
 				thread = FindThread(threadReference);
 				if (thread != null) {
 					thread.SetActive();
