@@ -1,3 +1,6 @@
+## 0.15.5
+* Thanks to PR from [AutonomicCoder](https://github.com/AutonomicCoder) [bug #21](https://github.com/Microsoft/vscode-mono-debug/issues/21) got fixed and mono-debug now supports protocol logging to a file.
+
 ## 0.15.4
 * Mono-debug now uses the terminal service provided by VS Code. You can now use the launch config attribute `console` for selecting one of `internalConsole`, `integratedTerminal`, `externalTerminal`. The 'integratedTerminal' and 'externalTerminal' can be further configured through workspace or user settings.
 * Added support for configuring handled and unhandled exceptions. Use the "Debug: Configure Exceptions" command.
