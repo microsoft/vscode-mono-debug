@@ -220,8 +220,7 @@ namespace VSCodeDebug
 					{
 						var request = JsonConvert.DeserializeObject<Request>(req);
 
-						if (TRACE)
-							Console.Error.WriteLine(string.Format("C {0}: {1}", request.command, JsonConvert.SerializeObject(request.arguments)));
+                        Program.Log(TRACE, "C {0}: {1}", request.command, JsonConvert.SerializeObject(request.arguments, Formatting.Indented));
 
 						var response = new Response(request);
 						DispatchRequest(request.command, request.arguments, response);
@@ -249,15 +248,15 @@ namespace VSCodeDebug
 		protected void SendMessage(ProtocolMessage message)
 		{
 			if (message.seq == 0) {
-				message.seq = _sequenceNumber++;		
+				message.seq = _sequenceNumber++;
 			}
-			if (TRACE_RESPONSE && message.type == "response") {
-				Console.Error.WriteLine(string.Format(" R: {0}", JsonConvert.SerializeObject(message)));
-			}
-			if (TRACE && message.type == "event") {
-				Event e = (Event)message;
-				Console.Error.WriteLine(string.Format("E {0}: {1}", e.eventType, JsonConvert.SerializeObject(e.body)));
-			}
+
+            Program.Log(TRACE_RESPONSE && message.type == "response", " R: {0}", JsonConvert.SerializeObject(message, Formatting.Indented));
+
+            if (message.type == "event" && message is Event) {
+                var e = message as Event;
+                Program.Log(TRACE, "E {0}: {1}", ((Event)message).eventType, JsonConvert.SerializeObject(e.body, Formatting.Indented));
+            }
 
 			var data = ConvertToBytes(message);
 			try {

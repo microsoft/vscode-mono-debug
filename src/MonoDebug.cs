@@ -15,6 +15,7 @@ namespace VSCodeDebug
 
 		private static bool trace_requests;
 		private static bool trace_responses;
+        static string LOG_FILE_PATH = null;
 
 		private static void Main(string[] argv)
 		{
@@ -39,27 +40,87 @@ namespace VSCodeDebug
 							port = DEFAULT_PORT;
 						}
 					}
+					else if( a.StartsWith("--log-file=")) {
+						LOG_FILE_PATH = a.Substring("--log-file=".Length);
+					}
 					break;
 				}
 			}
 
+			if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("mono_debug_logfile"))==false) {
+				LOG_FILE_PATH = Environment.GetEnvironmentVariable("mono_debug_logfile");
+				trace_requests = true;
+				trace_responses = true;
+			}
+
+
 			if (port > 0) {
 				// TCP/IP server
-				Console.Error.WriteLine("waiting for debug protocol on port " + port);
+				Program.Log("waiting for debug protocol on port " + port);
 				RunServer(port);
 			} else {
 				// stdin/stdout
-				Console.Error.WriteLine("waiting for debug protocol on stdin/stdout");
+				Program.Log("waiting for debug protocol on stdin/stdout");
 				RunSession(Console.OpenStandardInput(), Console.OpenStandardOutput());
 			}
 		}
 
-		private static void RunSession(Stream inputStream, Stream outputStream)
+        static TextWriter logFile;
+
+		public static void Log(bool predicate, string format, params object[] data)
+		{
+			if (predicate)
+			{
+				Log(format, data);
+			}
+		}
+        public static void Log(string format, params object[] data)
+        {
+            try
+            {
+				Console.Error.WriteLine(format, data);
+
+                if (LOG_FILE_PATH != null)
+                {
+                    if (logFile == null)
+                    {
+                        logFile = File.CreateText(LOG_FILE_PATH);
+                    }
+
+                    string msg = string.Format(format, data);
+                    logFile.WriteLine(string.Format("{0} {1}", DateTime.UtcNow.ToLongTimeString(), msg));
+                }
+            }
+            catch (Exception ex)
+            {
+				if (LOG_FILE_PATH != null)
+                {
+					try
+					{
+						File.WriteAllText(LOG_FILE_PATH + ".err", ex.ToString());
+					}
+					catch
+					{
+					}
+				}
+
+                throw;
+            }
+        }
+
+        private static void RunSession(Stream inputStream, Stream outputStream)
 		{
 			DebugSession debugSession = new MonoDebugSession();
 			debugSession.TRACE = trace_requests;
 			debugSession.TRACE_RESPONSE = trace_responses;
 			debugSession.Start(inputStream, outputStream).Wait();
+
+            if (logFile!=null)
+            {
+                logFile.Flush();
+                logFile.Close();
+                logFile = null;
+            }
 		}
 
 		private static void RunServer(int port)
@@ -71,7 +132,7 @@ namespace VSCodeDebug
 				while (true) {
 					var clientSocket = serverSocket.AcceptSocket();
 					if (clientSocket != null) {
-						Console.Error.WriteLine(">> accepted connection from client");
+						Program.Log(">> accepted connection from client");
 
 						new System.Threading.Thread(() => {
 							using (var networkStream = new NetworkStream(clientSocket)) {
