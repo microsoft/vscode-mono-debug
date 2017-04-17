@@ -137,7 +137,7 @@ namespace VSCodeDebug
 			return VARIABLE.Replace(format, match => {
 				string name = match.Groups[1].Value;
 				if (!underscoredOnly || name.StartsWith("_")) {
-					
+
 					PropertyInfo property = type.GetProperty(name);
 					if (property != null) {
 						object value = property.GetValue(variables, null);
