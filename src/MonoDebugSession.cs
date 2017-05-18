@@ -415,6 +415,36 @@ namespace VSCodeDebug
 			SendResponse(response);
 		}
 
+		public override void RunXamarinAndroid(Response response, dynamic args)
+		{
+			_attachMode = true;
+
+			SetExceptionBreakpoints(args.__exceptionOptions);
+
+			// validate argument 'port'
+			var packageName = getInt(args, "packageName", -1);
+			if (packageName == -1) {
+				SendErrorResponse(response, 3008, "Property 'packageName' is missing.");
+				return;
+			}
+
+			lock (_lock) {
+
+				_debuggeeKilled = false;
+
+				var args0 = new XamarinDebuggerArgs(10000) {
+					MaxConnectionAttempts = MAX_CONNECTION_ATTEMPTS,
+					TimeBetweenConnectionAttempts = CONNECTION_ATTEMPT_INTERVAL
+				};
+
+				_session.Run(new Mono.Debugging.Soft.SoftDebuggerStartInfo(args0), _debuggerSessionOptions);
+
+				_debuggeeExecuting = true;
+			}
+
+			SendResponse(response);
+		}
+
 		public override void Disconnect(Response response, dynamic args)
 		{
 			if (_attachMode) {
