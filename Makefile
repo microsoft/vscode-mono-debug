@@ -29,6 +29,7 @@ tests:
 	cd testdata/simple; make
 	cd testdata/output; make
 	cd testdata/simple_break; make
+	cd testdata/fsharp; make
 
 clean:
 	git clean -xfd

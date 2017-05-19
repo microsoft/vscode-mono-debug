@@ -117,4 +117,14 @@ suite('Node Debug Adapter', () => {
 			]);
 		});
 	});
+
+	suite('FSharp Tests', () => {
+		const PROGRAM = Path.join(DATA_ROOT, 'fsharp/Program.exe');
+		const SOURCE = Path.join(DATA_ROOT, 'fsharp/Program.fs');
+		const BREAKPOINT_LINE = 6;
+
+		test('should stop on a breakpoint in an fsharp program', () => {
+			return dc.hitBreakpoint({ program: PROGRAM }, { path: SOURCE, line: BREAKPOINT_LINE } );
+		});
+	});
 });
