@@ -1,7 +1,11 @@
 using System;
+using System.IO;
+using System.Net;
+using System.Net.Sockets;
 using Mono.Debugger.Soft;
 using Mono.Debugging.Client;
 using Mono.Debugging.Soft;
+
 
 namespace VSCodeDebug
 {
@@ -16,22 +20,23 @@ namespace VSCodeDebug
 
         public IAsyncResult BeginConnect(DebuggerStartInfo dsi, AsyncCallback callback)
         {
-            throw new NotImplementedException();
+            return XamarinVirtualMachineManager.BeginConnect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), _port), null, callback);
         }
 
         public void CancelConnect(IAsyncResult result)
         {
-            throw new NotImplementedException();
+            XamarinVirtualMachineManager.CancelConnection(result);
         }
 
         public void EndConnect(IAsyncResult result, out VirtualMachine vm, out string appName)
         {
-            throw new NotImplementedException();
+            vm = XamarinVirtualMachineManager.EndConnect(result);
+            appName = null;
         }
 
         public bool ShouldRetryConnection(Exception ex)
         {
-            throw new NotImplementedException();
+            return false;
         }
     }
 }
