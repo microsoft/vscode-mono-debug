@@ -346,10 +346,6 @@ namespace VSCodeDebug
 					Attach(response, args);
 					break;
 
-				case "runXA":
-					RunXamarinAndroid(response, args);
-					break;
-
 				case "disconnect":
 					Disconnect(response, args);
 					break;
@@ -429,8 +425,6 @@ namespace VSCodeDebug
 		public abstract void Launch(Response response, dynamic arguments);
 
 		public abstract void Attach(Response response, dynamic arguments);
-
-		public abstract void RunXamarinAndroid(Response response, dynamic arguments); 
 
 		public abstract void Disconnect(Response response, dynamic arguments);
 

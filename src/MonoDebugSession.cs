@@ -9,7 +9,7 @@ using System.Threading;
 using System.Linq;
 using System.Net;
 using Mono.Debugging.Client;
-
+using System.Diagnostics;
 
 namespace VSCodeDebug
 {
@@ -180,7 +180,19 @@ namespace VSCodeDebug
 			SendEvent(new InitializedEvent());
 		}
 
-		public override async void Launch(Response response, dynamic args)
+		public override void Launch(Response response, dynamic args)
+		{
+			if (args.packageName != null)
+			{
+				LaunchXamarinAndroid(response, args);
+			}
+			else
+			{
+				LaunchMono(response, args);
+			}
+		}
+
+		public async void LaunchMono(Response response, dynamic args)
 		{
 			_attachMode = false;
 
@@ -415,24 +427,28 @@ namespace VSCodeDebug
 			SendResponse(response);
 		}
 
-		public override void RunXamarinAndroid(Response response, dynamic args)
+		public void LaunchXamarinAndroid(Response response, dynamic args)
 		{
 			_attachMode = true;
 
 			SetExceptionBreakpoints(args.__exceptionOptions);
 
-			// validate argument 'port'
-			var packageName = getInt(args, "packageName", -1);
-			if (packageName == -1) {
+			var packageName = getString(args, "packageName", null);
+			if (packageName == null) {
 				SendErrorResponse(response, 3008, "Property 'packageName' is missing.");
 				return;
 			}
+
+			var forwardOutput = RunAdb("forward tcp:0 tcp:10000");
+			var port = int.Parse(forwardOutput);
+			RunAdb("shell setprop port=10000,timeout=2000000000");
+			RunAdb($"shell monkey -p {packageName} -c android.intent.category.LAUNCHER 1");
 
 			lock (_lock) {
 
 				_debuggeeKilled = false;
 
-				var args0 = new XamarinDebuggerArgs(10000) {
+				var args0 = new XamarinDebuggerArgs(port) {
 					MaxConnectionAttempts = MAX_CONNECTION_ATTEMPTS,
 					TimeBetweenConnectionAttempts = CONNECTION_ATTEMPT_INTERVAL
 				};
@@ -443,6 +459,21 @@ namespace VSCodeDebug
 			}
 
 			SendResponse(response);
+		}
+
+		private string RunAdb(string args)
+		{
+			var adbProcessInfo = new ProcessStartInfo 
+			{
+				FileName = "adb",
+				Arguments = args,
+				RedirectStandardOutput = true,
+				UseShellExecute = false
+			};
+			var adbProcess = Process.Start(adbProcessInfo);
+			var result = adbProcess.StandardOutput.ReadToEnd();
+			adbProcess.WaitForExit();
+			return result;
 		}
 
 		public override void Disconnect(Response response, dynamic args)
