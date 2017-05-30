@@ -442,6 +442,7 @@ namespace VSCodeDebug
 			var forwardOutput = RunAdb("forward tcp:0 tcp:10000");
 			var port = int.Parse(forwardOutput);
 			RunAdb("shell setprop port=10000,timeout=2000000000");
+			RunAdb($"shell am force-stop {packageName}");
 			RunAdb($"shell monkey -p {packageName} -c android.intent.category.LAUNCHER 1");
 
 			lock (_lock) {
