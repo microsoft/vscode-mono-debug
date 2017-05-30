@@ -444,6 +444,7 @@ namespace VSCodeDebug
 			RunAdb("shell setprop debug.mono.connect port=10000,timeout=2000000000");
 			RunAdb($"shell am force-stop {packageName}");
 			RunAdb($"shell monkey -p {packageName} -c android.intent.category.LAUNCHER 1");
+			System.Threading.Thread.Sleep(500);
 
 			lock (_lock) {
 
