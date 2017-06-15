@@ -17,8 +17,8 @@
 		"prepublish": "make build",
 		"vscode:prepublish": "make build",
 		"compile": "make build",
-		"watch": "node ./node_modules/typescript/bin/tsc -w -p ./src/typescript",
-		"test": "make tests; node ./node_modules/mocha/bin/mocha --timeout 10000 -u tdd ./out/tests",
+		"watch": "tsc -w -p ./src/typescript",
+		"test": "make tests; mocha --timeout 10000 -u tdd ./out/tests",
 		"postinstall": "node ./node_modules/vscode/bin/install"
 	},
 	"engines": {
