@@ -1,7 +1,7 @@
 {
 	"name": "mono-debug",
 	"displayName": "Mono Debug",
-	"version": "0.15.5",
+	"version": "0.15.6",
 	"publisher": "ms-vscode",
 	"description": "Visual Studio Code debugger extension for Mono",
 	"icon": "images/mono-debug-icon.png",
@@ -126,12 +126,7 @@
 					"type": "mono",
 					"request": "launch",
 					"program": "${workspaceRoot}/program.exe",
-					"args": [],
-					"cwd": "${workspaceRoot}",
-					"preLaunchTask": "",
-					"runtimeExecutable": null,
-					"env": { },
-					"externalConsole": false
+					"cwd": "${workspaceRoot}"
 				},
 				{
 					"name": "%mono.attach.config.name%",
