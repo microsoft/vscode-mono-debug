@@ -35,24 +35,24 @@ namespace VSCodeDebug
 		public int line { get; }
 		public int column { get; }
 		public string name { get; }
-        public string presentationHint { get; }
+		public string presentationHint { get; }
 
-        public StackFrame(int id, string name, Source source, int line, int column) {
+		public StackFrame(int id, string name, Source source, int line, int column) {
 			this.id = id;
 			this.name = name;
 			this.source = source;
 
-            // These should NEVER be negative
-            this.line = Math.Max(0,line);
-            this.column = Math.Max(0,column);
+			// These should NEVER be negative
+			this.line = Math.Max(0, line);
+			this.column = Math.Max(0, column);
 
-            // issue #21 - Don't provide source object when it doesn't make sense
-            if (this.line==0 || this.source==null || string.IsNullOrEmpty(this.source.name) || string.IsNullOrEmpty(this.source.path)) {
-                this.presentationHint = "label";
-                this.source = null;
-            } else {
-                this.presentationHint = "normal";
-            }
+			// issue #21 - Don't provide source object when it doesn't make sense
+			if (this.line == 0 || this.source == null || string.IsNullOrEmpty(this.source.name) || string.IsNullOrEmpty(this.source.path)) {
+				this.presentationHint = "subtle";
+				this.source = null;
+			} else {
+				this.presentationHint = "normal";
+			}
 		}
 	}
 
@@ -93,8 +93,7 @@ namespace VSCodeDebug
 			this.id = id;
 			if (name == null || name.Length == 0) {
 				this.name = string.Format("Thread #{0}", id);
-			}
-			else {
+			} else {
 				this.name = name;
 			}
 		}
@@ -118,13 +117,13 @@ namespace VSCodeDebug
 			this.sourceReference = sourceReference;
 		}
 
-        public static Source Create(string name, string path, int sourceReference = 0) {
-            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(path))
-                return null;
+		public static Source Create(string name, string path, int sourceReference = 0) {
+			if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(path))
+				return null;
 
-            return new Source(name, path, sourceReference);
-        }
-    }
+			return new Source(name, path, sourceReference);
+		}
+	}
 
 	public class Breakpoint
 	{
