@@ -20,15 +20,16 @@ debug: $MONO_DEBUG_DEBUG
 	@echo "build finished"
 
 $MONO_DEBUG_RELEASE:
-	xbuild /p:Configuration=Release mono-debug.sln
+	msbuild /p:Configuration=Release mono-debug.sln
 
 $MONO_DEBUG_DEBUG:
-	xbuild /p:Configuration=Debug mono-debug.sln
+	msbuild /p:Configuration=Debug mono-debug.sln
 
 tests:
 	cd testdata/simple; make
 	cd testdata/output; make
 	cd testdata/simple_break; make
+	cd testdata/fsharp; make
 
 clean:
 	git clean -xfd
