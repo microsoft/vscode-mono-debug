@@ -18,7 +18,7 @@
 			"type": "mono",
 			"request": "launch",
 			"name": "Server",
-			"program": "${workspaceRoot}/bin/Debug/monoDebug.exe",
+			"program": "${workspaceRoot}/bin/Debug/mono-debug.exe",
 			"args": [ "--server=4711" ]
 		},
 		{
