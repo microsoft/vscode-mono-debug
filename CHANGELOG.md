@@ -1,5 +1,10 @@
 ## 0.15.5
-* Thanks to PR from [AutonomicCoder](https://github.com/AutonomicCoder) [bug #21](https://github.com/Microsoft/vscode-mono-debug/issues/21) got fixed and mono-debug now supports protocol logging to a file.
+* fixed an issue with source-less stack frames showing up centered in the CALL STACK view.
+* Thanks to [PR](https://github.com/Microsoft/vscode-mono-debug/pull/35) from [VysotskiVadim](https://github.com/VysotskiVadim) it is now possible to debug Haxe (that got translated to C#).
+* Thanks to [PR](https://github.com/Microsoft/vscode-mono-debug/pull/33) from [VysotskiVadim](https://github.com/VysotskiVadim) the project now has a F# regression test.
+
+## 0.15.5
+* Thanks to [PR](https://github.com/Microsoft/vscode-mono-debug/pull/28) from [AutonomicCoder](https://github.com/AutonomicCoder) [bug #21](https://github.com/Microsoft/vscode-mono-debug/issues/21) got fixed and mono-debug now supports protocol logging to a file.
 
 ## 0.15.4
 * Mono-debug now uses the terminal service provided by VS Code. You can now use the launch config attribute `console` for selecting one of `internalConsole`, `integratedTerminal`, `externalTerminal`. The 'integratedTerminal' and 'externalTerminal' can be further configured through workspace or user settings.
