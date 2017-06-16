@@ -18,7 +18,8 @@ namespace VSCodeDebug
 		private const string MONO = "mono";
 		private readonly string[] MONO_EXTENSIONS = new String[] {
 			".cs", ".csx",
-			".fs", ".fsi", ".ml", ".mli", ".fsx", ".fsscript"
+			".fs", ".fsi", ".ml", ".mli", ".fsx", ".fsscript",
+			".hx"
 		};
 		private const int MAX_CHILDREN = 100;
 		private const int MAX_CONNECTION_ATTEMPTS = 10;
