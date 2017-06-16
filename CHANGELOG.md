@@ -1,5 +1,6 @@
-## 0.15.5
-* fixed an issue with source-less stack frames showing up centered in the CALL STACK view.
+## 0.15.6
+* no longer creates an initial launch configuration with an obsolete `externalConsole` property.
+* fixed an issue with source-less stack frames rendered centered in the CALL STACK view.
 * Thanks to [PR](https://github.com/Microsoft/vscode-mono-debug/pull/35) from [VysotskiVadim](https://github.com/VysotskiVadim) it is now possible to debug Haxe (that got translated to C#).
 * Thanks to [PR](https://github.com/Microsoft/vscode-mono-debug/pull/33) from [VysotskiVadim](https://github.com/VysotskiVadim) the project now has a F# regression test.
 
