@@ -49,7 +49,7 @@ namespace VSCodeDebug
 		private bool _stdoutEOF = true;
 
 
-		public MonoDebugSession() : base(true)
+		public MonoDebugSession() : base()
 		{
 			_variableHandles = new Handles<ObjectValue[]>();
 			_frameHandles = new Handles<Mono.Debugging.Client.StackFrame>();
@@ -584,7 +584,6 @@ namespace VSCodeDebug
 			int threadReference = getInt(args, "threadId", 0);
 
 			WaitForSuspend();
-			var stackFrames = new List<StackFrame>();
 
 			ThreadInfo thread = DebuggerActiveThread();
 			if (thread.Id != threadReference) {
@@ -595,24 +594,46 @@ namespace VSCodeDebug
 				}
 			}
 
+			var stackFrames = new List<StackFrame>();
+			int totalFrames = 0;
+
 			var bt = thread.Backtrace;
 			if (bt != null && bt.FrameCount >= 0) {
-				for (var i = 0; i < Math.Min(bt.FrameCount, maxLevels); i++) {
+
+				totalFrames = bt.FrameCount;
+
+				for (var i = 0; i < Math.Min(totalFrames, maxLevels); i++) {
 
 					var frame = bt.GetFrame(i);
-					var frameHandle = _frameHandles.Create(frame);
 
-					string name = frame.SourceLocation.MethodName;
 					string path = frame.SourceLocation.FileName;
-					int line = frame.SourceLocation.Line;
-					string sourceName = Path.GetFileName(path);
 
-					var source = VSCodeDebug.Source.Create(sourceName, ConvertDebuggerPathToClient(path));
-					stackFrames.Add(new StackFrame(frameHandle, name, source, ConvertDebuggerLineToClient(line), 0));
+					var hint = "subtle";
+					Source source = null;
+					if (!string.IsNullOrEmpty(path)) {
+						string sourceName = Path.GetFileName(path);
+						if (!string.IsNullOrEmpty(sourceName)) {
+							if (File.Exists(path)) {
+								source = new Source(sourceName, ConvertDebuggerPathToClient(path), 0, "normal");
+								hint = "normal";
+							} else {
+								source = new Source(sourceName, null, 1000, "deemphasize");
+							}
+						}
+					}
+
+					var frameHandle = _frameHandles.Create(frame);
+					string name = frame.SourceLocation.MethodName;
+					int line = frame.SourceLocation.Line;
+					stackFrames.Add(new StackFrame(frameHandle, name, source, ConvertDebuggerLineToClient(line), 0, hint));
 				}
 			}
 
-			SendResponse(response, new StackTraceResponseBody(stackFrames));
+			SendResponse(response, new StackTraceResponseBody(stackFrames, totalFrames));
+		}
+
+		public override void Source(Response response, dynamic arguments) {
+			SendErrorResponse(response, 1020, "No source available");
 		}
 
 		public override void Scopes(Response response, dynamic args) {
@@ -907,9 +928,8 @@ namespace VSCodeDebug
 		}
 
 		private Mono.Debugging.Client.StackFrame DebuggerActiveFrame() {
-			var f = _activeFrame;
-			if (f != null)
-				return f;
+			if (_activeFrame != null)
+				return _activeFrame;
 
 			var bt = DebuggerActiveBacktrace();
 			if (bt != null)
