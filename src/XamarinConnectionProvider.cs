@@ -20,7 +20,8 @@ namespace VSCodeDebug
 
         public IAsyncResult BeginConnect(DebuggerStartInfo dsi, AsyncCallback callback)
         {
-            return XamarinVirtualMachineManager.BeginConnect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), _port), null, callback);
+            var endPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), _port);
+            return XamarinVirtualMachineManager.BeginConnect(endPoint, endPoint, callback);
         }
 
         public void CancelConnect(IAsyncResult result)

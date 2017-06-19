@@ -19,9 +19,12 @@ namespace VSCodeDebug
 
 		public static VirtualMachine ConnectInternal (Socket dbg_sock, Socket con_sock, IPEndPoint dbg_ep, IPEndPoint con_ep, TextWriter logWriter = null) {
 			if (con_sock != null) {
-				try {
-					con_sock.Connect (con_ep);
-				} catch (Exception) {
+				try
+				{
+					con_sock.Connect(con_ep);
+					SendCommand(con_sock, "connect stdout");
+				}
+				catch (Exception) {
 					try {
 						dbg_sock.Close ();
 					} catch { }
@@ -31,10 +34,7 @@ namespace VSCodeDebug
 
 			try {
 				dbg_sock.Connect (dbg_ep);
-                byte[] byData = new byte[] { 19 } ;
-                dbg_sock.Send(byData, 0, byData.Length, SocketFlags.None);
-                byData = System.Text.Encoding.ASCII.GetBytes("start debugger: sdb");
-			    dbg_sock.Send(byData, 0, byData.Length, SocketFlags.None);
+				SendCommand(dbg_sock, "start debugger: sdb");
 			} catch (Exception) {
 				if (con_sock != null) {
 					try {
@@ -44,10 +44,18 @@ namespace VSCodeDebug
 				throw;
 			}
 
-			Connection transport = new XamarinTcpConnection (dbg_sock, logWriter);			
+			Connection transport = new XamarinTcpConnection (dbg_sock, logWriter);
 			StreamReader console = con_sock != null ? new StreamReader (new NetworkStream (con_sock)) : null;
 
 			return VirtualMachineManager.Connect (transport, console, null);
+		}
+
+		private static void SendCommand(Socket socket, string command)
+		{
+			byte[] commandBin = System.Text.Encoding.ASCII.GetBytes(command);
+			byte[] commandLenght = new byte[] { (byte)commandBin.Length };
+			socket.Send(commandLenght, 0, commandLenght.Length, SocketFlags.None);
+			socket.Send(commandBin, 0, commandBin.Length, SocketFlags.None);
 		}
 
 		public static IAsyncResult BeginConnect (IPEndPoint dbg_ep, AsyncCallback callback, TextWriter logWriter = null) {
