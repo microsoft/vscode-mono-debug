@@ -1,3 +1,6 @@
+## 0.15.7
+* Thanks to [PR](https://github.com/Microsoft/vscode-mono-debug/pull/39) from [Jonathan Dick](https://github.com/Redth) the file extension .cake has been added to the list of supported extensions. This allows to launch Cake.exe with the mono soft debugger, and subsequently attach to it with this extension to debug cake scripts.
+
 ## 0.15.6
 * no longer creates an initial launch configuration with an obsolete `externalConsole` property.
 * fixed an issue with source-less stack frames rendered centered in the CALL STACK view.
