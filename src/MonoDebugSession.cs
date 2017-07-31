@@ -18,6 +18,7 @@ namespace VSCodeDebug
 		private const string MONO = "mono";
 		private readonly string[] MONO_EXTENSIONS = new String[] {
 			".cs", ".csx",
+			".cake",
 			".fs", ".fsi", ".ml", ".mli", ".fsx", ".fsscript",
 			".hx"
 		};
