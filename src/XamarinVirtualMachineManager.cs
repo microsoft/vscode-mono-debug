@@ -16,13 +16,14 @@ namespace VSCodeDebug
 		private delegate VirtualMachine LaunchCallback (ITargetProcess p, ProcessStartInfo info, Socket socket, TextWriter logWriter);
 		private delegate VirtualMachine ListenCallback (Socket dbg_sock, Socket con_sock, TextWriter logWriter); 
 		private delegate VirtualMachine ConnectCallback (Socket dbg_sock, Socket con_sock, IPEndPoint dbg_ep, IPEndPoint con_ep, TextWriter logWriter); 
+		private delegate VirtualMachine ConnectCallbackWithCustomConsole (Socket dbg_sock, IPEndPoint dbg_ep, StreamReader console, TextWriter logWriter); 
 
 		public static VirtualMachine ConnectInternal (Socket dbg_sock, Socket con_sock, IPEndPoint dbg_ep, IPEndPoint con_ep, TextWriter logWriter = null) {
 			if (con_sock != null) {
 				try
 				{
 					con_sock.Connect(con_ep);
-					SendCommand(con_sock, "connect stdout");
+					SendCommand(con_sock, "ping");
 				}
 				catch (Exception) {
 					try {
@@ -50,6 +51,14 @@ namespace VSCodeDebug
 			return VirtualMachineManager.Connect (transport, console, null);
 		}
 
+		public static VirtualMachine ConnectInternalWithCustomConsole (Socket dbg_sock, IPEndPoint dbg_ep, StreamReader console, TextWriter logWriter = null)
+		{
+			dbg_sock.Connect (dbg_ep);
+			SendCommand(dbg_sock, "start debugger: sdb");
+			Connection transport = new XamarinTcpConnection (dbg_sock, logWriter);
+			return VirtualMachineManager.Connect (transport, console, null);
+		}
+
 		private static void SendCommand(Socket socket, string command)
 		{
 			byte[] commandBin = System.Text.Encoding.ASCII.GetBytes(command);
@@ -59,7 +68,7 @@ namespace VSCodeDebug
 		}
 
 		public static IAsyncResult BeginConnect (IPEndPoint dbg_ep, AsyncCallback callback, TextWriter logWriter = null) {
-			return BeginConnect (dbg_ep, null, callback, logWriter);
+			return BeginConnect (dbg_ep, (IPEndPoint)null, callback, logWriter);
 		}
 
 		public static IAsyncResult BeginConnect (IPEndPoint dbg_ep, IPEndPoint con_ep, AsyncCallback callback, TextWriter logWriter = null) {
@@ -74,6 +83,14 @@ namespace VSCodeDebug
 			
 			ConnectCallback c = new ConnectCallback (ConnectInternal);
 			return c.BeginInvoke (dbg_sock, con_sock, dbg_ep, con_ep, logWriter, callback, con_sock ?? dbg_sock);
+		}
+
+		public static IAsyncResult BeginConnect (IPEndPoint dbg_ep, StreamReader console, AsyncCallback callback, TextWriter logWriter = null) {
+			Socket dbg_sock = null;
+			dbg_sock = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+			
+			var c = new ConnectCallbackWithCustomConsole (ConnectInternalWithCustomConsole);
+			return c.BeginInvoke (dbg_sock, dbg_ep, console, logWriter, callback, logWriter);
 		}
 
 		public static VirtualMachine EndConnect (IAsyncResult asyncResult) {

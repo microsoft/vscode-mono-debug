@@ -439,11 +439,12 @@ namespace VSCodeDebug
 				return;
 			}
 
-			var forwardOutput = RunAdb("forward tcp:0 tcp:10000");
+			//var deviceConsole = RunAdb("shell logcat");
+			var forwardOutput = RunAdbForResult("forward tcp:0 tcp:10000");
 			var port = int.Parse(forwardOutput);
-			RunAdb("shell setprop debug.mono.connect port=10000,timeout=2000000000");
-			RunAdb($"shell am force-stop {packageName}");
-			RunAdb($"shell monkey -p {packageName} -c android.intent.category.LAUNCHER 1");
+			RunAdbForResult("shell setprop debug.mono.connect port=10000,timeout=2000000000");
+			RunAdbForResult($"shell am force-stop {packageName}");
+			RunAdbForResult($"shell monkey -p {packageName} -c android.intent.category.LAUNCHER 1");
 			System.Threading.Thread.Sleep(500);
 
 			lock (_lock) {
@@ -463,7 +464,7 @@ namespace VSCodeDebug
 			SendResponse(response);
 		}
 
-		private string RunAdb(string args)
+		private string RunAdbForResult(string args)
 		{
 			var adbProcessInfo = new ProcessStartInfo 
 			{
@@ -476,6 +477,25 @@ namespace VSCodeDebug
 			var result = adbProcess.StandardOutput.ReadToEnd();
 			adbProcess.WaitForExit();
 			return result;
+		}
+
+		private StreamReader RunAdb(string args)
+		{
+			var adbProcessInfo = new ProcessStartInfo 
+			{
+				FileName = "adb",
+				Arguments = args,
+				RedirectStandardOutput = true,
+				UseShellExecute = false
+			};
+			var adbProcess = Process.Start(adbProcessInfo);
+			adbProcess.ErrorDataReceived += (o, e) => {
+				Console.WriteLine(e.Data);
+			};
+			adbProcess.OutputDataReceived += (o, e) => {
+				Console.WriteLine(e.Data);
+			};
+			return adbProcess.StandardOutput;
 		}
 
 		public override void Disconnect(Response response, dynamic args)

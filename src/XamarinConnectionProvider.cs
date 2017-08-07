@@ -12,16 +12,27 @@ namespace VSCodeDebug
     public class XamarinConnectionProvider : ISoftDebuggerConnectionProvider
     {
         private readonly int _port;
+        private readonly StreamReader _console;
 
-        public XamarinConnectionProvider(int port)
+        public XamarinConnectionProvider(int port, StreamReader console = null)
         {
             _port = port;
+            _console = console;
         }
 
         public IAsyncResult BeginConnect(DebuggerStartInfo dsi, AsyncCallback callback)
         {
+            IAsyncResult result;
             var endPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), _port);
-            return XamarinVirtualMachineManager.BeginConnect(endPoint, endPoint, callback);
+            if (_console != null)
+            {
+                result = XamarinVirtualMachineManager.BeginConnect(endPoint, _console, callback);
+            }
+            else
+            {
+                result = XamarinVirtualMachineManager.BeginConnect(endPoint, endPoint, callback);
+            }
+            return result;
         }
 
         public void CancelConnect(IAsyncResult result)
