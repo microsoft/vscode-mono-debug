@@ -439,7 +439,6 @@ namespace VSCodeDebug
 				return;
 			}
 
-			//var deviceConsole = RunAdb("shell logcat");
 			var forwardOutput = RunAdbForResult("forward tcp:0 tcp:10000");
 			var port = int.Parse(forwardOutput);
 			RunAdbForResult("shell setprop debug.mono.connect port=10000,timeout=2000000000");
@@ -450,8 +449,8 @@ namespace VSCodeDebug
 			lock (_lock) {
 
 				_debuggeeKilled = false;
-
-				var args0 = new XamarinDebuggerArgs(port) {
+				var console = RunAdb("shell mono-stdout:D *:S");
+				var args0 = new XamarinDebuggerArgs(port, console) {
 					MaxConnectionAttempts = MAX_CONNECTION_ATTEMPTS,
 					TimeBetweenConnectionAttempts = CONNECTION_ATTEMPT_INTERVAL
 				};
