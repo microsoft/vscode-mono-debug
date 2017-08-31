@@ -16,12 +16,10 @@ namespace VSCodeDebug
 		private const string START_DEBUGGER_COMMAND = "start debugger: sdb";
 		private const string CONNECT_STDOUT_COMMAND = "connect stdout";
 
-		private delegate VirtualMachine LaunchCallback (ITargetProcess p, ProcessStartInfo info, Socket socket, TextWriter logWriter);
-		private delegate VirtualMachine ListenCallback (Socket dbg_sock, Socket con_sock, TextWriter logWriter); 
-		private delegate VirtualMachine ConnectCallback (Socket dbg_sock, Socket con_sock, IPEndPoint dbg_ep, IPEndPoint con_ep, TextWriter logWriter); 
-		private delegate VirtualMachine ConnectCallbackWithCustomConsole (Socket dbg_sock, IPEndPoint dbg_ep, StreamReader console, TextWriter logWriter); 
+		private delegate VirtualMachine ConnectWithNetworkOutputCallback (Socket dbg_sock, Socket con_sock, IPEndPoint dbg_ep, IPEndPoint con_ep, TextWriter logWriter); 
+		private delegate VirtualMachine ConnectWithConsoleCallback (Socket dbg_sock, IPEndPoint dbg_ep, StreamReader console, TextWriter logWriter); 
 
-		private static VirtualMachine ConnectInternal (Socket dbg_sock, Socket con_sock, IPEndPoint dbg_ep, IPEndPoint con_ep, TextWriter logWriter = null) {
+		private static VirtualMachine ConnectWithNetworkOutput (Socket dbg_sock, Socket con_sock, IPEndPoint dbg_ep, IPEndPoint con_ep, TextWriter logWriter = null) {
 			if (con_sock != null) {
 				try
 				{
@@ -54,7 +52,7 @@ namespace VSCodeDebug
 			return VirtualMachineManager.Connect (transport, console, null);
 		}
 
-		private static VirtualMachine ConnectInternalWithCustomConsole (Socket dbg_sock, IPEndPoint dbg_ep, StreamReader console, TextWriter logWriter = null)
+		private static VirtualMachine ConnectWithConsole (Socket dbg_sock, IPEndPoint dbg_ep, StreamReader console, TextWriter logWriter = null)
 		{
 			dbg_sock.Connect (dbg_ep);
 			SendCommand(dbg_sock, START_DEBUGGER_COMMAND);
@@ -70,26 +68,25 @@ namespace VSCodeDebug
 			socket.Send(commandBin, 0, commandBin.Length, SocketFlags.None);
 		}
 
-		public static IAsyncResult BeginConnect (IPEndPoint dbg_ep, IPEndPoint con_ep, AsyncCallback callback, TextWriter logWriter = null) {
-			Socket dbg_sock = null;
-			Socket con_sock = null;
+		public static IAsyncResult BeginConnect (IPEndPoint debugEndPoint, IPEndPoint outputEndPoint, AsyncCallback callback, TextWriter logWriter = null) {
+			Socket debugSocket = null;
+			Socket outputSocket = null;
 
-			dbg_sock = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
-			if (con_ep != null) {
-				con_sock = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+			debugSocket = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+			if (outputEndPoint != null) {
+				outputSocket = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 			}
 			
-			ConnectCallback c = new ConnectCallback (ConnectInternal);
-			return c.BeginInvoke (dbg_sock, con_sock, dbg_ep, con_ep, logWriter, callback, con_sock ?? dbg_sock);
+			ConnectWithNetworkOutputCallback c = new ConnectWithNetworkOutputCallback (ConnectWithNetworkOutput);
+			return c.BeginInvoke (debugSocket, outputSocket, debugEndPoint, outputEndPoint, logWriter, callback, outputSocket ?? debugSocket);
 		}
 
-		public static IAsyncResult BeginConnect (IPEndPoint dbg_ep, StreamReader console, AsyncCallback callback, TextWriter logWriter = null) {
-			Socket dbg_sock = null;
-			dbg_sock = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+		public static IAsyncResult BeginConnect (IPEndPoint debugEndPoint, StreamReader console, AsyncCallback callback, TextWriter logWriter = null) {
+			Socket debugSocket = null;
+			debugSocket = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 			
-			ConnectCallbackWithCustomConsole c = new ConnectCallbackWithCustomConsole (ConnectInternalWithCustomConsole);
-			return c.BeginInvoke (dbg_sock, dbg_ep, console, logWriter, callback, dbg_sock);
+			ConnectWithConsoleCallback c = new ConnectWithConsoleCallback (ConnectWithConsole);
+			return c.BeginInvoke (debugSocket, debugEndPoint, console, logWriter, callback, debugSocket);
 		}
 
 		public static VirtualMachine EndConnect (IAsyncResult asyncResult) {
@@ -100,13 +97,13 @@ namespace VSCodeDebug
 				asyncResult.AsyncWaitHandle.WaitOne ();
 
 			AsyncResult result = (AsyncResult) asyncResult;
-			ConnectCallback cb = (ConnectCallback) result.AsyncDelegate;
-			return cb.EndInvoke (asyncResult);
+			ConnectWithNetworkOutputCallback cb = (ConnectWithNetworkOutputCallback) result.AsyncDelegate;
+			return cb.EndInvoke(asyncResult);
 		}
 
 		public static void CancelConnection (IAsyncResult asyncResult)
 		{
-			((Socket)asyncResult.AsyncState).Close ();
+			((IDisposable) asyncResult.AsyncState).Dispose();
 		}
 	}
 }
