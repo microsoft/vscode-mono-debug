@@ -13,17 +13,20 @@ namespace VSCodeDebug
 
 	public static class XamarinVirtualMachineManager
 	{
+		private const string START_DEBUGGER_COMMAND = "start debugger: sdb";
+		private const string CONNECT_STDOUT_COMMAND = "connect stdout";
+
 		private delegate VirtualMachine LaunchCallback (ITargetProcess p, ProcessStartInfo info, Socket socket, TextWriter logWriter);
 		private delegate VirtualMachine ListenCallback (Socket dbg_sock, Socket con_sock, TextWriter logWriter); 
 		private delegate VirtualMachine ConnectCallback (Socket dbg_sock, Socket con_sock, IPEndPoint dbg_ep, IPEndPoint con_ep, TextWriter logWriter); 
 		private delegate VirtualMachine ConnectCallbackWithCustomConsole (Socket dbg_sock, IPEndPoint dbg_ep, StreamReader console, TextWriter logWriter); 
 
-		public static VirtualMachine ConnectInternal (Socket dbg_sock, Socket con_sock, IPEndPoint dbg_ep, IPEndPoint con_ep, TextWriter logWriter = null) {
+		private static VirtualMachine ConnectInternal (Socket dbg_sock, Socket con_sock, IPEndPoint dbg_ep, IPEndPoint con_ep, TextWriter logWriter = null) {
 			if (con_sock != null) {
 				try
 				{
 					con_sock.Connect(con_ep);
-					SendCommand(con_sock, "ping");
+					SendCommand(con_sock, CONNECT_STDOUT_COMMAND);
 				}
 				catch (Exception) {
 					try {
@@ -35,7 +38,7 @@ namespace VSCodeDebug
 
 			try {
 				dbg_sock.Connect (dbg_ep);
-				SendCommand(dbg_sock, "start debugger: sdb");
+				SendCommand(dbg_sock, START_DEBUGGER_COMMAND);
 			} catch (Exception) {
 				if (con_sock != null) {
 					try {
@@ -51,10 +54,10 @@ namespace VSCodeDebug
 			return VirtualMachineManager.Connect (transport, console, null);
 		}
 
-		public static VirtualMachine ConnectInternalWithCustomConsole (Socket dbg_sock, IPEndPoint dbg_ep, StreamReader console, TextWriter logWriter = null)
+		private static VirtualMachine ConnectInternalWithCustomConsole (Socket dbg_sock, IPEndPoint dbg_ep, StreamReader console, TextWriter logWriter = null)
 		{
 			dbg_sock.Connect (dbg_ep);
-			SendCommand(dbg_sock, "start debugger: sdb");
+			SendCommand(dbg_sock, START_DEBUGGER_COMMAND);
 			Connection transport = new XamarinTcpConnection (dbg_sock, logWriter);
 			return VirtualMachineManager.Connect (transport, console, null);
 		}
@@ -65,10 +68,6 @@ namespace VSCodeDebug
 			byte[] commandLenght = new byte[] { (byte)commandBin.Length };
 			socket.Send(commandLenght, 0, commandLenght.Length, SocketFlags.None);
 			socket.Send(commandBin, 0, commandBin.Length, SocketFlags.None);
-		}
-
-		public static IAsyncResult BeginConnect (IPEndPoint dbg_ep, AsyncCallback callback, TextWriter logWriter = null) {
-			return BeginConnect (dbg_ep, (IPEndPoint)null, callback, logWriter);
 		}
 
 		public static IAsyncResult BeginConnect (IPEndPoint dbg_ep, IPEndPoint con_ep, AsyncCallback callback, TextWriter logWriter = null) {
@@ -89,8 +88,8 @@ namespace VSCodeDebug
 			Socket dbg_sock = null;
 			dbg_sock = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 			
-			var c = new ConnectCallbackWithCustomConsole (ConnectInternalWithCustomConsole);
-			return c.BeginInvoke (dbg_sock, dbg_ep, console, logWriter, callback, logWriter);
+			ConnectCallbackWithCustomConsole c = new ConnectCallbackWithCustomConsole (ConnectInternalWithCustomConsole);
+			return c.BeginInvoke (dbg_sock, dbg_ep, console, logWriter, callback, dbg_sock);
 		}
 
 		public static VirtualMachine EndConnect (IAsyncResult asyncResult) {
