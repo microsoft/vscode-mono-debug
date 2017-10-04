@@ -1,4 +1,4 @@
-﻿/*---------------------------------------------------------------------------------------------
+/*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
@@ -449,7 +449,7 @@ namespace VSCodeDebug
 			lock (_lock) {
 
 				_debuggeeKilled = false;
-				var console = RunAdb("shell mono-stdout:D *:S");
+				var console = RunAdb("shell logcat mono-stdout:D *:S");
 				var args0 = new XamarinDebuggerArgs(port, console) {
 					MaxConnectionAttempts = MAX_CONNECTION_ATTEMPTS,
 					TimeBetweenConnectionAttempts = CONNECTION_ATTEMPT_INTERVAL
