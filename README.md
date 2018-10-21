@@ -9,7 +9,9 @@ A simple VS Code debugger extension for the Mono VM. Its implementation was insp
 You can either download the latest Mono version for Linux, macOS, or Windows at [Mono project](http://www.mono-project.com/download/) or you can use your package manager.
 
 * On OS X: `brew install mono`
-* On Linux: `sudo apt-get install mono-complete`
+* On Ubuntu, Debian, Raspbian: `sudo apt-get install mono-complete`
+* On CentOS: `yum install mono-complete`
+* On Fedora: `dnf install mono-complete`
 
 ## Enable Mono debugging
 
