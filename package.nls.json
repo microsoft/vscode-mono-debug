@@ -23,6 +23,7 @@
 	"mono.launch.runtimeArgs.description": "Optional arguments passed to the runtime executable.",
 	"mono.launch.env.description": "Environment variables passed to the program.",
 	"mono.launch.externalConsole.deprecationMessage": "Attribute 'externalConsole' is deprecated, use 'console' instead.",
+	"mono.launch.useRuntime.description": "Specify to use the .NET runtime to execute the application, or execute directly and set MONO_ENV_OPTIONS.",
 	"mono.launch.console.description": "Where to launch the debug target.",
 		"mono.launch.console.internalConsole.description": "VS Code Debug Console (which doesn't support to read input from a program)",
 		"mono.launch.console.integratedTerminal.description": "VS Code's integrated terminal",

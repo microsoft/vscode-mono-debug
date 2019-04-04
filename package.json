@@ -186,6 +186,11 @@
 							],
 							"description": "%mono.launch.console.description%",
 							"default": "internalConsole"
+							},
+							"useRuntime": {
+								"type": "boolean",
+								"description": "%mono.launch.useRuntime.description%",
+								"default": true
 						}
 					}
 				},

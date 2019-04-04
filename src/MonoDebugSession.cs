@@ -188,6 +188,8 @@ namespace VSCodeDebug
 
 			SetExceptionBreakpoints(args.__exceptionOptions);
 
+			bool useRuntime = getBool(args, "useRuntime", true);
+
 			// validate argument 'program'
 			string programPath = getString(args, "program");
 			if (programPath == null) {
@@ -195,7 +197,7 @@ namespace VSCodeDebug
 				return;
 			}
 			programPath = ConvertClientPathToDebugger(programPath);
-			if (!File.Exists(programPath) && !Directory.Exists(programPath)) {
+			if (useRuntime && !File.Exists(programPath) && !Directory.Exists(programPath)) {
 				SendErrorResponse(response, 3002, "Program '{path}' does not exist.", new { path = programPath });
 				return;
 			}
@@ -230,17 +232,12 @@ namespace VSCodeDebug
 				}
 			}
 
-
 			// validate argument 'env'
-			Dictionary<string, string> env = null;
+			var env = new Dictionary<string, string>();
 			var environmentVariables = args.env;
 			if (environmentVariables != null) {
-				env = new Dictionary<string, string>();
 				foreach (var entry in environmentVariables) {
 					env.Add((string)entry.Name, (string)entry.Value);
-				}
-				if (env.Count == 0) {
-					env = null;
 				}
 			}
 
@@ -256,32 +253,46 @@ namespace VSCodeDebug
 				mono_path = MONO;     // try to find mono through PATH
 			}
 
-
+			string executablePath = mono_path;
 			var cmdLine = new List<String>();
+			var runtimeArguments = new List<String>();
 
 			bool debug = !getBool(args, "noDebug", false);
 			if (debug) {
-				cmdLine.Add("--debug");
-				cmdLine.Add(String.Format("--debugger-agent=transport=dt_socket,server=y,address={0}:{1}", host, port));
+				runtimeArguments.Add("--debug");
+				runtimeArguments.Add(String.Format("--debugger-agent=transport=dt_socket,server=y,address={0}:{1}", host, port));
 			}
 
 			// add 'runtimeArgs'
 			if (args.runtimeArgs != null) {
-				string[] runtimeArguments = args.runtimeArgs.ToObject<string[]>();
-				if (runtimeArguments != null && runtimeArguments.Length > 0) {
-					cmdLine.AddRange(runtimeArguments);
+				string[] runtimeArgs = args.runtimeArgs.ToObject<string[]>();
+				if (runtimeArgs != null && runtimeArgs.Length > 0) {
+					runtimeArguments.AddRange(runtimeArgs);
 				}
 			}
 
-			// add 'program'
-			if (workingDirectory == null) {
-				// if no working dir given, we use the direct folder of the executable
-				workingDirectory = Path.GetDirectoryName(programPath);
-				cmdLine.Add(Path.GetFileName(programPath));
+			if (useRuntime)	{
+				// execute using .NET runtime
+				cmdLine.AddRange(runtimeArguments);
+
+				// add 'program'
+				if (workingDirectory == null) {
+					// if no working dir given, we use the direct folder of the executable
+					workingDirectory = Path.GetDirectoryName(programPath);
+					cmdLine.Add(Path.GetFileName(programPath));
+				}
+				else {
+					// if working dir is given and if the executable is within that folder, we make the program path relative to the working dir
+					cmdLine.Add(Utilities.MakeRelativePath(workingDirectory, programPath));
+				}
 			}
-			else {
-				// if working dir is given and if the executable is within that folder, we make the program path relative to the working dir
-				cmdLine.Add(Utilities.MakeRelativePath(workingDirectory, programPath));
+			else
+			{
+				// execute directly, passing mono options using an environment variable
+				executablePath = programPath;
+				if (runtimeArguments?.Count > 0) {
+					env.Add("MONO_ENV_OPTIONS", string.Join(" ", runtimeArguments));
+				}
 			}
 
 			// add 'args'
@@ -303,15 +314,18 @@ namespace VSCodeDebug
 			}
 
 			if (console == "externalTerminal" || console == "integratedTerminal") {
+				
+				cmdLine.Insert(0, executablePath);
 
-				cmdLine.Insert(0, mono_path);
+				if (env?.Count == 0)
+					env = null;
 
 				var termArgs = new {
 					kind = console == "integratedTerminal" ? "integrated" : "external",
-					title = "Node Debug Console",
+					title = "Mono Debug Console",
 					cwd = workingDirectory,
 					args = cmdLine.ToArray(),
-					env = environmentVariables
+					env = env
 				};
 
 				var resp = await SendRequest("runInTerminal", termArgs);
@@ -326,7 +340,7 @@ namespace VSCodeDebug
 				_process.StartInfo.CreateNoWindow = true;
 				_process.StartInfo.UseShellExecute = false;
 				_process.StartInfo.WorkingDirectory = workingDirectory;
-				_process.StartInfo.FileName = mono_path;
+				_process.StartInfo.FileName = executablePath;
 				_process.StartInfo.Arguments = Utilities.ConcatArgs(cmdLine.ToArray());
 
 				_stdoutEOF = false;
@@ -360,7 +374,7 @@ namespace VSCodeDebug
 					}
 				}
 
-				var cmd = string.Format("{0} {1}", mono_path, _process.StartInfo.Arguments);
+				var cmd = string.Format("{0} {1}", executablePath, _process.StartInfo.Arguments);
 				SendOutput("console", cmd);
 
 				try {
