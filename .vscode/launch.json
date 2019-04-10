@@ -5,6 +5,7 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"name": "Extension",
+			"preLaunchTask": "make",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceRoot}"

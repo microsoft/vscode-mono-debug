@@ -1,11 +1,23 @@
 {
-	"version": "0.1.0",
-	"command": "npm",
-	"isShellCommand": true,
-	"isBackground": true,
-	"showOutput": "always",
-	"args": [
-		"run", "watch"
-	],
-	"problemMatcher": "$tsc-watch"
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "npm",
+			"command": "npm",
+			"type": "shell",
+			"isBackground": true,
+			"presentation": {
+				"reveal": "always",
+			},
+			"args": [
+				"run", "watch"
+			],
+			"problemMatcher": "$tsc-watch"
+		},
+		{
+			"label": "make",
+			"command": "make"
+		}
+	]
+	
 }
