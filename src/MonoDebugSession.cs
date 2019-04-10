@@ -20,7 +20,8 @@ namespace VSCodeDebug
 			".cs", ".csx",
 			".cake",
 			".fs", ".fsi", ".ml", ".mli", ".fsx", ".fsscript",
-			".hx"
+			".hx",
+			".vb"
 		};
 		private const int MAX_CHILDREN = 100;
 		private const int MAX_CONNECTION_ATTEMPTS = 10;
