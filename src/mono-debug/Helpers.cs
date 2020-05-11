@@ -69,14 +69,20 @@ namespace VSCodeDebug
 
           var commonPath = FindCommonPath(Path.DirectorySeparatorChar, new[] { workspacePath, targetDirectory });
 
-          // assume the workspacePath points to MacRhino.xcodeproj, so check based on its parent folder, which should be src4 or the root.
+          if (commonPath == targetDirectory)
+            return dataPath;
+
+          /*
+          // assume the workspacePath points to MacRhino.xcodeproj, so check based on its parent folders, which should be src4 or the root.
           if (commonPath == workspaceDir.Parent?.Parent?.Parent?.FullName || commonPath == workspaceDir.Parent?.Parent?.FullName)
           {
+
             var appPath = Path.Combine(dataPath, "Build", "Products", "Debug", "Rhinoceros.app");
 
             if (Directory.Exists(appPath))
               return appPath;
           }
+          */
         }
         catch
         {

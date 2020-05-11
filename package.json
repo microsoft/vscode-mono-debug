@@ -1,8 +1,8 @@
 {
 	"name": "rhino-debug",
 	"displayName": "Rhino Debug",
-	"version": "0.1.0",
-	"publisher": "cwensley",
+	"version": "0.2.0",
+	"publisher": "mcneel",
 	"description": "Visual Studio Code debugger extension for Rhinoceros",
 	"icon": "images/mono-debug-icon.png",
 	"categories": [
@@ -31,10 +31,10 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Microsoft/vscode-mono-debug.git"
+		"url": "https://github.com/mcneel/vscode-rhino-debug.git"
 	},
 	"bugs": {
-		"url": "https://github.com/Microsoft/vscode-mono-debug/issues"
+		"url": "https://github.com/mcneel/vscode-rhino-debug/issues"
 	},
 	"devDependencies": {
 		"@types/es6-collections": "^0.5.29",
@@ -50,15 +50,16 @@
 	},
 	"main": "./out/extension",
 	"activationEvents": [
-		"onCommand:extension.mono-debug.configureExceptions",
-		"onCommand:extension.mono-debug.startSession"
+		"onCommand:extension.rhino-debug.configureExceptions",
+		"onCommand:extension.rhino-debug.startSession",
+		"onCommand:extension.derivedDataRoot"
 	],
 	"contributes": {
 		"configuration": {
 			"type": "object",
 			"title": "%configuration.title%",
 			"properties": {
-				"mono-debug.exceptionOptions": {
+				"rhino-debug.exceptionOptions": {
 					"type": "object",
 					"additionalProperties": {
 						"type": "string",
@@ -95,7 +96,7 @@
 		},
 		"commands": [
 			{
-				"command": "extension.mono-debug.configureExceptions",
+				"command": "extension.rhino-debug.configureExceptions",
 				"title": "%configure.exceptions.command%",
 				"category": "Debug"
 			}
@@ -122,13 +123,15 @@
 				"linux": {
 					"runtime": "mono"
 				},
+				"variables": {
+					"derivedDataRoot": "extension.derivedDataRoot"
+				},
 				"initialConfigurations": [
 					{
 						"name": "%mono.launch.config.name%",
 						"type": "rhino",
 						"request": "launch",
-						"launcher": "development",
-						"sourcePath": "${workspaceRoot}"
+						"program": "${command:derivedDataRoot}/Build/Products/Debug/Rhinoceros.app"
 					},
 					{
 						"name": "%mono.attach.config.name%",
@@ -140,17 +143,10 @@
 				],
 				"configurationAttributes": {
 					"launch": {
+						"required": [
+							"program"
+						],
 						"properties": {
-							"launcher": {
-								"type": "string",
-								"description": "Path to Rhinoceros.app or Rhino.exe to debug with, or 'app', 'wip', 'development'",
-								"default": "app"
-							},
-							"sourcePath": {
-								"type": "string",
-								"description": "Source path when launching for development",
-								"default": "${workspaceRoot}"
-							},
 							"program": {
 								"type": "string",
 								"description": "%mono.launch.program.description%"
@@ -230,6 +226,18 @@
 								"type": "string",
 								"description": "%mono.attach.address.description%",
 								"default": "undefined"
+							},
+							"delay": {
+								"type": "number",
+								"default": 0
+							},
+							"maxConnectionAttempts": {
+								"type": "number",
+								"default": 10
+							},
+							"timeBetweenConnectionAttempts": {
+								"type": "number",
+								"default": 500
 							}
 						}
 					}

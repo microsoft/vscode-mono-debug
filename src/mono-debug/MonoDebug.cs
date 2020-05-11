@@ -22,10 +22,14 @@ namespace VSCodeDebug
 		private static void Main(string[] argv)
 		{
 			int port = -1;
+			bool getDerivedDataRoot = false;
 
 			// parse command line arguments
 			foreach (var a in argv) {
 				switch (a) {
+				case "--getDerivedDataRoot":
+					getDerivedDataRoot = true;
+					break;
 				case "--trace":
 					trace_requests = true;
 					break;
@@ -50,6 +54,12 @@ namespace VSCodeDebug
 					}
 					break;
 				}
+			}
+
+			if (getDerivedDataRoot)
+			{
+				Console.Write(Helpers.GetXcodeDerivedDataPath(WorkspaceRoot));
+				return;
 			}
 
 			if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("mono_debug_logfile")) == false) {

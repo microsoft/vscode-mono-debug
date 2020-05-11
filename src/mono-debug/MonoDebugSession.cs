@@ -193,43 +193,9 @@ namespace VSCodeDebug
 
 			// validate argument 'program'
 			string programPath = getString(args, "program");
-			if (programPath == null)
-			{
-				var launcher = getString(args, "launcher", "app");
-				
-				switch (launcher)
-				{
-					case "development":
-						var sourcePath = getString(args, "sourcePath", Program.WorkspaceRoot);
-						if (sourcePath == null)
-						{
-							SendErrorResponse(response, 3002, "Property 'sourcePath' is missing or empty.");
-							return;
-						}
-
-						programPath = Helpers.GetXcodeDerivedDataPath(sourcePath);
-						programPath = Helpers.GetExecutablePath(programPath);
-
-						if (programPath == null)
-						{
-							SendErrorResponse(response, 3002, "Cannot find derived data path for SourcePath '{sourcePath}'.", new { sourcePath = sourcePath });
-							return;
-						}
-						break;
-					case "app":
-						programPath = Helpers.StandardInstallPath;
-						break;
-					case "wip":
-						programPath = Helpers.StandardInstallWipPath;
-						break;
-					default:
-						programPath = Helpers.GetExecutablePath(programPath);
-						break;
-				}
-			}
 
 			if (programPath == null) {
-				SendErrorResponse(response, 3001, "Property 'program' or 'launcher' is missing or empty.", null);
+				SendErrorResponse(response, 3001, "Property 'program' missing or empty.", null);
 				return;
 			}
 
@@ -479,8 +445,14 @@ namespace VSCodeDebug
 				SendErrorResponse(response, 3013, "Invalid address '{address}'.", new { address = address });
 				return;
 			}
+			var delay = getInt(args, "delay", 0);
+			if (delay > 0)
+				System.Threading.Thread.Sleep(delay);
 
-			Connect(address, port);
+			var maxConnectionAttempts = getInt(args, "maxConnectionAttempts", MAX_CONNECTION_ATTEMPTS);
+			var timeBetweenConnectionAttempts = getInt(args, "timeBetweenConnectionAttempts", CONNECTION_ATTEMPT_INTERVAL);
+
+			Connect(address, port, maxConnectionAttempts, timeBetweenConnectionAttempts);
 
 			SendResponse(response);
 		}
@@ -1023,15 +995,15 @@ namespace VSCodeDebug
 			return bt == null ? null : bt.GetFrame(0).GetException();
 		}
 
-		private void Connect(IPAddress address, int port)
+		private void Connect(IPAddress address, int port, int maxConnectionAttempts = MAX_CONNECTION_ATTEMPTS, int timeBetweenConnectionAttempts = CONNECTION_ATTEMPT_INTERVAL)
 		{
 			lock (_lock) {
 
 				_debuggeeKilled = false;
 
 				var args0 = new Mono.Debugging.Soft.SoftDebuggerConnectArgs(string.Empty, address, port) {
-					MaxConnectionAttempts = MAX_CONNECTION_ATTEMPTS,
-					TimeBetweenConnectionAttempts = CONNECTION_ATTEMPT_INTERVAL
+					MaxConnectionAttempts = maxConnectionAttempts,
+					TimeBetweenConnectionAttempts = timeBetweenConnectionAttempts,
 				};
 
 				_session.Run(new Mono.Debugging.Soft.SoftDebuggerStartInfo(args0), _debuggerSessionOptions);
