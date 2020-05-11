@@ -1,11 +1,11 @@
 
-MONO_DEBUG_RELEASE = "./bin/Release/mono-debug.exe"
-MONO_DEBUG_DEBUG = "./bin/Debug/mono-debug.exe"
+MONO_DEBUG_RELEASE = "./bin/Release/net45/mono-debug.exe"
+MONO_DEBUG_DEBUG = "./bin/Debug/net45/mono-debug.exe"
 
 all: vsix
 	@echo "vsix created"
 
-vsix: $MONO_DEBUG_RELEASE
+vsix: $MONO_DEBUG_DEBUG
 	./node_modules/.bin/vsce package
 
 publish: $MONO_DEBUG_RELEASE
@@ -20,7 +20,7 @@ debug: $MONO_DEBUG_DEBUG
 	@echo "build finished"
 
 $MONO_DEBUG_RELEASE:
-	msbuild /p:Configuration=Release mono-debug.sln
+	msbuild /p:Configuration=Debug mono-debug.sln
 
 $MONO_DEBUG_DEBUG:
 	msbuild /p:Configuration=Debug mono-debug.sln

@@ -1,15 +1,15 @@
 {
-	"name": "mono-debug-ext",
-	"displayName": "Mono Debug (extended)",
-	"version": "0.15.9",
+	"name": "rhino-debug",
+	"displayName": "Rhino Debug",
+	"version": "0.1.0",
 	"publisher": "cwensley",
-	"description": "Visual Studio Code debugger extension for Mono",
+	"description": "Visual Studio Code debugger extension for Rhinoceros",
 	"icon": "images/mono-debug-icon.png",
 	"categories": [
 		"Debuggers"
 	],
 	"author": {
-		"name": "Microsoft Corporation"
+		"name": "McNeel &amp; Associates"
 	},
 	"license": "MIT",
 	"private": true,
@@ -54,7 +54,6 @@
 		"onCommand:extension.mono-debug.startSession"
 	],
 	"contributes": {
-
 		"configuration": {
 			"type": "object",
 			"title": "%configuration.title%",
@@ -63,7 +62,11 @@
 					"type": "object",
 					"additionalProperties": {
 						"type": "string",
-						"enum": [ "never", "always", "unhandled" ],
+						"enum": [
+							"never",
+							"always",
+							"unhandled"
+						],
 						"enumDescriptions": [
 							"%breakMode.never%",
 							"%breakMode.always%",
@@ -90,7 +93,6 @@
 				}
 			}
 		},
-
 		"commands": [
 			{
 				"command": "extension.mono-debug.configureExceptions",
@@ -109,31 +111,28 @@
 				"language": "fsharp"
 			}
 		],
-		"debuggers": [{
-				"type": "mono",
-				"label": "C# Mono",
-				"program": "./bin/Release/mono-debug.exe",
+		"debuggers": [
+			{
+				"type": "rhino",
+				"label": "%mono.label%",
+				"program": "./bin/Debug/net45/mono-debug.exe",
 				"osx": {
 					"runtime": "mono"
 				},
 				"linux": {
 					"runtime": "mono"
 				},
-				"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
-
-				"startSessionCommand": "extension.mono-debug.startSession",
-
 				"initialConfigurations": [
 					{
 						"name": "%mono.launch.config.name%",
-						"type": "mono",
+						"type": "rhino",
 						"request": "launch",
-						"program": "${workspaceRoot}/program.exe",
-						"cwd": "${workspaceRoot}"
+						"launcher": "development",
+						"sourcePath": "${workspaceRoot}"
 					},
 					{
 						"name": "%mono.attach.config.name%",
-						"type": "mono",
+						"type": "rhino",
 						"request": "attach",
 						"address": "localhost",
 						"port": 55555
@@ -141,8 +140,17 @@
 				],
 				"configurationAttributes": {
 					"launch": {
-					"required": ["program"],
 						"properties": {
+							"launcher": {
+								"type": "string",
+								"description": "Path to Rhinoceros.app or Rhino.exe to debug with, or 'app', 'wip', 'development'",
+								"default": "app"
+							},
+							"sourcePath": {
+								"type": "string",
+								"description": "Source path when launching for development",
+								"default": "${workspaceRoot}"
+							},
 							"program": {
 								"type": "string",
 								"description": "%mono.launch.program.description%"
@@ -150,7 +158,9 @@
 							"args": {
 								"type": "array",
 								"description": "%mono.launch.args.description%",
-							"items": { "type": "string" },
+								"items": {
+									"type": "string"
+								},
 								"default": []
 							},
 							"cwd": {
@@ -159,14 +169,19 @@
 								"default": "."
 							},
 							"runtimeExecutable": {
-							"type": ["string", "null"],
+								"type": [
+									"string",
+									"null"
+								],
 								"description": "%mono.launch.runtimeExecutable.description%",
 								"default": null
 							},
 							"runtimeArgs": {
 								"type": "array",
 								"description": "%mono.launch.runtimeArgs.description%",
-							"items": { "type": "string" },
+								"items": {
+									"type": "string"
+								},
 								"default": []
 							},
 							"env": {
@@ -181,7 +196,11 @@
 							},
 							"console": {
 								"type": "string",
-							"enum": [ "internalConsole", "integratedTerminal", "externalTerminal" ],
+								"enum": [
+									"internalConsole",
+									"integratedTerminal",
+									"externalTerminal"
+								],
 								"enumDescriptions": [
 									"%mono.launch.console.internalConsole.description%",
 									"%mono.launch.console.integratedTerminal.description%",
@@ -198,7 +217,9 @@
 						}
 					},
 					"attach": {
-					"required": ["port"],
+						"required": [
+							"port"
+						],
 						"properties": {
 							"port": {
 								"type": "number",
@@ -213,6 +234,7 @@
 						}
 					}
 				}
-		}]
+			}
+		]
 	}
 }

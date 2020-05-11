@@ -17,6 +17,8 @@ namespace VSCodeDebug
 		private static bool trace_responses;
 		static string LOG_FILE_PATH = null;
 
+		public static string WorkspaceRoot { get; private set; }
+
 		private static void Main(string[] argv)
 		{
 			int port = -1;
@@ -42,6 +44,9 @@ namespace VSCodeDebug
 					}
 					else if( a.StartsWith("--log-file=")) {
 						LOG_FILE_PATH = a.Substring("--log-file=".Length);
+					}
+					else if (a.StartsWith("--workspaceRoot=")) {
+						WorkspaceRoot = a.Substring("--workspaceRoot=".Length);
 					}
 					break;
 				}

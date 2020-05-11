@@ -1,9 +1,9 @@
 {
-	"mono.label": "C# Mono",
+	"mono.label": "Rhino Debug",
 
 	"configure.exceptions.command": "Configure Exceptions",
 
-	"configuration.title": "Mono Debug",
+	"configuration.title": "Rhino Debug",
 	"configuration.exceptionOptions.description": "Configure when exceptions should break (never, always, unhandled). Add more as needed.",
 	"configuration.exceptionOptions.description2": "When should this thrown exception break?",
 
@@ -13,8 +13,8 @@
 	"breakMode.unhandled": "breaks when exception unhandled",
 
 
-	"mono.launch.config.name": "Launch",
-	"mono.attach.config.name": "Attach",
+	"mono.launch.config.name": "Launch Rhinoceros",
+	"mono.attach.config.name": "Attach to Rhinoceros",
 
 	"mono.launch.program.description": "Absolute path to the program.",
 	"mono.launch.args.description": "Command line arguments passed to the program.",

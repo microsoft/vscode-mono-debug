@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Diagnostics;
 
 using Mono.Debugging.Client;
+using System.Collections.Generic;
 
 namespace VSCodeDebug
 {
@@ -59,7 +60,7 @@ namespace VSCodeDebug
 			return false;
 		}
 
-		public static string ConcatArgs(string[] args)
+		public static string ConcatArgs(IEnumerable<string> args)
 		{
 			var arg = "";
 			if (args != null) {

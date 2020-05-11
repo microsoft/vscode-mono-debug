@@ -8,8 +8,9 @@ using System.IO;
 using System.Threading;
 using System.Linq;
 using System.Net;
+using System.ComponentModel;
 using Mono.Debugging.Client;
-
+using System.Text;
 
 namespace VSCodeDebug
 {
@@ -181,6 +182,7 @@ namespace VSCodeDebug
 
 			// Mono Debug is ready to accept breakpoints immediately
 			SendEvent(new InitializedEvent());
+
 		}
 
 		public override async void Launch(Response response, dynamic args)
@@ -189,16 +191,52 @@ namespace VSCodeDebug
 
 			SetExceptionBreakpoints(args.__exceptionOptions);
 
-			bool useRuntime = getBool(args, "useRuntime", true);
-
 			// validate argument 'program'
 			string programPath = getString(args, "program");
+			if (programPath == null)
+			{
+				var launcher = getString(args, "launcher", "app");
+				
+				switch (launcher)
+				{
+					case "development":
+						var sourcePath = getString(args, "sourcePath", Program.WorkspaceRoot);
+						if (sourcePath == null)
+						{
+							SendErrorResponse(response, 3002, "Property 'sourcePath' is missing or empty.");
+							return;
+						}
+
+						programPath = Helpers.GetXcodeDerivedDataPath(sourcePath);
+						programPath = Helpers.GetExecutablePath(programPath);
+
+						if (programPath == null)
+						{
+							SendErrorResponse(response, 3002, "Cannot find derived data path for SourcePath '{sourcePath}'.", new { sourcePath = sourcePath });
+							return;
+						}
+						break;
+					case "app":
+						programPath = Helpers.StandardInstallPath;
+						break;
+					case "wip":
+						programPath = Helpers.StandardInstallWipPath;
+						break;
+					default:
+						programPath = Helpers.GetExecutablePath(programPath);
+						break;
+				}
+			}
+
 			if (programPath == null) {
-				SendErrorResponse(response, 3001, "Property 'program' is missing or empty.", null);
+				SendErrorResponse(response, 3001, "Property 'program' or 'launcher' is missing or empty.", null);
 				return;
 			}
+
 			programPath = ConvertClientPathToDebugger(programPath);
-			if (useRuntime && !File.Exists(programPath) && !Directory.Exists(programPath)) {
+
+			bool useRuntime = getBool(args, "useRuntime", programPath.EndsWith(".exe", StringComparison.InvariantCultureIgnoreCase));
+			if (!File.Exists(programPath) && !Directory.Exists(programPath)) {
 				SendErrorResponse(response, 3002, "Program '{path}' does not exist.", new { path = programPath });
 				return;
 			}
@@ -257,11 +295,13 @@ namespace VSCodeDebug
 			string executablePath = mono_path;
 			var cmdLine = new List<String>();
 			var runtimeArguments = new List<String>();
+			var rhinoArguments = new List<String>();
 
 			bool debug = !getBool(args, "noDebug", false);
 			if (debug) {
 				runtimeArguments.Add("--debug");
 				runtimeArguments.Add(String.Format("--debugger-agent=transport=dt_socket,server=y,address={0}:{1}", host, port));
+				rhinoArguments.Add(string.Format($"transport=dt_socket,server=y,address={host}:{port}"));
 			}
 
 			// add 'runtimeArgs'
@@ -291,8 +331,21 @@ namespace VSCodeDebug
 			{
 				// execute directly, passing mono options using an environment variable
 				executablePath = programPath;
+
+				if (executablePath.EndsWith(".app"))
+				{
+					// use open so that it properly gets activated instead of running in the background
+					cmdLine.Add("-W");
+					cmdLine.Add("-n");
+					cmdLine.Add(executablePath);
+					executablePath = "open";
+				}
 				if (runtimeArguments?.Count > 0) {
 					env.Add("MONO_ENV_OPTIONS", string.Join(" ", runtimeArguments));
+				}
+
+				if (rhinoArguments?.Count > 0) {
+					env.Add("RHINO_SOFT_DEBUG", string.Join(" ", rhinoArguments));
 				}
 			}
 
@@ -342,7 +395,7 @@ namespace VSCodeDebug
 				_process.StartInfo.UseShellExecute = false;
 				_process.StartInfo.WorkingDirectory = workingDirectory;
 				_process.StartInfo.FileName = executablePath;
-				_process.StartInfo.Arguments = Utilities.ConcatArgs(cmdLine.ToArray());
+				_process.StartInfo.Arguments = Utilities.ConcatArgs(cmdLine);
 
 				_stdoutEOF = false;
 				_process.StartInfo.RedirectStandardOutput = true;
@@ -695,13 +748,25 @@ namespace VSCodeDebug
 						// Wait for all values at once.
 						WaitHandle.WaitAll(children.Select(x => x.WaitHandle).ToArray());
 						foreach (var v in children) {
-							variables.Add(CreateVariable(v));
+							try
+							{
+								variables.Add(CreateVariable(v));
+							}
+							catch (Exception)
+							{
+							}
 						}
 					}
 					else {
 						foreach (var v in children) {
 							v.WaitHandle.WaitOne();
-							variables.Add(CreateVariable(v));
+							try
+							{
+								variables.Add(CreateVariable(v));
+							}
+							catch (Exception)
+							{
+							}
 						}
 					}
 

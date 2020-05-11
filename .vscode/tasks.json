@@ -16,7 +16,8 @@
 		},
 		{
 			"label": "make",
-			"command": "make"
+			"command": "make",
+			"group": "build"
 		}
 	]
 	
