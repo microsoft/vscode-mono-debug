@@ -88,7 +88,7 @@ suite('Node Debug Adapter', () => {
 			return Promise.all([
 				dc.configurationSequence(),
 				dc.launch({ program: PROGRAM }),
-				dc.assertStoppedLocation('step', DEBUGGER_LINE)
+				dc.assertStoppedLocation('step', { line: DEBUGGER_LINE })
 			]);
 		});
 	});
