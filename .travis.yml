@@ -6,7 +6,7 @@ mono:
 solution: mono-debug.sln
 
 git:
-  submodules: false
+  submodules: true
 
 before_install:
   - git clone https://github.com/creationix/nvm.git ./.nvm
@@ -16,6 +16,7 @@ before_install:
 
 install:
   - nuget restore mono-debug.sln
+  - nuget restore external/debugger-libs/debugger-libs.sln
   - npm install
 
 script:

@@ -6,7 +6,7 @@
     <ProjectGuid>{6B18B22D-6B1A-4BF9-BD46-DF84EE2181C5}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>VSCodeDebug</RootNamespace>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
   </PropertyGroup>
@@ -40,22 +40,19 @@
       <HintPath>packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil">
-      <HintPath>packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.dll</HintPath>
+      <HintPath>packages\Mono.Cecil.0.10.1\lib\net40\Mono.Cecil.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil.Mdb">
-      <HintPath>packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.Mdb.dll</HintPath>
+      <HintPath>packages\Mono.Cecil.0.10.1\lib\net40\Mono.Cecil.Mdb.dll</HintPath>
     </Reference>
-    <Reference Include="Mono.Debugger.Soft">
-      <HintPath>packages\Mono.Debugger.Soft.1.0.20161020.46\lib\net40\Mono.Debugger.Soft.dll</HintPath>
+    <Reference Include="Mono.Cecil.Pdb">
+      <HintPath>packages\Mono.Cecil.0.10.1\lib\net40\Mono.Cecil.Pdb.dll</HintPath>
     </Reference>
-    <Reference Include="Mono.Debugging.Soft">
-      <HintPath>packages\Mono.Debugging.Soft.1.0.20161020.46\lib\net40\Mono.Debugging.Soft.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Debugging">
-      <HintPath>packages\Mono.Debugging.1.0.20161020.46\lib\net40\Mono.Debugging.dll</HintPath>
+    <Reference Include="Mono.Cecil.Rocks">
+      <HintPath>packages\Mono.Cecil.0.10.1\lib\net40\Mono.Cecil.Rocks.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -81,5 +78,19 @@
   </Target>
   <ItemGroup>
     <Folder Include="src\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="external\debugger-libs\Mono.Debugger.Soft\Mono.Debugger.Soft.csproj">
+      <Project>{372E8E3E-29D5-4B4D-88A2-4711CD628C4E}</Project>
+      <Name>Mono.Debugger.Soft</Name>
+    </ProjectReference>
+    <ProjectReference Include="external\debugger-libs\Mono.Debugging\Mono.Debugging.csproj">
+      <Project>{90C99ADB-7D4B-4EB4-98C2-40BD1B14C7D2}</Project>
+      <Name>Mono.Debugging</Name>
+    </ProjectReference>
+    <ProjectReference Include="external\debugger-libs\Mono.Debugging.Soft\Mono.Debugging.Soft.csproj">
+      <Project>{DE40756E-57F6-4AF2-B155-55E3A88CCED8}</Project>
+      <Name>Mono.Debugging.Soft</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>
