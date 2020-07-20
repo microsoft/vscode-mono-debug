@@ -83,12 +83,12 @@ suite('Node Debug Adapter', () => {
 		test('should stop on debugger statement', () => {
 
 			const PROGRAM = Path.join(DATA_ROOT, 'simple_break/Program.exe');
-			const DEBUGGER_LINE = 10;
+			const DEBUGGER_LINE = 11;
 
 			return Promise.all([
 				dc.configurationSequence(),
 				dc.launch({ program: PROGRAM }),
-				dc.assertStoppedLocation('step', DEBUGGER_LINE)
+				dc.assertStoppedLocation('step', { line: DEBUGGER_LINE })
 			]);
 		});
 	});

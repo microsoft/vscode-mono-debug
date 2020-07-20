@@ -5,6 +5,18 @@ VisualStudioVersion = 14.0.22823.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mono-debug", "mono-debug.csproj", "{6B18B22D-6B1A-4BF9-BD46-DF84EE2181C5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Debugging.Soft", "external\debugger-libs\Mono.Debugging.Soft\Mono.Debugging.Soft.csproj", "{DE40756E-57F6-4AF2-B155-55E3A88CCED8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Debugger.Soft", "external\debugger-libs\Mono.Debugger.Soft\Mono.Debugger.Soft.csproj", "{372E8E3E-29D5-4B4D-88A2-4711CD628C4E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Debugging", "external\debugger-libs\Mono.Debugging\Mono.Debugging.csproj", "{90C99ADB-7D4B-4EB4-98C2-40BD1B14C7D2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "external", "external", "{E023475B-7BCC-48DC-9D39-609F6AC4BC37}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ICSharpCode.NRefactory", "external\nrefactory\ICSharpCode.NRefactory\ICSharpCode.NRefactory.csproj", "{3B2A5653-EC97-4001-BB9B-D90F1AF2C371}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ICSharpCode.NRefactory.CSharp", "external\nrefactory\ICSharpCode.NRefactory.CSharp\ICSharpCode.NRefactory.CSharp.csproj", "{53DCA265-3C3C-42F9-B647-F72BA678122B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +27,26 @@ Global
 		{6B18B22D-6B1A-4BF9-BD46-DF84EE2181C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6B18B22D-6B1A-4BF9-BD46-DF84EE2181C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6B18B22D-6B1A-4BF9-BD46-DF84EE2181C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE40756E-57F6-4AF2-B155-55E3A88CCED8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE40756E-57F6-4AF2-B155-55E3A88CCED8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE40756E-57F6-4AF2-B155-55E3A88CCED8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE40756E-57F6-4AF2-B155-55E3A88CCED8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{372E8E3E-29D5-4B4D-88A2-4711CD628C4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{372E8E3E-29D5-4B4D-88A2-4711CD628C4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{372E8E3E-29D5-4B4D-88A2-4711CD628C4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{372E8E3E-29D5-4B4D-88A2-4711CD628C4E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90C99ADB-7D4B-4EB4-98C2-40BD1B14C7D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90C99ADB-7D4B-4EB4-98C2-40BD1B14C7D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90C99ADB-7D4B-4EB4-98C2-40BD1B14C7D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90C99ADB-7D4B-4EB4-98C2-40BD1B14C7D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B2A5653-EC97-4001-BB9B-D90F1AF2C371}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B2A5653-EC97-4001-BB9B-D90F1AF2C371}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B2A5653-EC97-4001-BB9B-D90F1AF2C371}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B2A5653-EC97-4001-BB9B-D90F1AF2C371}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53DCA265-3C3C-42F9-B647-F72BA678122B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53DCA265-3C3C-42F9-B647-F72BA678122B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53DCA265-3C3C-42F9-B647-F72BA678122B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53DCA265-3C3C-42F9-B647-F72BA678122B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0
@@ -62,5 +94,12 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{372E8E3E-29D5-4B4D-88A2-4711CD628C4E} = {E023475B-7BCC-48DC-9D39-609F6AC4BC37}
+		{90C99ADB-7D4B-4EB4-98C2-40BD1B14C7D2} = {E023475B-7BCC-48DC-9D39-609F6AC4BC37}
+		{DE40756E-57F6-4AF2-B155-55E3A88CCED8} = {E023475B-7BCC-48DC-9D39-609F6AC4BC37}
+		{3B2A5653-EC97-4001-BB9B-D90F1AF2C371} = {E023475B-7BCC-48DC-9D39-609F6AC4BC37}
+		{53DCA265-3C3C-42F9-B647-F72BA678122B} = {E023475B-7BCC-48DC-9D39-609F6AC4BC37}
 	EndGlobalSection
 EndGlobal
