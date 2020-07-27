@@ -14,9 +14,9 @@
 	"license": "MIT",
 	"private": true,
 	"scripts": {
-		"prepublish": "powershell ./build.ps1 build",
-		"vscode:prepublish": "powershell ./build.ps1 build",
-		"compile": "powershell ./build.ps1 build",
+		"prepublish": "pwsh ./build.ps1 build",
+		"vscode:prepublish": "pwsh ./build.ps1 build",
+		"compile": "pwsh ./build.ps1 build",
 		"watch": "tsc -w -p ./src/typescript",
 		"test": "make tests; mocha --timeout 10000 -u tdd ./out/tests"
 	},
