@@ -18,7 +18,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('extension.mono-debug.startSession', config => startSession(config)));
 
 	vscode.window.registerTreeDataProvider(
-		'xamarin-forms',
+		'xamarinforms',
 		new XamarinEmulatorProvider(vscode.workspace.rootPath)
 	  );
 	

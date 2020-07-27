@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { timeStamp } from 'console';
 
 class XamarinEmulatorProvider implements vscode.TreeDataProvider<EmulatorItem> {
     constructor(private workspaceRoot: string) {}
@@ -10,6 +11,14 @@ class XamarinEmulatorProvider implements vscode.TreeDataProvider<EmulatorItem> {
     }
 
     getChildren(element?: EmulatorItem): vscode.ProviderResult<EmulatorItem[]> {
+
+        vscode.window.showInformationMessage("Starting getChildren()!");
+
+        // if (!this.workspaceRoot) {
+        //     vscode.window.showInformationMessage("Not in workspace root!")
+        //     return 
+        // }
+
         return Promise.resolve(this.getDummyData());
     }
 
@@ -29,13 +38,18 @@ class XamarinEmulatorProvider implements vscode.TreeDataProvider<EmulatorItem> {
 
 class EmulatorItem extends vscode.TreeItem {
 
-    constructor(public readonly name: string, public readonly collapsibleState?: vscode.TreeItemCollapsibleState)
+    constructor(public readonly name: string, public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None) 
     {
         super(name, collapsibleState);
     }
 
-    // tooltip()
+    get tooltip(): string {
+		return `${this.label}-Android emulator`;
+    }
+    
     // description()
+    // contextValue = 
+
 }
 
  export default XamarinEmulatorProvider;

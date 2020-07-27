@@ -51,13 +51,14 @@
 	"main": "./out/extension",
 	"activationEvents": [
 		"onCommand:extension.mono-debug.configureExceptions",
-		"onCommand:extension.mono-debug.startSession"
+		"onCommand:extension.mono-debug.startSession",
+		"onStartupFinished"
 	],
 	"contributes": {
 		"views": {
 			"xamarin": [
 				{
-					"id": "xamarin-forms",
+					"id": "xamarinforms",
 					"name": "Xamarin Forms",
 					"icon": "images/xam-logo.svg"
 				}
@@ -69,6 +70,15 @@
 					"id": "xamarin",
 					"title": "Xamarin",
 					"icon": "images/xam-logo.svg"
+				}
+			]
+		},
+		"menus": {
+			"view/title": [
+				{
+					"command": "xamarinforms.refreshEntry",
+					"when": "view == xamarinforms",
+					"group": "navigation"
 				}
 			]
 		},
@@ -116,6 +126,10 @@
 				"command": "extension.mono-debug.configureExceptions",
 				"title": "%configure.exceptions.command%",
 				"category": "Debug"
+			},
+			{
+				"command": "xamarinforms.refreshEntry",
+				"title": "Refresh"
 			}
 		],
 		"breakpoints": [
