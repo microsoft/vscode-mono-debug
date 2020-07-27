@@ -6,29 +6,45 @@ if (-Not $cmd)
 	$cmd = "debug"
 }
 
-switch ($args[0]) {
+function Vsix
+{
+	& ./node_modules/.bin/vsce package
+	Write-Host "vsix created"
+}
+function Build
+{
+	& msbuild /r /p:Configuration=Release ./src/mono-debug/mono-debug.csproj
+	& msbuild /r /p:Configuration=Release ./src/xamarin-util/xamarin-util.csproj
+
+	& npx webpack --mode production ./package.json
+	& node_modules/.bin/tsc -p ./src/typescript
+
+	Write-Host "build finished"
+}
+
+function Debug
+{
+	& msbuild /r /p:Configuration=Debug ./src/mono-debug/mono-debug.csproj
+	& msbuild /r /p:Configuration=Debug ./src/xamarin-util/xamarin-util.csproj
+
+	& node_modules/.bin/tsc -p ./src/typescript
+	Write-Host "debug build finished"
+}
+
+switch ($cmd) {
 	"all" {
-		Write-Host "vsix created"
+		Debug
+		Build
+		Vsix
 	}
 	"vsix" {
-		& ./node_modules/.bin/vsce package
-	}
-	"publish" {
-		& ./node_modules/.bin/vsce publish
+		Build
+		Vsix
 	}
 	"build" {
-		& msbuild /r /p:Configuration=Release ./src/mono-debug/mono-debug.csproj
-		& msbuild /r /p:Configuration=Release ./src/xamarin-util/xamarin-util.csproj
-
-		& npx webpack --mode production ./
-		& node_modules/.bin/tsc -p ./src/typescript
-
-		Write-Host "build finished"
+		Build
 	}
 	"debug" {
-		& msbuild /r /p:Configuration=Debug ./src/mono-debug/mono-debug.csproj
-		& msbuild /r /p:Configuration=Debug ./src/xamarin-util/xamarin-util.csproj
-
-		& node_modules/.bin/tsc -p ./src/typescript
+		Debug
 	}
 }
