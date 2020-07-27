@@ -14,9 +14,9 @@
 	"license": "MIT",
 	"private": true,
 	"scripts": {
-		"prepublish": "make build",
-		"vscode:prepublish": "make build",
-		"compile": "make build",
+		"prepublish": "powershell ./build.ps1 build",
+		"vscode:prepublish": "powershell ./build.ps1 build",
+		"compile": "powershell ./build.ps1 build",
 		"watch": "tsc -w -p ./src/typescript",
 		"test": "make tests; mocha --timeout 10000 -u tdd ./out/tests"
 	},
@@ -44,9 +44,9 @@
 		"@types/node": "^6.0.39",
 		"mocha": "^2.4.5",
 		"typescript": "^2.0.3",
-		"vscode-debugadapter-testsupport": "^1.20.0",
 		"vsce": "^1.20.0",
-		"vscode-nls-dev": "^2.0.1"
+		"vscode-debugadapter-testsupport": "^1.20.0",
+		"vscode-nls-dev": "^2.0.1",
 	},
 	"main": "./out/extension",
 	"activationEvents": [
@@ -144,7 +144,7 @@
 			{
 				"type": "mono",
 				"label": "C# Mono",
-				"program": "./bin/Release/mono-debug.exe",
+				"program": "./src/mono-debug/bin/Release/netcoreapp3.1/mono-debug.exe",
 				"osx": {
 					"runtime": "mono"
 				},
