@@ -47,6 +47,8 @@
 		"vsce": "^1.20.0",
 		"vscode-debugadapter-testsupport": "^1.20.0",
 		"vscode-nls-dev": "^2.0.1",
+		"webpack-cli": "^3.3.12",
+		"webpack": "^4.44.0"
 	},
 	"main": "./out/extension",
 	"activationEvents": [
