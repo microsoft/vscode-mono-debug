@@ -25,6 +25,8 @@
 		"node": "^6.3.0"
 	},
 	"dependencies": {
+		"@types/vscode": "^1.47.0",
+		"vscode-test": "^1.4.0",
 		"vscode-debugprotocol": "^1.20.0",
 		"vscode-nls": "^2.0.2"
 	},
@@ -44,8 +46,6 @@
 		"typescript": "^2.0.3",
 		"vscode-debugadapter-testsupport": "^1.20.0",
 		"vsce": "^1.20.0",
-		"@types/vscode": "^1.47.0",
-		"vscode-test": "^1.4.0",
 		"vscode-nls-dev": "^2.0.1"
 	},
 	"main": "./out/extension",
