@@ -146,12 +146,12 @@
 			{
 				"type": "mono",
 				"label": "C# Mono",
-				"program": "./src/mono-debug/bin/Release/netcoreapp3.1/mono-debug.exe",
+				"program": "./src/mono-debug/bin/Release/netcoreapp3.1/mono-debug.dll",
 				"osx": {
-					"runtime": "mono"
+					"runtime": "dotnet"
 				},
 				"linux": {
-					"runtime": "mono"
+					"runtime": "dotnet"
 				},
 				"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
 				"startSessionCommand": "extension.mono-debug.startSession",
