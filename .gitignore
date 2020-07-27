@@ -13,3 +13,6 @@
 mono-debug.userprefs
 npm-debug.log
 .vs/
+/**/bin/
+/**/obj/
+/**/packages/
