@@ -16,7 +16,6 @@ function Build
 	& msbuild /r /p:Configuration=Release ./src/mono-debug/mono-debug.csproj
 	& msbuild /r /p:Configuration=Release ./src/xamarin-util/xamarin-util.csproj
 
-	& npx webpack --mode production ./package.json
 	& node_modules/.bin/tsc -p ./src/typescript
 
 	Write-Host "build finished"
