@@ -232,15 +232,11 @@ namespace VSCodeDebug
 
 
 			// validate argument 'env'
-			Dictionary<string, string> env = null;
+			Dictionary<string, string> env = new Dictionary<string, string>();
 			var environmentVariables = args.env;
 			if (environmentVariables != null) {
-				env = new Dictionary<string, string>();
 				foreach (var entry in environmentVariables) {
 					env.Add((string)entry.Name, (string)entry.Value);
-				}
-				if (env.Count == 0) {
-					env = null;
 				}
 			}
 
@@ -260,11 +256,22 @@ namespace VSCodeDebug
 			var cmdLine = new List<String>();
 
 			bool debug = !getBool(args, "noDebug", false);
+			
+			bool dotNet = getBool(args, "dotnet", false);
 			if (debug) {
-				cmdLine.Add("--debug");
-				cmdLine.Add(String.Format("--debugger-agent=transport=dt_socket,server=y,address={0}:{1}", host, port));
+				if (dotNet) {
+					env.Add("MONO_ENV_OPTIONS",  $"--debug --debugger-agent=transport=dt_socket,server=y,address={host}:{port}");
+				}
+				else {
+					cmdLine.Add("--debug");
+					cmdLine.Add(String.Format("--debugger-agent=transport=dt_socket,server=y,address={0}:{1}", host, port));
+				}
 			}
-
+			
+			if (env.Count == 0) {
+				env = null;
+			}
+			
 			// add 'runtimeArgs'
 			if (args.runtimeArgs != null) {
 				string[] runtimeArguments = args.runtimeArgs.ToObject<string[]>();
@@ -305,13 +312,12 @@ namespace VSCodeDebug
 			if (console == "externalTerminal" || console == "integratedTerminal") {
 
 				cmdLine.Insert(0, mono_path);
-
 				var termArgs = new {
 					kind = console == "integratedTerminal" ? "integrated" : "external",
 					title = "Node Debug Console",
 					cwd = workingDirectory,
 					args = cmdLine.ToArray(),
-					env = environmentVariables
+					env
 				};
 
 				var resp = await SendRequest("runInTerminal", termArgs);

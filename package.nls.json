@@ -20,6 +20,7 @@
 	"mono.launch.args.description": "Command line arguments passed to the program.",
 	"mono.launch.cwd.description": "Absolute path to the working directory of the program being debugged.",
 	"mono.launch.runtimeExecutable.description": "Absolute path to the runtime executable to be used. Default is the runtime executable on the PATH.",
+	"mono.launch.dotnet.description": "Debug using netcore mono.",
 	"mono.launch.runtimeArgs.description": "Optional arguments passed to the runtime executable.",
 	"mono.launch.env.description": "Environment variables passed to the program.",
 	"mono.launch.externalConsole.deprecationMessage": "Attribute 'externalConsole' is deprecated, use 'console' instead.",
