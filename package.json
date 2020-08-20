@@ -160,11 +160,6 @@
 							"description": "%mono.launch.runtimeExecutable.description%",
 							"default": null
 						},
-						"dotnet": {
-							"type": ["boolean", "null"],
-							"description": "%mono.launch.dotnet.description%",
-							"default": null
-						},
 						"runtimeArgs": {
 							"type": "array",
 							"description": "%mono.launch.runtimeArgs.description%",
