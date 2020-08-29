@@ -1,4 +1,4 @@
-﻿/*---------------------------------------------------------------------------------------------
+/*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
@@ -9,7 +9,7 @@ using System.Threading;
 using System.Linq;
 using System.Net;
 using Mono.Debugging.Client;
-
+using System.Diagnostics;
 
 namespace VSCodeDebug
 {
@@ -182,7 +182,19 @@ namespace VSCodeDebug
 			SendEvent(new InitializedEvent());
 		}
 
-		public override async void Launch(Response response, dynamic args)
+		public override void Launch(Response response, dynamic args)
+		{
+			if (args.packageName != null)
+			{
+				LaunchXamarinAndroid(response, args);
+			}
+			else
+			{
+				LaunchMono(response, args);
+			}
+		}
+
+		public async void LaunchMono(Response response, dynamic args)
 		{
 			_attachMode = false;
 
@@ -417,6 +429,76 @@ namespace VSCodeDebug
 			Connect(address, port);
 
 			SendResponse(response);
+		}
+
+		public void LaunchXamarinAndroid(Response response, dynamic args)
+		{
+			_attachMode = true;
+
+			SetExceptionBreakpoints(args.__exceptionOptions);
+
+			var packageName = getString(args, "packageName", null);
+			if (packageName == null) {
+				SendErrorResponse(response, 3008, "Property 'packageName' is missing.");
+				return;
+			}
+
+			var forwardOutput = RunAdbForResult("forward tcp:0 tcp:10000");
+			var port = int.Parse(forwardOutput);
+			RunAdbForResult("shell setprop debug.mono.connect port=10000,timeout=2000000000");
+			RunAdbForResult($"shell am force-stop {packageName}");
+			RunAdbForResult($"shell monkey -p {packageName} -c android.intent.category.LAUNCHER 1");
+			System.Threading.Thread.Sleep(500);
+
+			lock (_lock) {
+
+				_debuggeeKilled = false;
+				var console = RunAdb("shell logcat mono-stdout:D *:S");
+				var args0 = new XamarinDebuggerArgs(port, console) {
+					MaxConnectionAttempts = MAX_CONNECTION_ATTEMPTS,
+					TimeBetweenConnectionAttempts = CONNECTION_ATTEMPT_INTERVAL
+				};
+
+				_session.Run(new Mono.Debugging.Soft.SoftDebuggerStartInfo(args0), _debuggerSessionOptions);
+
+				_debuggeeExecuting = true;
+			}
+
+			SendResponse(response);
+		}
+
+		private string RunAdbForResult(string args)
+		{
+			var adbProcessInfo = new ProcessStartInfo 
+			{
+				FileName = "adb",
+				Arguments = args,
+				RedirectStandardOutput = true,
+				UseShellExecute = false
+			};
+			var adbProcess = Process.Start(adbProcessInfo);
+			var result = adbProcess.StandardOutput.ReadToEnd();
+			adbProcess.WaitForExit();
+			return result;
+		}
+
+		private StreamReader RunAdb(string args)
+		{
+			var adbProcessInfo = new ProcessStartInfo 
+			{
+				FileName = "adb",
+				Arguments = args,
+				RedirectStandardOutput = true,
+				UseShellExecute = false
+			};
+			var adbProcess = Process.Start(adbProcessInfo);
+			adbProcess.ErrorDataReceived += (o, e) => {
+				Console.WriteLine(e.Data);
+			};
+			adbProcess.OutputDataReceived += (o, e) => {
+				Console.WriteLine(e.Data);
+			};
+			return adbProcess.StandardOutput;
 		}
 
 		public override void Disconnect(Response response, dynamic args)

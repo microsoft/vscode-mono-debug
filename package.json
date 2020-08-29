@@ -138,11 +138,15 @@
 			],
 			"configurationAttributes": {
 				"launch": {
-					"required": ["program"],
+					"required": [],
 					"properties": {
 						"program": {
 							"type": "string",
 							"description": "%mono.launch.program.description%"
+						},
+						"packageName":{
+							"type": "string",
+							"description": "%mono.launch.packageName.description%"
 						},
 						"args": {
 							"type": "array",

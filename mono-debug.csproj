@@ -63,6 +63,10 @@
     <Compile Include="src\DebugSession.cs" />
     <Compile Include="src\MonoDebug.cs" />
     <Compile Include="src\Protocol.cs" />
+    <Compile Include="src\XamarinConnectionProvider.cs" />
+    <Compile Include="src\XamarinDebuggerArgs.cs" />
+    <Compile Include="src\XamarinTcpConnection.cs" />
+    <Compile Include="src\XamarinVirtualMachineManager.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
