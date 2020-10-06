@@ -37,15 +37,13 @@
 		"url": "https://github.com/Microsoft/vscode-mono-debug/issues"
 	},
 	"devDependencies": {
-		"@types/es6-collections": "^0.5.29",
-		"@types/es6-promise": "0.0.32",
-		"@types/mocha": "^2.2.32",
-		"@types/node": "^6.0.39",
+		"@types/mocha": "^8.0.3",
+		"@types/node": "^14.11.5",
 		"mocha": "^2.4.5",
-		"typescript": "^2.0.3",
-		"vscode-debugadapter-testsupport": "^1.20.0",
-		"vsce": "^1.20.0",
+		"typescript": "^4.0.3",
+		"vsce": "^1.81.1",
 		"vscode": "^1.0.3",
+		"vscode-debugadapter-testsupport": "^1.20.0",
 		"vscode-nls-dev": "^2.0.1"
 	},
 	"main": "./out/extension",
@@ -54,7 +52,6 @@
 		"onCommand:extension.mono-debug.startSession"
 	],
 	"contributes": {
-
 		"configuration": {
 			"type": "object",
 			"title": "%configuration.title%",
@@ -63,7 +60,11 @@
 					"type": "object",
 					"additionalProperties": {
 						"type": "string",
-						"enum": [ "never", "always", "unhandled" ],
+						"enum": [
+							"never",
+							"always",
+							"unhandled"
+						],
 						"enumDescriptions": [
 							"%breakMode.never%",
 							"%breakMode.always%",
@@ -90,7 +91,6 @@
 				}
 			}
 		},
-
 		"commands": [
 			{
 				"command": "extension.mono-debug.configureExceptions",
@@ -106,105 +106,120 @@
 				"language": "fsharp"
 			}
 		],
-		"debuggers": [{
-			"type": "mono",
-			"label": "C# Mono",
-			"program": "./bin/Release/mono-debug.exe",
-			"osx": {
-				"runtime": "mono"
-			},
-			"linux": {
-				"runtime": "mono"
-			},
-			"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
-
-			"startSessionCommand": "extension.mono-debug.startSession",
-
-			"initialConfigurations": [
-				{
-					"name": "%mono.launch.config.name%",
-					"type": "mono",
-					"request": "launch",
-					"program": "${workspaceRoot}/program.exe",
-					"cwd": "${workspaceRoot}"
+		"debuggers": [
+			{
+				"type": "mono",
+				"label": "C# Mono",
+				"program": "./bin/Release/mono-debug.exe",
+				"osx": {
+					"runtime": "mono"
 				},
-				{
-					"name": "%mono.attach.config.name%",
-					"type": "mono",
-					"request": "attach",
-					"address": "localhost",
-					"port": 55555
-				}
-			],
-			"configurationAttributes": {
-				"launch": {
-					"required": ["program"],
-					"properties": {
-						"program": {
-							"type": "string",
-							"description": "%mono.launch.program.description%"
-						},
-						"args": {
-							"type": "array",
-							"description": "%mono.launch.args.description%",
-							"items": { "type": "string" },
-							"default": []
-						},
-						"cwd": {
-							"type": "string",
-							"description": "%mono.launch.cwd.description%",
-							"default": "."
-						},
-						"runtimeExecutable": {
-							"type": ["string", "null"],
-							"description": "%mono.launch.runtimeExecutable.description%",
-							"default": null
-						},
-						"runtimeArgs": {
-							"type": "array",
-							"description": "%mono.launch.runtimeArgs.description%",
-							"items": { "type": "string" },
-							"default": []
-						},
-						"env": {
-							"type": "object",
-							"description": "%mono.launch.env.description%",
-							"default": {}
-						},
-						"externalConsole": {
-							"type": "boolean",
-							"deprecationMessage": "%mono.launch.externalConsole.deprecationMessage%",
-							"default": true
-						},
-						"console": {
-							"type": "string",
-							"enum": [ "internalConsole", "integratedTerminal", "externalTerminal" ],
-							"enumDescriptions": [
-								"%mono.launch.console.internalConsole.description%",
-								"%mono.launch.console.integratedTerminal.description%",
-								"%mono.launch.console.externalTerminal.description%"
-							],
-							"description": "%mono.launch.console.description%",
-							"default": "internalConsole"
-						}
+				"linux": {
+					"runtime": "mono"
+				},
+				"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
+				"startSessionCommand": "extension.mono-debug.startSession",
+				"initialConfigurations": [
+					{
+						"name": "%mono.launch.config.name%",
+						"type": "mono",
+						"request": "launch",
+						"program": "${workspaceRoot}/program.exe",
+						"cwd": "${workspaceRoot}"
+					},
+					{
+						"name": "%mono.attach.config.name%",
+						"type": "mono",
+						"request": "attach",
+						"address": "localhost",
+						"port": 55555
 					}
-				},
-				"attach": {
-					"required": ["port"],
-					"properties": {
-						"port": {
-							"type": "number",
-							"description": "%mono.attach.port.description%",
-							"default": 55555
-						},
-						"address": {
-							"type": "string",
-							"description": "%mono.attach.address.description%",
-							"default": "undefined"
+				],
+				"configurationAttributes": {
+					"launch": {
+						"required": [
+							"program"
+						],
+						"properties": {
+							"program": {
+								"type": "string",
+								"description": "%mono.launch.program.description%"
+							},
+							"args": {
+								"type": "array",
+								"description": "%mono.launch.args.description%",
+								"items": {
+									"type": "string"
+								},
+								"default": []
+							},
+							"cwd": {
+								"type": "string",
+								"description": "%mono.launch.cwd.description%",
+								"default": "."
+							},
+							"runtimeExecutable": {
+								"type": [
+									"string",
+									"null"
+								],
+								"description": "%mono.launch.runtimeExecutable.description%",
+								"default": null
+							},
+							"runtimeArgs": {
+								"type": "array",
+								"description": "%mono.launch.runtimeArgs.description%",
+								"items": {
+									"type": "string"
+								},
+								"default": []
+							},
+							"env": {
+								"type": "object",
+								"description": "%mono.launch.env.description%",
+								"default": {}
+							},
+							"externalConsole": {
+								"type": "boolean",
+								"deprecationMessage": "%mono.launch.externalConsole.deprecationMessage%",
+								"default": true
+							},
+							"console": {
+								"type": "string",
+								"enum": [
+									"internalConsole",
+									"integratedTerminal",
+									"externalTerminal"
+								],
+								"enumDescriptions": [
+									"%mono.launch.console.internalConsole.description%",
+									"%mono.launch.console.integratedTerminal.description%",
+									"%mono.launch.console.externalTerminal.description%"
+								],
+								"description": "%mono.launch.console.description%",
+								"default": "internalConsole"
+							}
+						}
+					},
+					"attach": {
+						"required": [
+							"port"
+						],
+						"properties": {
+							"port": {
+								"type": "number",
+								"description": "%mono.attach.port.description%",
+								"default": 55555
+							},
+							"address": {
+								"type": "string",
+								"description": "%mono.attach.address.description%",
+								"default": "undefined"
+							}
 						}
 					}
 				}
 			}
-		}]
+		]
 	}
 }
