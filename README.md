@@ -44,7 +44,7 @@ The corresponding attach `launch.json` configuration looks like this:
 
 ## Building the mono-debug extension
 
-[![build status](https://github.com/microsoft/vscode-mono-debug/workflows/build/badge.svg)](https://github.com/microsoft/vscode-mono-debug/actions)
+[![build status](https://github.com/microsoft/vscode-mono-debug/workflows/.github/workflows/build.yml/badge.svg)](https://github.com/microsoft/vscode-mono-debug/actions)
 
 Building and using VS Code mono-debug requires a basic POSIX-like environment, a Bash-like
 shell, and an installed Mono framework.
