@@ -60,7 +60,7 @@ suite('Node Debug Adapter', () => {
 
 		test('should run program to the end', () => {
 
-			const PROGRAM = Path.join(DATA_ROOT, 'simple/Program.exe');
+			const PROGRAM = Path.join(DATA_ROOT, 'simple/bin/Debug/simple.exe');
 
 			return Promise.all([
 				dc.configurationSequence(),
@@ -71,7 +71,7 @@ suite('Node Debug Adapter', () => {
 
 		test('should run program to the end (and not stop on Debugger.Break())', () => {
 
-			const PROGRAM = Path.join(DATA_ROOT, 'simple_break/Program.exe');
+			const PROGRAM = Path.join(DATA_ROOT, 'simple_break/bin/Debug/simple_break.exe');
 
 			return Promise.all([
 				dc.configurationSequence(),
@@ -82,20 +82,20 @@ suite('Node Debug Adapter', () => {
 
 		test('should stop on debugger statement', () => {
 
-			const PROGRAM = Path.join(DATA_ROOT, 'simple_break/Program.exe');
-			const DEBUGGER_LINE = 10;
+			const PROGRAM = Path.join(DATA_ROOT, 'simple_break/bin/Debug/simple_break.exe');
+			const DEBUGGER_LINE = 11;
 
 			return Promise.all([
 				dc.configurationSequence(),
 				dc.launch({ program: PROGRAM }),
-				dc.assertStoppedLocation('step', DEBUGGER_LINE)
+				dc.assertStoppedLocation('step', { line: DEBUGGER_LINE })
 			]);
 		});
 	});
 
 	suite('setBreakpoints', () => {
 
-		const PROGRAM = Path.join(DATA_ROOT, 'simple/Program.exe');
+		const PROGRAM = Path.join(DATA_ROOT, 'simple/bin/Debug/simple.exe');
 		const SOURCE = Path.join(DATA_ROOT, 'simple/Program.cs');
 		const BREAKPOINT_LINE = 13;
 
@@ -106,7 +106,7 @@ suite('Node Debug Adapter', () => {
 
 	suite('output events', () => {
 
-		const PROGRAM = Path.join(DATA_ROOT, 'output/Output.exe');
+		const PROGRAM = Path.join(DATA_ROOT, 'output/bin/Debug/output.exe');
 
 		test('stdout and stderr events should be complete and in correct order', () => {
 			return Promise.all([
@@ -120,7 +120,7 @@ suite('Node Debug Adapter', () => {
 
 	suite('FSharp Tests', () => {
 
-		const PROGRAM = Path.join(DATA_ROOT, 'fsharp/Program.exe');
+		const PROGRAM = Path.join(DATA_ROOT, 'fsharp/bin/Debug/fsharp.exe');
 		const SOURCE = Path.join(DATA_ROOT, 'fsharp/Program.fs');
 		const BREAKPOINT_LINE = 8;
 

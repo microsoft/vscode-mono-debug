@@ -24,9 +24,9 @@
 	"mono.launch.env.description": "Environment variables passed to the program.",
 	"mono.launch.externalConsole.deprecationMessage": "Attribute 'externalConsole' is deprecated, use 'console' instead.",
 	"mono.launch.console.description": "Where to launch the debug target.",
-		"mono.launch.console.internalConsole.description": "VS Code Debug Console (which doesn't support to read input from a program)",
-		"mono.launch.console.integratedTerminal.description": "VS Code's integrated terminal",
-		"mono.launch.console.externalTerminal.description": "external terminal that can be configured via user settings",
+	"mono.launch.console.internalConsole.description": "VS Code Debug Console (which doesn't support to read input from a program)",
+	"mono.launch.console.integratedTerminal.description": "VS Code's integrated terminal",
+	"mono.launch.console.externalTerminal.description": "external terminal that can be configured via user settings",
 
 	"mono.attach.port.description": "Debug port to attach to.",
 	"mono.attach.address.description": "TCP/IP address. Default is \"localhost\"."
