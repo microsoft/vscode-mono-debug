@@ -105,6 +105,9 @@
 				"language": "csharp"
 			},
 			{
+				"language": "vb"
+			},
+			{
 				"language": "fsharp"
 			}
 		],
