@@ -5,10 +5,10 @@ MONO_DEBUG_DEBUG = "./bin/Debug/mono-debug.exe"
 all: vsix
 	@echo "vsix created"
 
-vsix: $MONO_DEBUG_RELEASE
+vsix: build
 	./node_modules/.bin/vsce package
 
-publish: $MONO_DEBUG_RELEASE
+publish:
 	./node_modules/.bin/vsce publish
 
 build: $MONO_DEBUG_RELEASE
@@ -26,10 +26,10 @@ $MONO_DEBUG_DEBUG:
 	msbuild /v:minimal /restore /p:Configuration=Debug src/csharp/mono-debug.csproj
 
 tests:
-	cd testdata/simple; make
-	cd testdata/output; make
-	cd testdata/simple_break; make
-	cd testdata/fsharp; make
+	dotnet build testdata/simple
+	dotnet build testdata/output
+	dotnet build testdata/simple_break
+	dotnet build testdata/fsharp
 
 run-tests: tests
 	node_modules/.bin/mocha --timeout 10000 -u tdd ./out/tests

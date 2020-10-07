@@ -14,7 +14,6 @@
 	"license": "MIT",
 	"private": true,
 	"scripts": {
-		"vscode:prepublishOnly": "make build",
 		"compile": "make build",
 		"lint": "make lint",
 		"watch": "make watch",

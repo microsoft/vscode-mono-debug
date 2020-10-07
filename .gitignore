@@ -1,7 +1,7 @@
 /out/
 /extension/
 /upload/
-/bin/
+bin/
 /node_modules/
 /packages/
 obj/
