@@ -1,3 +1,8 @@
+## 0.16.1
+
+* Support debugging VB source files (.vb)
+* Raise minimum required VSCode version to 1.32
+
 ## 0.16.0
 
 * Update mono debugger-libs to latest version, resolves lots of bugs in the debugger: [PR #64](https://github.com/Microsoft/vscode-mono-debug/pull/64)
