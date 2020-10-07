@@ -11,8 +11,8 @@ git:
 before_install:
   - git clone https://github.com/creationix/nvm.git ./.nvm
   - source ./.nvm/nvm.sh
-  - nvm install 6.5
-  - nvm use 6.5
+  - nvm install 14
+  - nvm use 14
 
 install:
   - nuget restore mono-debug.sln
