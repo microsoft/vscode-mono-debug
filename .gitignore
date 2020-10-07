@@ -1,10 +1,10 @@
 /out/
 /extension/
 /upload/
-/bin/
+bin/
 /node_modules/
 /packages/
-/obj/
+obj/
 /mono-debug-*/
 *.vsix
 *.zip
@@ -13,4 +13,4 @@
 mono-debug.userprefs
 npm-debug.log
 .vs/
-/.DS_Store
+.DS_Store

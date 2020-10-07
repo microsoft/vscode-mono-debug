@@ -14,12 +14,10 @@
 	"license": "MIT",
 	"private": true,
 	"scripts": {
-		"prepare": "make build",
-		"vscode:prepublishOnly": "make build",
 		"compile": "make build",
-		"lint": "eslint . --ext .ts,.tsx",
-		"watch": "tsc -w -p ./src/typescript",
-		"test": "make tests; mocha --timeout 10000 -u tdd ./out/tests"
+		"lint": "make lint",
+		"watch": "make watch",
+		"test": "make run-tests"
 	},
 	"engines": {
 		"vscode": "^1.32.0",
@@ -31,10 +29,10 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Microsoft/vscode-mono-debug.git"
+		"url": "https://github.com/microsoft/vscode-mono-debug.git"
 	},
 	"bugs": {
-		"url": "https://github.com/Microsoft/vscode-mono-debug/issues"
+		"url": "https://github.com/microsoft/vscode-mono-debug/issues"
 	},
 	"devDependencies": {
 		"@types/mocha": "^8.0.3",
