@@ -26,10 +26,10 @@ $MONO_DEBUG_DEBUG:
 	msbuild /v:minimal /restore /p:Configuration=Debug src/csharp/mono-debug.csproj
 
 tests:
-	dotnet build testdata/simple
-	dotnet build testdata/output
-	dotnet build testdata/simple_break
-	dotnet build testdata/fsharp
+	dotnet build /nologo testdata/simple
+	dotnet build /nologo testdata/output
+	dotnet build /nologo testdata/simple_break
+	dotnet build /nologo testdata/fsharp
 
 run-tests: tests
 	node_modules/.bin/mocha --timeout 10000 -u tdd ./out/tests
