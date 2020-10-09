@@ -1,7 +1,7 @@
 {
 	"name": "mono-debug",
 	"displayName": "Mono Debug",
-	"version": "0.16.1",
+	"version": "0.16.2",
 	"publisher": "ms-vscode",
 	"description": "Visual Studio Code debugger extension for Mono",
 	"icon": "images/mono-debug-icon.png",
@@ -178,6 +178,11 @@
 									"type": "string"
 								},
 								"default": []
+							},
+							"passDebugOptionsViaEnvironmentVariable": {
+								"type": "boolean",
+								"description": "%mono.launch.passDebugOptionsViaEnvironmentVariable.description%",
+								"default": false
 							},
 							"env": {
 								"type": "object",

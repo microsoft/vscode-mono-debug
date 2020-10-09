@@ -1,3 +1,7 @@
+## 0.16.2
+
+* Don't use MONO_ENV_OPTIONS to pass debug options by default, it causes issues when starting subprocesses: [Issue #68](https://github.com/microsoft/vscode-mono-debug/issues/68)
+
 ## 0.16.1
 
 * Support debugging VB source files (.vb)

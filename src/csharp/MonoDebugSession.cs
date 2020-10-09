@@ -259,10 +259,18 @@ namespace VSCodeDebug
 			bool debug = !getBool(args, "noDebug", false);
 			
 			if (debug) {
-				if (!env.ContainsKey("MONO_ENV_OPTIONS"))
-					env["MONO_ENV_OPTIONS"] = $" --debug --debugger-agent=transport=dt_socket,server=y,address={host}:{port}";
-				else
-					env["MONO_ENV_OPTIONS"] = $" --debug --debugger-agent=transport=dt_socket,server=y,address={host}:{port} " + env["MONO_ENV_OPTIONS"];
+				bool passDebugOptionsViaEnvironmentVariable = getBool(args, "passDebugOptionsViaEnvironmentVariable", false);
+
+				if (passDebugOptionsViaEnvironmentVariable) {
+					if (!env.ContainsKey("MONO_ENV_OPTIONS"))
+						env["MONO_ENV_OPTIONS"] = $" --debug --debugger-agent=transport=dt_socket,server=y,address={host}:{port}";
+					else
+						env["MONO_ENV_OPTIONS"] = $" --debug --debugger-agent=transport=dt_socket,server=y,address={host}:{port} " + env["MONO_ENV_OPTIONS"];
+				}
+				else {
+					cmdLine.Add("--debug");
+					cmdLine.Add($"--debugger-agent=transport=dt_socket,server=y,address={host}:{port}");
+				}
 			}
 			
 			if (env.Count == 0) {
