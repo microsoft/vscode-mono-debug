@@ -241,7 +241,7 @@ namespace VSCodeDebug
 			}
 
 			// validate argument 'env'
-			var env = new Dictionary<string, string>();
+			Dictionary<string, string> env = new Dictionary<string, string>();
 			var environmentVariables = args.env;
 			if (environmentVariables != null) {
 				foreach (var entry in environmentVariables) {
@@ -267,12 +267,27 @@ namespace VSCodeDebug
 			var rhinoArguments = new List<String>();
 
 			bool debug = !getBool(args, "noDebug", false);
+			
 			if (debug) {
-				runtimeArguments.Add("--debug");
-				runtimeArguments.Add(String.Format("--debugger-agent=transport=dt_socket,server=y,address={0}:{1}", host, port));
+				bool passDebugOptionsViaEnvironmentVariable = getBool(args, "passDebugOptionsViaEnvironmentVariable", false);
 				rhinoArguments.Add(string.Format($"transport=dt_socket,server=y,address={host}:{port}"));
-			}
 
+				if (passDebugOptionsViaEnvironmentVariable) {
+					if (!env.ContainsKey("MONO_ENV_OPTIONS"))
+						env["MONO_ENV_OPTIONS"] = $" --debug --debugger-agent=transport=dt_socket,server=y,address={host}:{port}";
+					else
+						env["MONO_ENV_OPTIONS"] = $" --debug --debugger-agent=transport=dt_socket,server=y,address={host}:{port} " + env["MONO_ENV_OPTIONS"];
+				}
+				else {
+					cmdLine.Add("--debug");
+					cmdLine.Add($"--debugger-agent=transport=dt_socket,server=y,address={host}:{port}");
+				}
+			}
+			
+			if (env.Count == 0) {
+				env = null;
+			}
+			
 			// add 'runtimeArgs'
 			if (args.runtimeArgs != null) {
 				string[] runtimeArgs = args.runtimeArgs.ToObject<string[]>();
@@ -337,18 +352,14 @@ namespace VSCodeDebug
 			}
 
 			if (console == "externalTerminal" || console == "integratedTerminal") {
-				
-				cmdLine.Insert(0, executablePath);
 
-				if (env?.Count == 0)
-					env = null;
-
+				cmdLine.Insert(0, mono_path);
 				var termArgs = new {
 					kind = console == "integratedTerminal" ? "integrated" : "external",
 					title = "Mono Debug Console",
 					cwd = workingDirectory,
 					args = cmdLine.ToArray(),
-					env = env
+					env
 				};
 
 				var resp = await SendRequest("runInTerminal", termArgs);

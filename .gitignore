@@ -1,10 +1,10 @@
 /out/
 /extension/
 /upload/
-/bin/
+bin/
 /node_modules/
 /packages/
-/obj/
+obj/
 /mono-debug-*/
 *.vsix
 *.zip
@@ -12,6 +12,5 @@
 *.exe.mdb
 mono-debug.userprefs
 npm-debug.log
-.vs/mono-debug/v15/.suo
-obj/
-bin/
+.vs/
+.DS_Store

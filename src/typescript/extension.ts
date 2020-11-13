@@ -19,6 +19,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
+	// do nothing.
 }
 
 //----- configureExceptions ---------------------------------------------------------------------------------------------------
@@ -43,24 +44,25 @@ const DEFAULT_EXCEPTIONS : ExceptionConfigurations = {
 };
 
 class BreakOptionItem implements vscode.QuickPickItem {
-	label: string;
-	description: string;
-	breakMode: DebugProtocol.ExceptionBreakMode
+	label!: string;
+	description!: string;
+	breakMode!: DebugProtocol.ExceptionBreakMode;
 }
 
 // the possible exception options converted into QuickPickItem
-const OPTIONS = [ 'never', 'always', 'unhandled' ].map<BreakOptionItem>((bm: DebugProtocol.ExceptionBreakMode) => {
+const OPTIONS = [ 'never', 'always', 'unhandled' ].map<BreakOptionItem>((bm: string) : BreakOptionItem => {
+	const breakMode = <DebugProtocol.ExceptionBreakMode>bm;
 	return {
-		label: translate(bm),
+		label: translate(breakMode),
 		description: '',
-		breakMode: bm
+		breakMode: breakMode
 	}
 });
 
 class ExceptionItem implements vscode.QuickPickItem {
-	label: string;
-	description: string;
-	model: DebugProtocol.ExceptionOptions
+	label!: string;
+	description!: string;
+	model!: DebugProtocol.ExceptionOptions;
 }
 
 function translate(mode: DebugProtocol.ExceptionBreakMode): string {
@@ -98,7 +100,7 @@ function configureExceptions() : void {
 
 	const exceptionItems: vscode.QuickPickItem[] = [];
 	const model = getModel();
-	for (var exception in model) {
+	for (const exception in model) {
 		exceptionItems.push({
 			label: exception,
 			description: model[exception] !== 'never' ? `⚡ ${translate(model[exception])}` : ''
@@ -128,7 +130,7 @@ function configureExceptions() : void {
 	});
 }
 
-function setExceptionBreakpoints(model: ExceptionConfigurations) : Thenable<DebugProtocol.SetExceptionBreakpointsResponse> {
+function setExceptionBreakpoints(model: ExceptionConfigurations) : Thenable<DebugProtocol.SetExceptionBreakpointsResponse | undefined> {
 
 	const args: DebugProtocol.SetExceptionBreakpointsArguments = {
 		filters: [],
@@ -141,7 +143,7 @@ function setExceptionBreakpoints(model: ExceptionConfigurations) : Thenable<Debu
 function convertToExceptionOptions(model: ExceptionConfigurations) : DebugProtocol.ExceptionOptions[] {
 
 	const exceptionItems: DebugProtocol.ExceptionOptions[] = [];
-	for (var exception in model) {
+	for (const exception in model) {
 		exceptionItems.push({
 			path: [ { names: [ exception ] } ],
 			breakMode: model[exception]
@@ -156,9 +158,9 @@ function convertToExceptionOptions(model: ExceptionConfigurations) : DebugProtoc
  * The result type of the startSession command.
  */
 class StartSessionResult {
-	status: 'ok' | 'initialConfiguration' | 'saveConfiguration';
+	status!: 'ok' | 'initialConfiguration' | 'saveConfiguration';
 	content?: string;	// launch.json content for 'save'
-};
+}
 
 function startSession(config: any) : StartSessionResult {
 

@@ -8,11 +8,11 @@ and licenses under which Microsoft received such components are set forth below.
 expressly granted herein, whether by implication, estoppel or otherwise.
 
 
-1.	SDB version 1.4 (https://github.com/mono/sdb)
-2.	debugger-libs version 9.0.21022 (https://github.com/mono/debugger-libs)
-3.	newtonsoft.json version 6.0.8 (https://github.com/JamesNK/Newtonsoft.Json)
-4.	NRefactory version 10.0.0 (https://github.com/icsharpcode/NRefactory)
-5.	Cecil version 0.9.5.0 (https://github.com/jbevain/cecil)
+1.	SDB (https://github.com/mono/sdb)
+2.	Mono debugger-libs (https://github.com/mono/debugger-libs)
+3.	Newtonsoft.Json (https://github.com/JamesNK/Newtonsoft.Json)
+4.	NRefactory (https://github.com/xamarin/NRefactory)
+5.	Cecil (https://github.com/jbevain/cecil)
 
 
 %% SDB NOTICES AND INFORMATION BEGIN HERE

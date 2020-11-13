@@ -1,66 +1,64 @@
 {
-	"name": "rhino-debug",
-	"displayName": "Rhino Debug",
-	"version": "0.5.0",
-	"publisher": "mcneel",
-	"description": "Visual Studio Code debugger extension for Rhinoceros",
+	"name": "mono-debug",
+	"displayName": "Mono Debug",
+	"version": "0.16.2",
+	"publisher": "ms-vscode",
+	"description": "Visual Studio Code debugger extension for Mono",
 	"icon": "images/mono-debug-icon.png",
 	"categories": [
 		"Debuggers"
 	],
 	"author": {
-		"name": "McNeel &amp; Associates"
+		"name": "Microsoft Corporation"
 	},
 	"license": "MIT",
 	"private": true,
 	"scripts": {
-		"prepublish": "make build",
-		"vscode:prepublish": "make build",
 		"compile": "make build",
-		"watch": "tsc -w -p ./src/typescript",
-		"test": "make tests; mocha --timeout 10000 -u tdd ./out/tests"
+		"lint": "make lint",
+		"watch": "make watch",
+		"test": "make run-tests"
 	},
 	"engines": {
-		"vscode": "^1.40.0"
+		"vscode": "^1.32.0",
+		"node": "^14.0.0"
 	},
 	"dependencies": {
-		"vscode-debugprotocol": "^1.40.0",
-		"vscode-nls": "^4.1.2"
+		"vscode-debugprotocol": "^1.42.0",
+		"vscode-nls": "^5.0.0"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/mcneel/vscode-rhino-debug.git"
+		"url": "https://github.com/microsoft/vscode-mono-debug.git"
 	},
 	"bugs": {
-		"url": "https://github.com/mcneel/vscode-rhino-debug/issues"
+		"url": "https://github.com/microsoft/vscode-mono-debug/issues"
 	},
 	"devDependencies": {
-		"@types/glob": "^7.1.1",
-		"@types/mocha": "^7.0.2",
-		"@types/node": "^13.11.0",
-		"@types/vscode": "^1.40.0",
-		"eslint": "^6.8.0",
-		"@typescript-eslint/parser": "^2.30.0",
-		"@typescript-eslint/eslint-plugin": "^2.30.0",
-		"glob": "^7.1.6",
-		"mocha": "^7.1.2",
-		"typescript": "^3.8.3",
-		"vscode-test": "^1.3.0",
-		"vscode-debugadapter-testsupport": "^1.40.0",
-		"vsce": "^1.75.0"
+		"@types/mocha": "^8.0.3",
+		"@types/node": "^14.11.5",
+		"@types/vscode": "^1.32.0",
+		"@typescript-eslint/eslint-plugin": "^4.4.0",
+		"@typescript-eslint/parser": "^4.4.0",
+		"eslint": "^7.1.0",
+		"mocha": "^8.1.3",
+		"typescript": "^4.0.3",
+		"vsce": "^1.81.1",
+		"vscode-debugadapter-testsupport": "^1.42.0",
+		"vscode-nls-dev": "^3.3.2",
+		"vscode-test": "^1.4.0"
 	},
 	"main": "./out/extension",
 	"activationEvents": [
-		"onCommand:extension.rhino-debug.configureExceptions",
-		"onCommand:extension.rhino-debug.startSession",
-		"onCommand:extension.derivedDataRoot"
+		"onCommand:extension.mono-debug.configureExceptions",
+		"onCommand:extension.mono-debug.startSession"
 	],
 	"contributes": {
 		"configuration": {
 			"type": "object",
 			"title": "%configuration.title%",
 			"properties": {
-				"rhino-debug.exceptionOptions": {
+				"mono-debug.exceptionOptions": {
 					"type": "object",
 					"additionalProperties": {
 						"type": "string",
@@ -97,7 +95,7 @@
 		},
 		"commands": [
 			{
-				"command": "extension.rhino-debug.configureExceptions",
+				"command": "extension.mono-debug.configureExceptions",
 				"title": "%configure.exceptions.command%",
 				"category": "Debug"
 			}
@@ -115,28 +113,28 @@
 		],
 		"debuggers": [
 			{
-				"type": "rhino",
-				"label": "%mono.label%",
-				"program": "./bin/Debug/net45/mono-debug.exe",
+				"type": "mono",
+				"label": "C# Mono",
+				"program": "./bin/Release/mono-debug.exe",
 				"osx": {
 					"runtime": "mono"
 				},
 				"linux": {
 					"runtime": "mono"
 				},
-				"variables": {
-					"derivedDataRoot": "extension.derivedDataRoot"
-				},
+				"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
+				"startSessionCommand": "extension.mono-debug.startSession",
 				"initialConfigurations": [
 					{
 						"name": "%mono.launch.config.name%",
-						"type": "rhino",
+						"type": "mono",
 						"request": "launch",
-						"program": "${command:derivedDataRoot}/Build/Products/Debug/Rhinoceros.app"
+						"program": "${workspaceRoot}/program.exe",
+						"cwd": "${workspaceRoot}"
 					},
 					{
 						"name": "%mono.attach.config.name%",
-						"type": "rhino",
+						"type": "mono",
 						"request": "attach",
 						"address": "localhost",
 						"port": 55555
@@ -181,6 +179,11 @@
 								},
 								"default": []
 							},
+							"passDebugOptionsViaEnvironmentVariable": {
+								"type": "boolean",
+								"description": "%mono.launch.passDebugOptionsViaEnvironmentVariable.description%",
+								"default": false
+							},
 							"env": {
 								"type": "object",
 								"description": "%mono.launch.env.description%",
@@ -205,11 +208,6 @@
 								],
 								"description": "%mono.launch.console.description%",
 								"default": "internalConsole"
-							},
-							"useRuntime": {
-								"type": "boolean",
-								"description": "%mono.launch.useRuntime.description%",
-								"default": true
 							}
 						}
 					},
@@ -227,18 +225,6 @@
 								"type": "string",
 								"description": "%mono.attach.address.description%",
 								"default": "undefined"
-							},
-							"delay": {
-								"type": "number",
-								"default": 0
-							},
-							"maxConnectionAttempts": {
-								"type": "number",
-								"default": 10
-							},
-							"timeBetweenConnectionAttempts": {
-								"type": "number",
-								"default": 500
 							}
 						}
 					}
