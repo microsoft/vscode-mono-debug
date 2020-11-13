@@ -196,14 +196,17 @@ namespace VSCodeDebug
 
 			// validate argument 'program'
 			string programPath = getString(args, "program");
-			if (programPath == null) {
+			if (programPath == null && args.runtimeExecutable == null) {
 				SendErrorResponse(response, 3001, "Property 'program' is missing or empty.", null);
 				return;
 			}
-			programPath = ConvertClientPathToDebugger(programPath);
-			if (!File.Exists(programPath) && !Directory.Exists(programPath)) {
-				SendErrorResponse(response, 3002, "Program '{path}' does not exist.", new { path = programPath });
-				return;
+			if (programPath != null)
+			{
+				programPath = ConvertClientPathToDebugger(programPath);
+				if (!File.Exists(programPath) && !Directory.Exists(programPath)) {
+					SendErrorResponse(response, 3002, "Program '{path}' does not exist.", new { path = programPath });
+					return;
+				}
 			}
 
 			// validate argument 'cwd'
@@ -289,17 +292,21 @@ namespace VSCodeDebug
 				string[] runtimeArguments = args.runtimeArgs.ToObject<string[]>();
 				if (runtimeArguments != null && runtimeArguments.Length > 0) {
 					cmdLine.AddRange(runtimeArguments);
+				}
 			}
 
 			// add 'program'
-			if (workingDirectory == null) {
-				// if no working dir given, we use the direct folder of the executable
-				workingDirectory = Path.GetDirectoryName(programPath);
-				cmdLine.Add(Path.GetFileName(programPath));
-			}
-			else {
-				// if working dir is given and if the executable is within that folder, we make the program path relative to the working dir
-				cmdLine.Add(Utilities.MakeRelativePath(workingDirectory, programPath));
+			if (programPath != null)
+			{
+				if (workingDirectory == null) {
+					// if no working dir given, we use the direct folder of the executable
+					workingDirectory = Path.GetDirectoryName(programPath);
+					cmdLine.Add(Path.GetFileName(programPath));
+				}
+				else {
+					// if working dir is given and if the executable is within that folder, we make the program path relative to the working dir
+					cmdLine.Add(Utilities.MakeRelativePath(workingDirectory, programPath));
+				}
 			}
 
 			// add 'args'
@@ -392,7 +399,10 @@ namespace VSCodeDebug
 			}
 
 			if (debug) {
-				Connect(IPAddress.Parse(host), port);
+				var maxConnectionAttempts = getInt(args, "maxConnectionAttempts", MAX_CONNECTION_ATTEMPTS);
+				var timeBetweenConnectionAttempts = getInt(args, "timeBetweenConnectionAttempts", CONNECTION_ATTEMPT_INTERVAL);
+
+				Connect(IPAddress.Parse(host), port, maxConnectionAttempts, timeBetweenConnectionAttempts);
 			}
 
 			SendResponse(response);

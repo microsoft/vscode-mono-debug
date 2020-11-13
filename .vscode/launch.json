@@ -20,7 +20,7 @@
 			"request": "launch",
 			"name": "Server",
 			"preLaunchTask": "make",
-			"program": "${workspaceRoot}/bin/Debug/net45/mono-debug.exe",
+			"program": "${workspaceRoot}/bin/Debug/mono-debug.exe",
 			"args": [ "--server=4711" ]
 		},
 		{

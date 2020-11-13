@@ -177,29 +177,35 @@ function startSession(config: any) : StartSessionResult {
 
 function getDerivedDataRoot (config: any, context: vscode.ExtensionContext) : string {
 	const cp = require('child_process')
+	if (vscode.workspace.workspaceFolders == null)
+		return "";
+
 	for (let index = 0; index < vscode.workspace.workspaceFolders.length; index++) {
 		const workspaceFolder = vscode.workspace.workspaceFolders[index].uri.fsPath;
 		
-		let args = [
-			context.extensionPath + '/bin/Debug/net45/mono-debug.exe',
+		const args = [
+			context.extensionPath + '/bin/Release/mono-debug.exe',
 			'--getDerivedDataRoot',
 			'--workspaceFolder=' + workspaceFolder
 		];
 	
-		let result = cp.execFileSync('mono', args, { encoding: 'utf8' });
+		const result = cp.execFileSync('mono', args, { encoding: 'utf8' });
 		if (result.length > 0)
 		{
 			return result;
 		}
 	}
 
+	if (vscode.workspace.workspaceFile == null)
+		return "";
+
 	// fallback to rootPath
-	let args = [
-		context.extensionPath + '/bin/Debug/net45/mono-debug.exe',
+	const args = [
+		context.extensionPath + '/bin/Release/mono-debug.exe',
 		'--getDerivedDataRoot',
 		'--workspaceFolder=' + vscode.workspace.workspaceFile.path
 	];
 
-	let result = cp.execFileSync('mono', args, { encoding: 'utf8' });
+	const result = cp.execFileSync('mono', args, { encoding: 'utf8' });
 	return result;
 }
