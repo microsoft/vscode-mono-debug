@@ -17,7 +17,7 @@ namespace VSCodeDebug
 		private static bool trace_responses;
 		static string LOG_FILE_PATH = null;
 
-		public static string WorkspaceRoot { get; private set; }
+		public static string WorkspaceFolder { get; private set; }
 
 		private static void Main(string[] argv)
 		{
@@ -49,8 +49,8 @@ namespace VSCodeDebug
 					else if( a.StartsWith("--log-file=")) {
 						LOG_FILE_PATH = a.Substring("--log-file=".Length);
 					}
-					else if (a.StartsWith("--workspaceRoot=")) {
-						WorkspaceRoot = a.Substring("--workspaceRoot=".Length);
+					else if (a.StartsWith("--workspaceFolder=")) {
+						WorkspaceFolder = a.Substring("--workspaceFolder=".Length);
 					}
 					break;
 				}
@@ -58,7 +58,7 @@ namespace VSCodeDebug
 
 			if (getDerivedDataRoot)
 			{
-				Console.Write(Helpers.GetXcodeDerivedDataPath(WorkspaceRoot));
+				Console.Write(Helpers.GetXcodeDerivedDataPath(WorkspaceFolder));
 				return;
 			}
 

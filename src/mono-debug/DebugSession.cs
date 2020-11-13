@@ -176,6 +176,7 @@ namespace VSCodeDebug
 		public bool supportsFunctionBreakpoints;
 		public bool supportsConditionalBreakpoints;
 		public bool supportsEvaluateForHovers;
+		public bool supportsLogPoints;
 		public dynamic[] exceptionBreakpointFilters;
 	}
 
@@ -246,6 +247,15 @@ namespace VSCodeDebug
 				breakpoints = new Breakpoint[0];
 			else
 				breakpoints = bpts.ToArray<Breakpoint>();
+		}
+	}
+
+	public class SetExpressionResponseBody : ResponseBody
+	{
+		public string value { get; }
+		public SetExpressionResponseBody(string value)
+		{
+			this.value = value;
 		}
 	}
 
@@ -359,6 +369,10 @@ namespace VSCodeDebug
 					Threads(response, args);
 					break;
 
+				case "setExpression":
+					SetExpression(response, args);
+					break;
+
 				case "setBreakpoints":
 					SetBreakpoints(response, args);
 					break;
@@ -405,6 +419,8 @@ namespace VSCodeDebug
 		{
 		}
 
+		public abstract void SetExpression(Response response, dynamic arguments);
+
 		public abstract void SetBreakpoints(Response response, dynamic arguments);
 
 		public abstract void Continue(Response response, dynamic arguments);
@@ -431,15 +447,8 @@ namespace VSCodeDebug
 
 		// protected
 
-		protected int ConvertDebuggerLineToClient(int line)
-		{
-			return _clientLinesStartAt1 ? line : line - 1;
-		}
-
-		protected int ConvertClientLineToDebugger(int line)
-		{
-			return _clientLinesStartAt1 ? line : line + 1;
-		}
+		protected int ConvertDebuggerLineToClient(int line) => _clientLinesStartAt1 ? line : line - 1;
+		protected int ConvertClientLineToDebugger(int line) => _clientLinesStartAt1 ? line : line + 1;
 
 		protected string ConvertDebuggerPathToClient(string path)
 		{

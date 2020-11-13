@@ -25,7 +25,7 @@ namespace VSCodeDebug
 			".vb"
 		};
 		private const int MAX_CHILDREN = 100;
-		private const int MAX_CONNECTION_ATTEMPTS = 10;
+		private const int MAX_CONNECTION_ATTEMPTS = 20;
 		private const int CONNECTION_ATTEMPT_INTERVAL = 500;
 
 		private AutoResetEvent _resumeEvent = new AutoResetEvent(false);
@@ -74,6 +74,7 @@ namespace VSCodeDebug
 			};
 
 			_session.LogWriter = (isStdErr, text) => {
+				SendOutput(isStdErr ? "stderr" : "stdout", text);
 			};
 
 			_session.TargetStopped += (sender, e) => {
@@ -149,7 +150,6 @@ namespace VSCodeDebug
 				}
 				SendEvent(new ThreadEvent("exited", tid));
 			};
-
 			_session.OutputWriter = (isStdErr, text) => {
 				SendOutput(isStdErr ? "stderr" : "stdout", text);
 			};
@@ -170,11 +170,14 @@ namespace VSCodeDebug
 				// This debug adapter does not support function breakpoints.
 				supportsFunctionBreakpoints = false,
 
-				// This debug adapter doesn't support conditional breakpoints.
-				supportsConditionalBreakpoints = false,
+				// This debug adapter supports conditional breakpoints.
+				supportsConditionalBreakpoints = true,
 
 				// This debug adapter does not support a side effect free evaluate request for data hovers.
 				supportsEvaluateForHovers = false,
+
+				// We support log points so you can print a message and carry on.
+				supportsLogPoints = true,
 
 				// This debug adapter does not support exception breakpoint filters
 				exceptionBreakpointFilters = new dynamic[0]
@@ -570,11 +573,13 @@ namespace VSCodeDebug
 				return;
 			}
 
-			var clientLines = args.lines.ToObject<int[]>();
-			HashSet<int> lin = new HashSet<int>();
-			for (int i = 0; i < clientLines.Length; i++) {
-				lin.Add(ConvertClientLineToDebugger(clientLines[i]));
-			}
+			var clientBreakpoints = args.breakpoints.ToObject<dynamic[]>();
+
+			/*
+			var lin = new HashSet<int>();
+			for (int i = 0; i < clientBreakpoints.Length; i++) {
+				lin.Add(ConvertClientLineToDebugger((int)clientBreakpoints[i].line));
+			}*/
 
 			// find all breakpoints for the given path and remember their id and line number
 			var bpts = new List<Tuple<int, int>>();
@@ -585,37 +590,65 @@ namespace VSCodeDebug
 				}
 			}
 
-			HashSet<int> lin2 = new HashSet<int>();
+
+			//var lin2 = new HashSet<int>();
 			foreach (var bpt in bpts) {
-				if (lin.Contains(bpt.Item2)) {
+				/*
+				if (lin.Contains(bpt.Item2))
+				{
 					lin2.Add(bpt.Item2);
 				}
-				else {
+				else
+				*/
+				{
 					// Program.Log("cleared bpt #{0} for line {1}", bpt.Item1, bpt.Item2);
 
-					BreakEvent b;
-					if (_breakpoints.TryGetValue(bpt.Item1, out b)) {
+					if (_breakpoints.TryGetValue(bpt.Item1, out var b)) {
 						_breakpoints.Remove(bpt.Item1);
 						_session.Breakpoints.Remove(b);
 					}
 				}
 			}
 
-			for (int i = 0; i < clientLines.Length; i++) {
-				var l = ConvertClientLineToDebugger(clientLines[i]);
-				if (!lin2.Contains(l)) {
+			for (int i = 0; i < clientBreakpoints.Length; i++) {
+				var clientBreakpoint = clientBreakpoints[i];
+				var l = ConvertClientLineToDebugger((int)clientBreakpoint.line);
+				//if (!lin2.Contains(l)) 
+				{
 					var id = _nextBreakpointId++;
-					_breakpoints.Add(id, _session.Breakpoints.Add(path, l));
-					// Program.Log("added bpt #{0} for line {1}", id, l);
+
+					var breakpoint = new Mono.Debugging.Client.Breakpoint(path, l, (int)(clientBreakpoint?.column ?? 0));
+					breakpoint.Enabled = true;
+
+					if (clientBreakpoint.condition != null)
+					{
+						breakpoint.ConditionExpression = clientBreakpoint.condition;
+					}
+
+					if (clientBreakpoint.logMessage != null)
+					{
+						// log message breakpoint
+						breakpoint.HitAction = HitAction.PrintExpression;
+						breakpoint.TraceExpression = clientBreakpoint.logMessage;
+					}
+
+					_session.Breakpoints.Add(breakpoint);
+					_breakpoints.Add(id, breakpoint);
+					//Program.Log("added bpt #{0} for line {1}", id, l);
 				}
 			}
 
 			var breakpoints = new List<Breakpoint>();
-			foreach (var l in clientLines) {
-				breakpoints.Add(new Breakpoint(true, l));
+			foreach (var l in clientBreakpoints) {
+				breakpoints.Add(new Breakpoint(true, (int)l.line));
 			}
 
 			SendResponse(response, new SetBreakpointsResponseBody(breakpoints));
+		}
+
+		public override void SetExpression(Response response, dynamic arguments)
+		{
+			SendResponse(response, new SetExpressionResponseBody(arguments.expression));
 		}
 
 		public override void StackTrace(Response response, dynamic args)
@@ -786,7 +819,7 @@ namespace VSCodeDebug
 
 						var flags = val.Flags;
 						if (flags.HasFlag(ObjectValueFlags.Error) || flags.HasFlag(ObjectValueFlags.NotSupported)) {
-							error = val.DisplayValue;
+							error = val.Value;
 							if (error.IndexOf("reference not available in the current evaluation context") > 0) {
 								error = "not available";
 							}
@@ -802,7 +835,7 @@ namespace VSCodeDebug
 							if (val.HasChildren) {
 								handle = _variableHandles.Create(val.GetAllChildren());
 							}
-							SendResponse(response, new EvaluateResponseBody(val.DisplayValue, handle));
+							SendResponse(response, new EvaluateResponseBody(val.Value, handle));
 							return;
 						}
 					}
@@ -814,7 +847,7 @@ namespace VSCodeDebug
 					error = "no active stackframe";
 				}
 			}
-			SendErrorResponse(response, 3014, "Evaluate request failed ({_reason}).", new { _reason = error } );
+			SendErrorResponse(response, 3014, "Evaluate request failed ({_reason}).", new { _reason = error }, user: false );
 		}
 
 		//---- private ------------------------------------------
