@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 VisualStudioVersion = 14.0.22823.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mono-debug", "src\mono-debug\mono-debug.csproj", "{6B18B22D-6B1A-4BF9-BD46-DF84EE2181C5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mono-debug", "src\csharp\mono-debug.csproj", "{6B18B22D-6B1A-4BF9-BD46-DF84EE2181C5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
