@@ -24,7 +24,6 @@
 	"mono.launch.passDebugOptionsViaEnvironmentVariable.description": "Use the MONO_ENV_OPTIONS environment variable to pass the Mono debugger options when launching a program. This is useful if you're embedding Mono in a custom executable.",
 	"mono.launch.env.description": "Environment variables passed to the program.",
 	"mono.launch.externalConsole.deprecationMessage": "Attribute 'externalConsole' is deprecated, use 'console' instead.",
-	"mono.launch.useRuntime.description": "Specify to use the .NET runtime to execute the application, or execute directly and set MONO_ENV_OPTIONS.",
 	"mono.launch.console.description": "Where to launch the debug target.",
 	"mono.launch.console.internalConsole.description": "VS Code Debug Console (which doesn't support to read input from a program)",
 	"mono.launch.console.integratedTerminal.description": "VS Code's integrated terminal",

@@ -196,15 +196,11 @@ namespace VSCodeDebug
 
 			// validate argument 'program'
 			string programPath = getString(args, "program");
-
 			if (programPath == null) {
-				SendErrorResponse(response, 3001, "Property 'program' missing or empty.", null);
+				SendErrorResponse(response, 3001, "Property 'program' is missing or empty.", null);
 				return;
 			}
-
 			programPath = ConvertClientPathToDebugger(programPath);
-
-			bool useRuntime = getBool(args, "useRuntime", programPath.EndsWith(".exe", StringComparison.InvariantCultureIgnoreCase));
 			if (!File.Exists(programPath) && !Directory.Exists(programPath)) {
 				SendErrorResponse(response, 3002, "Program '{path}' does not exist.", new { path = programPath });
 				return;
@@ -240,6 +236,7 @@ namespace VSCodeDebug
 				}
 			}
 
+
 			// validate argument 'env'
 			Dictionary<string, string> env = new Dictionary<string, string>();
 			var environmentVariables = args.env;
@@ -261,16 +258,15 @@ namespace VSCodeDebug
 				mono_path = MONO;     // try to find mono through PATH
 			}
 
-			string executablePath = mono_path;
+
 			var cmdLine = new List<String>();
-			var runtimeArguments = new List<String>();
-			var rhinoArguments = new List<String>();
 
 			bool debug = !getBool(args, "noDebug", false);
 			
 			if (debug) {
 				bool passDebugOptionsViaEnvironmentVariable = getBool(args, "passDebugOptionsViaEnvironmentVariable", false);
-				rhinoArguments.Add(string.Format($"transport=dt_socket,server=y,address={host}:{port}"));
+
+				env["RHINO_SOFT_DEBUG"] = $"transport=dt_socket,server=y,address={host}:{port}";
 
 				if (passDebugOptionsViaEnvironmentVariable) {
 					if (!env.ContainsKey("MONO_ENV_OPTIONS"))
@@ -290,47 +286,20 @@ namespace VSCodeDebug
 			
 			// add 'runtimeArgs'
 			if (args.runtimeArgs != null) {
-				string[] runtimeArgs = args.runtimeArgs.ToObject<string[]>();
-				if (runtimeArgs != null && runtimeArgs.Length > 0) {
-					runtimeArguments.AddRange(runtimeArgs);
-				}
+				string[] runtimeArguments = args.runtimeArgs.ToObject<string[]>();
+				if (runtimeArguments != null && runtimeArguments.Length > 0) {
+					cmdLine.AddRange(runtimeArguments);
 			}
 
-			if (useRuntime)	{
-				// execute using .NET runtime
-				cmdLine.AddRange(runtimeArguments);
-
-				// add 'program'
-				if (workingDirectory == null) {
-					// if no working dir given, we use the direct folder of the executable
-					workingDirectory = Path.GetDirectoryName(programPath);
-					cmdLine.Add(Path.GetFileName(programPath));
-				}
-				else {
-					// if working dir is given and if the executable is within that folder, we make the program path relative to the working dir
-					cmdLine.Add(Utilities.MakeRelativePath(workingDirectory, programPath));
-				}
+			// add 'program'
+			if (workingDirectory == null) {
+				// if no working dir given, we use the direct folder of the executable
+				workingDirectory = Path.GetDirectoryName(programPath);
+				cmdLine.Add(Path.GetFileName(programPath));
 			}
-			else
-			{
-				// execute directly, passing mono options using an environment variable
-				executablePath = programPath;
-
-				if (executablePath.EndsWith(".app"))
-				{
-					// use open so that it properly gets activated instead of running in the background
-					cmdLine.Add("-W");
-					cmdLine.Add("-n");
-					cmdLine.Add(executablePath);
-					executablePath = "open";
-				}
-				if (runtimeArguments?.Count > 0) {
-					env.Add("MONO_ENV_OPTIONS", string.Join(" ", runtimeArguments));
-				}
-
-				if (rhinoArguments?.Count > 0) {
-					env.Add("RHINO_SOFT_DEBUG", string.Join(" ", rhinoArguments));
-				}
+			else {
+				// if working dir is given and if the executable is within that folder, we make the program path relative to the working dir
+				cmdLine.Add(Utilities.MakeRelativePath(workingDirectory, programPath));
 			}
 
 			// add 'args'
@@ -374,8 +343,8 @@ namespace VSCodeDebug
 				_process.StartInfo.CreateNoWindow = true;
 				_process.StartInfo.UseShellExecute = false;
 				_process.StartInfo.WorkingDirectory = workingDirectory;
-				_process.StartInfo.FileName = executablePath;
-				_process.StartInfo.Arguments = Utilities.ConcatArgs(cmdLine);
+				_process.StartInfo.FileName = mono_path;
+				_process.StartInfo.Arguments = Utilities.ConcatArgs(cmdLine.ToArray());
 
 				_stdoutEOF = false;
 				_process.StartInfo.RedirectStandardOutput = true;
@@ -408,7 +377,7 @@ namespace VSCodeDebug
 					}
 				}
 
-				var cmd = string.Format("{0} {1}", executablePath, _process.StartInfo.Arguments);
+				var cmd = string.Format("{0} {1}", mono_path, _process.StartInfo.Arguments);
 				SendOutput("console", cmd);
 
 				try {
@@ -459,9 +428,6 @@ namespace VSCodeDebug
 				SendErrorResponse(response, 3013, "Invalid address '{address}'.", new { address = address });
 				return;
 			}
-			var delay = getInt(args, "delay", 0);
-			if (delay > 0)
-				System.Threading.Thread.Sleep(delay);
 
 			var maxConnectionAttempts = getInt(args, "maxConnectionAttempts", MAX_CONNECTION_ATTEMPTS);
 			var timeBetweenConnectionAttempts = getInt(args, "timeBetweenConnectionAttempts", CONNECTION_ATTEMPT_INTERVAL);

@@ -1,0 +1,14 @@
+*
+*/**
+**/.DS_Store
+!bin/Release/*
+!out/extension.js
+!node_modules/vscode-nls/**/*
+!node_modules/vscode-debugprotocol/**/*
+!package.json
+!package.nls.json
+!README.md
+!CHANGELOG.md
+!LICENSE.txt
+!ThirdPartyNotices.txt
+!images/*
