@@ -54,7 +54,7 @@ shell, and an installed Mono framework.
 First, clone the mono-debug project:
 
 ```bash
-$ git clone https://github.com/microsoft/vscode-mono-debug
+$ git clone --recursive https://github.com/microsoft/vscode-mono-debug
 ```
 
 To build the extension vsix, run:
