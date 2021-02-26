@@ -3,12 +3,12 @@ name: Extension CI
 on:
   push:
     branches:
-    - master
+    - main
     tags:
     - 'v*'
   pull_request:
     branches:
-    - master
+    - main
   release:
     types:
     - published
@@ -49,7 +49,7 @@ jobs:
         run: make run-tests
 
     - name: Upload CI VSIX
-      if: github.ref == 'refs/heads/master'
+      if: github.ref == 'refs/heads/main'
       uses: actions/upload-artifact@v2
       with:
         name: mono-debug-${{ github.sha }}.vsix
