@@ -49,6 +49,8 @@ namespace VSCodeDebug
 		private bool _stderrEOF = true;
 		private bool _stdoutEOF = true;
 
+		private dynamic exceptionOptionsFromDap;
+
 
 		public MonoDebugSession() : base()
 		{
@@ -112,6 +114,7 @@ namespace VSCodeDebug
 			};
 
 			_session.TargetReady += (sender, e) => {
+				SetExceptionBreakpointsFromDap(exceptionOptionsFromDap);
 				_activeProcess = _session.GetProcesses().SingleOrDefault();
 			};
 
@@ -175,8 +178,12 @@ namespace VSCodeDebug
 				// This debug adapter does not support a side effect free evaluate request for data hovers.
 				supportsEvaluateForHovers = false,
 
-				// This debug adapter does not support exception breakpoint filters
-				exceptionBreakpointFilters = new dynamic[0]
+    			supportsExceptionFilterOptions = true,
+    			exceptionBreakpointFilters = new dynamic[] {
+					new { filter = "always", label = "All Exceptions", @default=false, supportsCondition=true, description="Breaks on all throw errors, even if they're caught later.",
+						  conditionDescription = "Comma-separated list of exception types to break on"},
+					new { filter = "uncaught", label = "Uncaught Exceptions", @default=false, supportsCondition=false, description="Breaks only on errors that are not handled."}
+					}
 			});
 
 			// Mono Debug is ready to accept breakpoints immediately
@@ -257,7 +264,7 @@ namespace VSCodeDebug
 			var cmdLine = new List<String>();
 
 			bool debug = !getBool(args, "noDebug", false);
-			
+
 			if (debug) {
 				bool passDebugOptionsViaEnvironmentVariable = getBool(args, "passDebugOptionsViaEnvironmentVariable", false);
 
@@ -272,11 +279,11 @@ namespace VSCodeDebug
 					cmdLine.Add($"--debugger-agent=transport=dt_socket,server=y,address={host}:{port}");
 				}
 			}
-			
+
 			if (env.Count == 0) {
 				env = null;
 			}
-			
+
 			// add 'runtimeArgs'
 			if (args.runtimeArgs != null) {
 				string[] runtimeArguments = args.runtimeArgs.ToObject<string[]>();
@@ -516,7 +523,15 @@ namespace VSCodeDebug
 
 		public override void SetExceptionBreakpoints(Response response, dynamic args)
 		{
-			SetExceptionBreakpoints(args.exceptionOptions);
+			if (args.filterOptions != null)
+			{
+				if (_activeProcess != null)
+					SetExceptionBreakpointsFromDap(args.filterOptions);
+				else
+					exceptionOptionsFromDap = args.filterOptions;
+			}
+			else
+				SetExceptionBreakpoints(args.exceptionOptions);
 			SendResponse(response);
 		}
 
@@ -778,6 +793,25 @@ namespace VSCodeDebug
 
 		//---- private ------------------------------------------
 
+		private void SetExceptionBreakpointsFromDap(dynamic exceptionOptions)
+		{
+			if (exceptionOptions != null) {
+				var exceptions = exceptionOptions.ToObject<dynamic[]>();
+				for (int i = 0; i < exceptions.Length; i++) {
+					var exception = exceptions[i];
+
+					bool caught = exception.filterId == "always" ? true : false;
+					if (exception.condition != null && exception.condition != "") {
+						string[] conditionNames = exception.condition.ToString().Split(',');
+						foreach (var conditionName in conditionNames)
+							_session.EnableException(conditionName, caught);
+					}
+					else {
+						_session.EnableException("System.Exception", caught);
+					}
+				}
+			}
+		}
 		private void SetExceptionBreakpoints(dynamic exceptionOptions)
 		{
 			if (exceptionOptions != null) {
