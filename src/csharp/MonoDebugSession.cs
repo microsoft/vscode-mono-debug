@@ -178,8 +178,8 @@ namespace VSCodeDebug
 				// This debug adapter does not support a side effect free evaluate request for data hovers.
 				supportsEvaluateForHovers = false,
 
-    			supportsExceptionFilterOptions = true,
-    			exceptionBreakpointFilters = new dynamic[] {
+				supportsExceptionFilterOptions = true,
+				exceptionBreakpointFilters = new dynamic[] {
 					new { filter = "always", label = "All Exceptions", @default=false, supportsCondition=true, description="Breaks on all throw errors, even if they're caught later.",
 						  conditionDescription = "Comma-separated list of exception types to break on"},
 					new { filter = "uncaught", label = "Uncaught Exceptions", @default=false, supportsCondition=false, description="Breaks only on errors that are not handled."}
