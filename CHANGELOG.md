@@ -1,5 +1,5 @@
 ## 0.16.3
-* Added support for configuring handled and unhandled exceptions. Configure it on Breakpoints window.
+* Added support for configuring handled and unhandled exceptions in the Breakpoints window.
 
 ## 0.16.2
 
