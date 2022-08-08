@@ -180,9 +180,9 @@ namespace VSCodeDebug
 
 				supportsExceptionFilterOptions = true,
 				exceptionBreakpointFilters = new dynamic[] {
-					new { filter = "always", label = "All Exceptions", @default=false, supportsCondition=true, description="Breaks on all throw errors, even if they're caught later.",
+					new { filter = "always", label = "All Exceptions", @default=false, supportsCondition=true, description="Break when an exception is thrown, even if it is caught later.",
 						  conditionDescription = "Comma-separated list of exception types to break on"},
-					new { filter = "uncaught", label = "Uncaught Exceptions", @default=false, supportsCondition=false, description="Breaks only on errors that are not handled."}
+					new { filter = "uncaught", label = "Uncaught Exceptions", @default=false, supportsCondition=false, description="Breaks only on exceptions that are not handled."}
 					}
 			});
 
