@@ -176,6 +176,7 @@ namespace VSCodeDebug
 		public bool supportsFunctionBreakpoints;
 		public bool supportsConditionalBreakpoints;
 		public bool supportsEvaluateForHovers;
+		public bool supportsExceptionFilterOptions;
 		public dynamic[] exceptionBreakpointFilters;
 	}
 

@@ -129,14 +129,14 @@ function configureExceptions() : void {
 	});
 }
 
-function setExceptionBreakpoints(model: ExceptionConfigurations) : Thenable<DebugProtocol.SetExceptionBreakpointsResponse | undefined> {
+function setExceptionBreakpoints(model: ExceptionConfigurations) : void {
 
 	const args: DebugProtocol.SetExceptionBreakpointsArguments = {
 		filters: [],
 		exceptionOptions: convertToExceptionOptions(model)
 	}
-
-	return vscode.commands.executeCommand<DebugProtocol.SetExceptionBreakpointsResponse>('workbench.customDebugRequest', 'setExceptionBreakpoints', args);
+	if (vscode.debug.activeDebugSession)
+		vscode.debug.activeDebugSession.customRequest('setExceptionBreakpoints', args);
 }
 
 function convertToExceptionOptions(model: ExceptionConfigurations) : DebugProtocol.ExceptionOptions[] {
