@@ -20,10 +20,10 @@ debug: $MONO_DEBUG_DEBUG
 	@echo "build finished"
 
 $MONO_DEBUG_RELEASE:
-	msbuild /v:minimal /restore /p:Configuration=Release src/csharp/mono-debug.csproj
+	dotnet build -c Release src/csharp/mono-debug.csproj
 
 $MONO_DEBUG_DEBUG:
-	msbuild /v:minimal /restore /p:Configuration=Debug src/csharp/mono-debug.csproj
+	dotnet build -c Debug src/csharp/mono-debug.csproj
 
 tests:
 	dotnet build /nologo testdata/simple
