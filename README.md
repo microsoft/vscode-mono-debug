@@ -1,3 +1,8 @@
+> **Fork Notice**  
+> This repository is an *unmodified* fork of [microsoft/vscode-mono-debug](https://github.com/microsoft/vscode-mono-debug).  
+> All authorship, copyright, and ownership remain with the original authors.  
+> Modifications are limited to packaging and publication on the OpenVSX Marketplace.
+
 # VS Code Mono Debug
 
 A simple VS Code debugger extension for the Mono VM. Its implementation was inspired by the [SDB](https://github.com/mono/sdb) command line debugger.
