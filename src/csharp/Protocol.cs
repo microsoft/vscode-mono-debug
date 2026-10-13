@@ -102,7 +102,7 @@ namespace VSCodeDebug
 		public bool TRACE_RESPONSE;
 
 		protected const int BUFFER_SIZE = 4096;
-		protected const string TWO_CRLF = "\r\n\r\n";
+		protected const string TWO_CRLF = @"\r\n\r\n";
 		protected static readonly Regex CONTENT_LENGTH_MATCHER = new Regex(@"Content-Length: (\d+)");
 
 		protected static readonly Encoding Encoding = System.Text.Encoding.UTF8;
